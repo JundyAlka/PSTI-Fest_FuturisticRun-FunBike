@@ -2,6 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["better-sqlite3", "@prisma/adapter-better-sqlite3"],
+  async redirects() {
+    return [
+      {
+        source: "/daftar",
+        destination: "/futuristic-run/daftar",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

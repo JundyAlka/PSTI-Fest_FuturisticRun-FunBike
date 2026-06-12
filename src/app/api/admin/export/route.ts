@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
 
   const rows = (participants ?? []).map((p) => ({
     "No. Registrasi": p.reg_number,
+    "Event": p.event_type === "fun-bike" ? "Fun Bike" : "Futuristic Run",
     "Nama Lengkap": p.full_name,
     NIK: p.nik,
     "Jenis Kelamin": p.gender === "male" ? "Laki-laki" : "Perempuan",

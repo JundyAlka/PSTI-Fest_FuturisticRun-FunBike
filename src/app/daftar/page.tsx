@@ -4,7 +4,7 @@ import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Daftar Sekarang — Futuristic RUN 2026 | PSTI FEST",
+  title: "Daftar Futuristic RUN 2026 — Run The Future | PSTI FEST",
   description: "Daftarkan diri Anda untuk Futuristic RUN 2026 kategori Run 5K dan dapatkan jersey eksklusif.",
 };
 
@@ -14,14 +14,16 @@ export default function DaftarPage() {
       <Navbar />
       {/* BG effects */}
       <div
-        className="absolute inset-0 opacity-[0.04]"
+        className="absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(0,229,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,1) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
+            "radial-gradient(rgba(0,229,255,0.5) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
         }}
       />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full blur-3xl opacity-10 bg-gradient-to-r from-[#2A4FFF] to-[#8B00FF]" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full blur-3xl opacity-[0.07] bg-gradient-to-r from-[#2A4FFF] to-[#8B00FF]" />
+      <div className="absolute top-1/3 -left-40 w-[400px] h-[400px] rounded-full blur-3xl opacity-[0.05] bg-[#00E5FF]" />
+      <div className="absolute bottom-0 -right-40 w-[500px] h-[500px] rounded-full blur-3xl opacity-[0.05] bg-[#8B00FF]" />
 
       <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
         <div className="section-reveal text-center mb-10">

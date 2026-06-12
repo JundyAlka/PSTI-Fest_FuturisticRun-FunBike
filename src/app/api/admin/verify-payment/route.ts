@@ -69,5 +69,22 @@ export async function POST(req: NextRequest) {
     }).catch(console.error);
   }
 
+  // Audit log (fire-and-forget)
+  void insforge.database
+    .from("audit_logs")
+    .insert([{
+      entity: "participant",
+      entity_id: id,
+      action: `verify_${status}`,
+      performed_by: session.user?.email ?? "admin",
+      details: JSON.stringify({
+        reg_number: participant.reg_number,
+        from: participant.payment_status,
+        to: status,
+        notes: notes ?? null,
+      }),
+      created_at: new Date().toISOString(),
+    }]);
+
   return NextResponse.json({ success: true, participant: updated });
 }

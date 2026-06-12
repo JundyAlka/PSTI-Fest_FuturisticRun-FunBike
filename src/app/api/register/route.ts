@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { insforge } from "@/lib/insforge";
 import { RegisterSchema } from "@/lib/validations";
-import { generateRegistrationNumber, getEventCategories } from "@/lib/utils";
+import { generateRegistrationNumber, getEventCategories, getEventInfo } from "@/lib/utils";
 import { sendRegistrationEmail } from "@/lib/email";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const rl = checkRateLimit(req, "register", 5, 60_000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { success: false, message: "Terlalu banyak percobaan. Tunggu sebentar." },
+        { status: 429, headers: rl.headers }
+      );
+    }
+
     const body = await req.json();
     const parsed = RegisterSchema.safeParse(body);
 
@@ -29,12 +39,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check event-level settings
+    // Check event-level settings (registration_open + deadline)
     const { data: settings, error: settingsError } = await insforge.database
       .from("event_settings")
       .select("key, value")
       .eq("event_type", eventType)
-      .in("key", ["registration_open"]);
+      .in("key", ["registration_open", "registration_deadline"]);
 
     if (settingsError) throw settingsError;
 
@@ -42,6 +52,38 @@ export async function POST(req: NextRequest) {
 
     if (settingsMap.registration_open !== "true") {
       return NextResponse.json({ success: false, message: "Pendaftaran sedang ditutup" }, { status: 403 });
+    }
+
+    // Check deadline
+    if (settingsMap.registration_deadline) {
+      const deadline = new Date(settingsMap.registration_deadline);
+      if (!isNaN(deadline.getTime()) && new Date() > deadline) {
+        return NextResponse.json({ success: false, message: "Batas pendaftaran telah melewati deadline" }, { status: 403 });
+      }
+    }
+
+    // Also check event-level deadline from events table
+    const eventInfo = await getEventInfo(eventType);
+    if (eventInfo?.deadline) {
+      const deadline = new Date(eventInfo.deadline);
+      if (!isNaN(deadline.getTime()) && new Date() > deadline) {
+        return NextResponse.json({ success: false, message: "Batas pendaftaran telah melewati deadline" }, { status: 403 });
+      }
+    }
+
+    // Age validation based on category min_age
+    if (catRow.min_age && data.birthDate) {
+      const birth = new Date(data.birthDate);
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const m = today.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+      if (age < catRow.min_age) {
+        return NextResponse.json(
+          { success: false, message: `Usia minimum untuk kategori ini adalah ${catRow.min_age} tahun` },
+          { status: 400 }
+        );
+      }
     }
 
     // Quota check: use DB category quota, fallback to 200
@@ -63,21 +105,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let existing = null;
-    if (data.nik) {
+    // NIK duplicate check per event
+    if (data.nik && /^\d{16}$/.test(data.nik)) {
       const { data: duplicate, error: duplicateError } = await insforge.database
         .from("participants")
         .select("id")
         .eq("nik", data.nik)
         .eq("event_type", eventType)
+        .neq("payment_status", "rejected")
         .maybeSingle();
 
       if (duplicateError) throw duplicateError;
-      existing = duplicate;
+      if (duplicate) {
+        return NextResponse.json({ success: false, message: "NIK sudah terdaftar untuk event ini" }, { status: 409 });
+      }
     }
 
-    if (existing) {
-      return NextResponse.json({ success: false, message: "NIK sudah terdaftar untuk event ini" }, { status: 409 });
+    // Payment method validation — check if method is enabled
+    const { data: paymentSettings } = await insforge.database
+      .from("event_settings")
+      .select("key, value")
+      .eq("event_type", eventType)
+      .in("key", ["payment_transfer_enabled", "payment_qris_enabled"]);
+
+    const paymentMap = Object.fromEntries((paymentSettings ?? []).map((s) => [s.key, s.value]));
+    if (data.paymentMethod === "transfer" && paymentMap.payment_transfer_enabled === "false") {
+      return NextResponse.json({ success: false, message: "Metode transfer bank sedang tidak tersedia" }, { status: 400 });
+    }
+    if (data.paymentMethod === "qris" && paymentMap.payment_qris_enabled === "false") {
+      return NextResponse.json({ success: false, message: "Metode QRIS sedang tidak tersedia" }, { status: 400 });
     }
 
     const amount = catRow.price;
@@ -88,7 +144,7 @@ export async function POST(req: NextRequest) {
         reg_number: `${eventType.toUpperCase().replace(/-/g, "")}-TEMP-${Date.now()}`,
         event_type: eventType,
         full_name: data.fullName.trim(),
-        nik: data.nik,
+        nik: data.nik || "",
         gender: data.gender,
         birth_place: data.birthPlace.trim(),
         birth_date: data.birthDate,
@@ -99,7 +155,7 @@ export async function POST(req: NextRequest) {
         province: data.province.trim(),
         category: data.category,
         jersey_size: data.jerseySize,
-        bib_name: data.bibName.toUpperCase(),
+        bib_name: (data.bibName ?? "").toUpperCase(),
         emergency_contact_name: data.emergencyContactName.trim(),
         emergency_contact_phone: data.emergencyContactPhone,
         blood_type: data.bloodType ?? null,
@@ -107,6 +163,7 @@ export async function POST(req: NextRequest) {
         payment_status: "pending",
         payment_amount: amount,
         status: "registered",
+        ...(data.bikeType ? { running_club: data.bikeType } : {}),
       }])
       .select()
       .single();

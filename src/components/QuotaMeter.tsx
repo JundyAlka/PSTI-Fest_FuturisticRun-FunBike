@@ -121,31 +121,54 @@ export default function QuotaMeter({ category = "5K", fallbackTotal = 200, event
 
   return (
     <div ref={ref} className="quota-meter">
-      <div className="mb-2 flex items-center justify-between gap-3 text-sm">
-        <span className="text-[#B0C4DE]">Kuota Tersedia</span>
-        <span className="font-bold text-[#00E5FF]" style={{ fontFamily: "Orbitron, sans-serif" }}>
-          {loading ? "Memuat..." : `${displayRemaining} tersisa`}
-        </span>
-      </div>
-
-      <div className="quota-track" aria-label={`Kuota ${category} terisi ${filledPercent} persen`}>
-        <div
-          className={`quota-fill ${visible ? "is-active" : ""}`}
-          style={{ width: visible && !loading ? `${visualPercent}%` : "0%" }}
-        >
-          <span className="quota-fill-glint" />
+      {loading ? (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="skeleton-shimmer h-4 w-24 rounded" />
+            <div className="skeleton-shimmer h-4 w-20 rounded" />
+          </div>
+          <div className="skeleton-shimmer h-3 w-full rounded-full" />
+          <div className="flex items-center justify-between gap-3">
+            <div className="skeleton-shimmer h-3 w-32 rounded" />
+            <div className="skeleton-shimmer h-3 w-16 rounded" />
+          </div>
         </div>
-        <div className="quota-markers">
-          {[25, 50, 75].map((marker) => (
-            <span key={marker} style={{ left: `${marker}%` }} />
-          ))}
-        </div>
-      </div>
+      ) : (
+        <>
+          <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+            <span className="text-[#B0C4DE]">Kuota Tersedia</span>
+            <span className="font-bold text-[#00E5FF]" style={{ fontFamily: "Orbitron, sans-serif" }}>
+              {`${displayRemaining} tersisa`}
+            </span>
+          </div>
 
-      <div className="mt-2 flex items-center justify-between gap-3 text-xs text-[#B0C4DE]">
-        <span>{loading ? "Mengambil data backend..." : `Terisi ${displayFilled} dari ${quota.total} peserta`}</span>
-        <span className="font-semibold text-[#00E5FF]">{displayPercent}% terisi</span>
-      </div>
+          <div
+            className="quota-track"
+            role="progressbar"
+            aria-label={`Kuota ${category} terisi ${filledPercent} persen`}
+            aria-valuenow={filledPercent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div
+              className={`quota-fill ${visible ? "is-active" : ""}`}
+              style={{ width: visible ? `${visualPercent}%` : "0%" }}
+            >
+              <span className="quota-fill-glint" />
+            </div>
+            <div className="quota-markers">
+              {[25, 50, 75].map((marker) => (
+                <span key={marker} style={{ left: `${marker}%` }} />
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-2 flex items-center justify-between gap-3 text-xs text-[#B0C4DE]">
+            <span>{`Terisi ${displayFilled} dari ${quota.total} peserta`}</span>
+            <span className="font-semibold text-[#00E5FF]">{displayPercent}% terisi</span>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -20,16 +20,18 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [recent, setRecent] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeEvent, setActiveEvent] = useState<"futuristic-run" | "fun-bike">("futuristic-run");
 
   useEffect(() => {
+    setLoading(true);
     Promise.all([
-      fetch("/api/admin/stats?eventType=futuristic-run").then((r) => r.json()),
-      fetch("/api/admin/participants?limit=8&eventType=futuristic-run").then((r) => r.json()),
+      fetch(`/api/admin/stats?eventType=${activeEvent}`).then((r) => r.json()),
+      fetch(`/api/admin/participants?limit=8&eventType=${activeEvent}`).then((r) => r.json()),
     ]).then(([s, p]) => {
       setStats(s);
       setRecent(p.participants ?? []);
     }).finally(() => setLoading(false));
-  }, []);
+  }, [activeEvent]);
 
   const statCards = stats ? [
     { label: "Total Peserta", value: stats.total, icon: Users, color: "#00E5FF", bg: "rgba(0,229,255,0.1)" },
@@ -43,19 +45,47 @@ export default function AdminDashboard() {
   return (
     <div className="page-animate p-6 sm:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-black text-white" style={{ fontFamily: "Orbitron, sans-serif" }}>
             DASHBOARD
           </h1>
-          <p className="text-[#B0C4DE] text-sm mt-1">Futuristic RUN 2026 — Overview</p>
+          <p className="text-[#B0C4DE] text-sm mt-1">
+            {activeEvent === "futuristic-run" ? "Futuristic RUN 2026" : "Fun Bike 2026"} — Overview
+          </p>
         </div>
         <a
-          href="/api/admin/export?eventType=futuristic-run"
+          href={`/api/admin/export?eventType=${activeEvent}`}
           className="btn-outline-neon flex items-center gap-2 px-4 py-2 rounded-xl text-xs cursor-pointer"
         >
           <Download size={14} /> Export CSV
         </a>
+      </div>
+
+      {/* Event Tabs */}
+      <div className="card-animated flex gap-2 mb-6 p-1 glass-card rounded-xl border border-[#1E3A5F]">
+        {([
+          { id: "futuristic-run" as const, label: "FUTURISTIC RUN", color: "#00E5FF" },
+          { id: "fun-bike" as const, label: "FUN BIKE", color: "#FF6B2C" },
+        ]).map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveEvent(tab.id)}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 ${
+              activeEvent === tab.id
+                ? "text-[#0A0E27]"
+                : "text-[#B0C4DE] hover:text-white"
+            }`}
+            style={{
+              fontFamily: "Orbitron, sans-serif",
+              fontSize: "0.7rem",
+              letterSpacing: "1px",
+              background: activeEvent === tab.id ? tab.color : "transparent",
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {loading ? (

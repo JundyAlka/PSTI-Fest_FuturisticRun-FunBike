@@ -111,9 +111,10 @@ export default function HeroSection() {
 
           <div className="fade-in-up-delay-3 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-10">
             <Link
-              href="/daftar"
-              className="btn-neon flex items-center justify-center gap-2 px-8 py-4 rounded-full text-sm font-bold cursor-pointer"
+              href="/futuristic-run/daftar"
+              className="relative overflow-hidden btn-neon flex items-center justify-center gap-2 px-8 py-4 rounded-full text-sm font-bold cursor-pointer"
             >
+              <span className="shine-sweep" />
               <Zap size={16} />
               DAFTAR SEKARANG
               <ArrowRight size={16} />

@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useState } from "react";
-import { Settings, Save, ToggleLeft, ToggleRight, CreditCard, Building2, QrCode } from "lucide-react";
+import { Settings, Save, ToggleLeft, ToggleRight, CreditCard, Building2, QrCode, Upload, Loader2 } from "lucide-react";
 import LoadingPanel from "@/components/LoadingPanel";
 
 interface SettingsState {
@@ -78,6 +78,44 @@ export default function PengaturanPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<"event" | "payment">("event");
+
+  const [qrisUploading, setQrisUploading] = useState(false);
+  const [qrisUploadError, setQrisUploadError] = useState("");
+
+  const handleQrisUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setQrisUploadError("");
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      setQrisUploadError("Format harus JPG, PNG, atau WebP.");
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setQrisUploadError("Ukuran file maksimal 3MB.");
+      return;
+    }
+    setQrisUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload-qris?eventType=futuristic-run", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setQrisUploadError(data.error || "Gagal mengunggah QRIS.");
+      } else {
+        set("payment_qris_image_url", data.url);
+      }
+    } catch {
+      setQrisUploadError("Terjadi kesalahan jaringan.");
+    } finally {
+      setQrisUploading(false);
+      e.target.value = "";
+    }
+  };
 
   useEffect(() => {
     fetch("/api/admin/settings?eventType=futuristic-run")
@@ -295,17 +333,33 @@ export default function PengaturanPage() {
                   </div>
 
                   <div>
-                    <label className="block text-[#B0C4DE] text-sm mb-1.5">URL Gambar QR Code</label>
-                    <input
-                      type="text"
-                      className={inp}
-                      value={settings.payment_qris_image_url}
-                      placeholder="https://... (URL gambar QR Code QRIS Anda)"
-                      onChange={(e) => set("payment_qris_image_url", e.target.value)}
-                    />
-                    <p className="text-[#B0C4DE] text-xs mt-1.5">
-                      Upload gambar QR Code ke Google Drive / Cloudinary lalu paste URL-nya di sini. Gambar ini akan ditampilkan ke peserta.
-                    </p>
+                    <label className="block text-[#B0C4DE] text-sm mb-1.5">Gambar QR Code</label>
+                    <label className="flex items-center justify-center gap-2 cursor-pointer rounded-xl border-2 border-dashed border-[#8B00FF]/40 py-3 px-4 text-[#8B00FF] hover:border-[#8B00FF]/70 transition-colors">
+                      {qrisUploading ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          <span className="text-sm">Mengunggah...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={16} />
+                          <span className="text-sm font-semibold">Upload Gambar QRIS (JPG/PNG/WebP, maks 3MB)</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp"
+                        className="hidden"
+                        onChange={handleQrisUpload}
+                        disabled={qrisUploading}
+                      />
+                    </label>
+                    {qrisUploadError && (
+                      <p className="text-red-400 text-xs mt-1.5">{qrisUploadError}</p>
+                    )}
+                    {settings.payment_qris_image_url && (
+                      <p className="text-green-400 text-xs mt-1.5">✓ Gambar berhasil diupload</p>
+                    )}
                   </div>
 
                   {/* QRIS Preview */}

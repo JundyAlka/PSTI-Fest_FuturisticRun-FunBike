@@ -3,17 +3,10 @@ import ScrollRevealProvider from "@/components/ScrollRevealProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Futuristic RUN 2026 — Daftar Sekarang | PSTI FEST",
-  description:
-    "Futuristic RUN 2026 — Run The Future, Shine The Night. Event lari bertema futuristik oleh PSTI FEST dengan satu kategori Run 5K.",
+  title: "PSTI FEST 2026",
   icons: {
     icon: "/logo-futuristicrun.png",
     apple: "/logo-futuristicrun.png",
-  },
-  openGraph: {
-    title: "Futuristic RUN 2026 | PSTI FEST",
-    description: "Run The Future, Shine The Night — Event lari futuristik terbesar 2026.",
-    type: "website",
   },
 };
 
@@ -22,6 +15,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="id">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body>
         <ScrollRevealProvider />
         {children}

@@ -31,9 +31,9 @@ export default function Footer() {
           </div>
 
           <div className="card-animated">
-            <h4 className="text-white font-bold mb-4 text-sm tracking-widest" style={{ fontFamily: "Orbitron, sans-serif" }}>
+            <h3 className="text-white font-bold mb-4 text-sm tracking-widest" style={{ fontFamily: "Orbitron, sans-serif" }}>
               NAVIGASI
-            </h4>
+            </h3>
             <ul className="space-y-2">
               {[
                 { label: "Beranda", href: "#hero" },
@@ -57,9 +57,9 @@ export default function Footer() {
           </div>
 
           <div className="card-animated">
-            <h4 className="text-white font-bold mb-4 text-sm tracking-widest" style={{ fontFamily: "Orbitron, sans-serif" }}>
+            <h3 className="text-white font-bold mb-4 text-sm tracking-widest" style={{ fontFamily: "Orbitron, sans-serif" }}>
               EVENT
-            </h4>
+            </h3>
             <ul className="space-y-3 text-sm text-[#B0C4DE]">
               <li className="flex items-center gap-2">
                 <CalendarDays size={14} className="text-[#00E5FF]" />
@@ -83,9 +83,9 @@ export default function Footer() {
           </div>
 
           <div className="card-animated">
-            <h4 className="text-white font-bold mb-4 text-sm tracking-widest" style={{ fontFamily: "Orbitron, sans-serif" }}>
+            <h3 className="text-white font-bold mb-4 text-sm tracking-widest" style={{ fontFamily: "Orbitron, sans-serif" }}>
               KONTAK
-            </h4>
+            </h3>
             <div className="space-y-3 mb-6">
               <a href="mailto:info@pstifest.com" className="flex items-center gap-2 text-[#B0C4DE] hover:text-[#00E5FF] text-sm transition-colors">
                 <Mail size={14} className="text-[#00E5FF]" />
@@ -97,9 +97,9 @@ export default function Footer() {
               </a>
             </div>
 
-            <h4 className="text-white font-bold mb-3 text-sm tracking-widest" style={{ fontFamily: "Orbitron, sans-serif" }}>
+            <h3 className="text-white font-bold mb-3 text-sm tracking-widest" style={{ fontFamily: "Orbitron, sans-serif" }}>
               IKUTI KAMI
-            </h4>
+            </h3>
             <div className="flex gap-3">
               {[
                 { icon: Camera, href: "https://instagram.com/pstifest", label: "Instagram", color: "#FF006E" },

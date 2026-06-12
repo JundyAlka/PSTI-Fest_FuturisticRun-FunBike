@@ -1,6 +1,7 @@
 import { CheckCircle, Trophy, Medal, Tag, Coffee, Music } from "lucide-react";
 import AnimatedStatNumber from "@/components/AnimatedStatNumber";
 import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
+import AnimatedIcon from "@/components/ui/AnimatedIcon";
 
 const benefits = [
   { icon: CheckCircle, text: "Sertifikat digital peserta" },
@@ -45,7 +46,9 @@ export default function AboutSection() {
                   className="card-animated flex items-center gap-3 glass-card p-3 rounded-xl border border-[#1E3A5F] hover:border-[#00E5FF]/40 transition-all duration-300 group"
                 >
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00E5FF]/20 to-[#2A4FFF]/20 flex items-center justify-center flex-shrink-0 group-hover:from-[#00E5FF]/40 transition-all">
-                    <b.icon size={16} className="text-[#00E5FF]" />
+                    <AnimatedIcon color="#00E5FF" size={16} animate="sway">
+                      <b.icon size={16} />
+                    </AnimatedIcon>
                   </div>
                   <span className="text-sm text-[#B0C4DE] group-hover:text-white transition-colors">{b.text}</span>
                 </div>

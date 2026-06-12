@@ -3,7 +3,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Admin Dashboard — Futuristic RUN 2026",
+  title: "Admin Dashboard — PSTI FEST 2026",
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

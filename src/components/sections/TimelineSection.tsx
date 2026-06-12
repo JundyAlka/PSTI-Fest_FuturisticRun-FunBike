@@ -50,10 +50,10 @@ export default function TimelineSection() {
                           {ev.date}
                         </span>
                       </div>
-                      <h4 className="text-white font-bold mb-1 flex items-center gap-2" style={isRight ? { justifyContent: "flex-end" } : {}}>
+                      <h3 className="text-white font-bold mb-1 flex items-center gap-2" style={isRight ? { justifyContent: "flex-end" } : {}}>
                         {ev.isLast && <Flag size={14} style={{ color: ev.color }} />}
                         {ev.title}
-                      </h4>
+                      </h3>
                       <p className="text-[#B0C4DE] text-sm">{ev.desc}</p>
                     </div>
                   </div>

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { insforge } from "@/lib/insforge";
+import { rateLimitOr429 } from "@/lib/rateLimit";
 
 export async function GET(req: NextRequest) {
+  const rl = rateLimitOr429(req, "check-reg", 20, 60_000);
+  if (!rl.allowed) return rl.response;
+
   const regNumber = req.nextUrl.searchParams.get("regNumber");
   if (!regNumber) {
     return NextResponse.json({ found: false, message: "regNumber required" }, { status: 400 });

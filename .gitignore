@@ -44,6 +44,10 @@ dev.db
 codex-*.log
 codex-*.err.log
 
+# lighthouse reports
+lh*.json
+lighthouse*.json
+
 # agent config files
 AGENTS.md
 CLAUDE.md

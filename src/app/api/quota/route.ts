@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { insforge } from "@/lib/insforge";
 import { getEventCategories } from "@/lib/utils";
+import { rateLimitOr429 } from "@/lib/rateLimit";
 
 export async function GET(req: NextRequest) {
   try {
+    const rl = rateLimitOr429(req, "quota", 30, 60_000);
+    if (!rl.allowed) return rl.response;
+
     const eventType = req.nextUrl.searchParams.get("eventType") ?? "futuristic-run";
 
     // Get categories from DB

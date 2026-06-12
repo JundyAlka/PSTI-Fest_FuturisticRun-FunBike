@@ -11,7 +11,7 @@ const navLinks = [
   { label: "Jersey", href: "#jersey" },
   { label: "Jadwal", href: "#timeline" },
   { label: "FAQ", href: "#faq" },
-  { label: "Pendaftaran", href: "/daftar", isRoute: true },
+  { label: "Pendaftaran", href: "/futuristic-run/daftar", isRoute: true },
 ];
 
 export default function Navbar() {
@@ -53,7 +53,6 @@ export default function Navbar() {
                 window.location.assign("/");
               }}
               className="flex items-center gap-3 group"
-              aria-label="Kembali ke beranda"
             >
               <LogoMark size={60} priority className="pulse-glow" />
               <div className="hidden sm:block">
@@ -103,6 +102,7 @@ export default function Navbar() {
                       className={`absolute -bottom-1 left-0 h-0.5 bg-[#00E5FF] transition-all duration-300 ${
                         isActive ? "w-full" : "w-0 group-hover:w-full"
                       }`}
+                      aria-hidden="true"
                     />
                   </a>
                 );
@@ -112,9 +112,10 @@ export default function Navbar() {
             {/* CTA + Hamburger */}
             <div className="flex items-center gap-3">
               <Link
-                href="/daftar"
-                className="btn-neon hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full text-sm cursor-pointer"
+                href="/futuristic-run/daftar"
+                className="relative overflow-hidden btn-neon hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full text-sm cursor-pointer"
               >
+                <span className="shine-sweep" />
                 <Zap size={14} />
                 DAFTAR SEKARANG
               </Link>
@@ -137,7 +138,7 @@ export default function Navbar() {
         }`}
       >
         <div className="flex justify-end p-5">
-          <button onClick={() => setMenuOpen(false)} className="text-white">
+          <button onClick={() => setMenuOpen(false)} className="text-white" aria-label="Tutup menu">
             <X size={24} />
           </button>
         </div>
@@ -164,7 +165,7 @@ export default function Navbar() {
             )
           )}
           <Link
-            href="/daftar"
+            href="/futuristic-run/daftar"
             onClick={() => setMenuOpen(false)}
             className="btn-neon mt-4 flex items-center justify-center gap-2 px-5 py-3 rounded-full text-sm cursor-pointer"
           >

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Zap, ArrowRight } from "lucide-react";
 import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
 import QuotaMeter from "@/components/QuotaMeter";
+import HoverTiltCard from "@/components/ui/HoverTiltCard";
 
 const facilities = [
   { icon: "🏃", label: "Jersey Eksklusif Futuristic RUN 2026" },
@@ -43,6 +44,7 @@ export default function CategoriesSection() {
           <div className="absolute -inset-1 rounded-3xl blur-xl opacity-40"
             style={{ background: "linear-gradient(135deg, #8B00FF, #00E5FF)" }} />
 
+          <HoverTiltCard maxTilt={6} glareColor="#8B00FF">
           <div className="relative glass-card rounded-3xl overflow-hidden border"
             style={{ borderColor: "rgba(139,0,255,0.4)", background: "rgba(10,14,39,0.95)" }}>
 
@@ -100,8 +102,8 @@ export default function CategoriesSection() {
 
               {/* CTA */}
               <Link
-                href="/daftar"
-                className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-base transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                href="/futuristic-run/daftar"
+                className="relative overflow-hidden w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-base transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
                 style={{
                   background: "linear-gradient(135deg, #8B00FF, #2A4FFF)",
                   color: "white",
@@ -110,12 +112,14 @@ export default function CategoriesSection() {
                   boxShadow: "0 0 30px rgba(139,0,255,0.4)",
                 }}
               >
+                <span className="shine-sweep" />
                 <Zap size={20} />
                 DAFTAR SEKARANG
                 <ArrowRight size={20} />
               </Link>
             </div>
           </div>
+          </HoverTiltCard>
         </div>
       </div>
     </section>

@@ -99,7 +99,7 @@ export default function JerseySection() {
               </div>
 
               <Link
-                href="/daftar"
+                href="/futuristic-run/daftar"
                 className="btn-neon mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-bold sm:w-auto"
               >
                 <Zap size={16} />
