@@ -1,0 +1,41 @@
+import { NextRequest, NextResponse } from "next/server";
+import { insforge } from "@/lib/insforge";
+
+export async function GET(req: NextRequest) {
+  try {
+    const eventType = req.nextUrl.searchParams.get("eventType") ?? "futuristic-run";
+
+    const { data: settings, error } = await insforge.database
+      .from("event_settings")
+      .select("key, value")
+      .eq("event_type", eventType)
+      .in("key", [
+        "payment_bank_name",
+        "payment_bank_account",
+        "payment_bank_holder",
+        "payment_qris_nmid",
+        "payment_qris_image_url",
+        "registration_fee",
+        "payment_transfer_enabled",
+        "payment_qris_enabled",
+      ]);
+
+    if (error) throw error;
+
+    const map = Object.fromEntries((settings ?? []).map((s) => [s.key, s.value]));
+
+    return NextResponse.json({
+      bankName: map.payment_bank_name ?? "BRI",
+      bankAccount: map.payment_bank_account ?? "-",
+      bankHolder: map.payment_bank_holder ?? "Himatekno UMP",
+      qrisNmid: map.payment_qris_nmid ?? "-",
+      qrisImageUrl: map.payment_qris_image_url ?? "",
+      registrationFee: parseInt(map.registration_fee ?? "200000"),
+      transferEnabled: map.payment_transfer_enabled === "true",
+      qrisEnabled: map.payment_qris_enabled === "true",
+    });
+  } catch (err) {
+    console.error("[GET /api/payment-info]", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}

@@ -1,0 +1,113 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Event {
+  id        Int      @id @default(autoincrement())
+  slug      String   @unique
+  name      String
+  theme     String?
+  isOpen    Boolean  @default(true) @map("is_open")
+  eventDate DateTime? @map("event_date")
+  location  String?
+  deadline  DateTime?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  categories EventCategory[]
+
+  @@map("events")
+}
+
+model EventCategory {
+  id        Int      @id @default(autoincrement())
+  eventType String   @map("event_type")
+  code      String
+  label     String
+  price     Int
+  quota     Int
+  minAge    Int?     @map("min_age")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  event Event @relation(fields: [eventType], references: [slug])
+
+  @@unique([eventType, code])
+  @@map("event_categories")
+}
+
+model Participant {
+  id        Int      @id @default(autoincrement())
+  regNumber String   @unique @map("reg_number")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Multi-event
+  eventType String   @default("futuristic-run") @map("event_type")
+
+  // Data Diri
+  fullName   String  @map("full_name")
+  nik        String
+  gender     String
+  birthPlace String  @map("birth_place")
+  birthDate  DateTime @map("birth_date")
+  phone      String
+  email      String
+  address    String
+  city       String
+  province   String
+
+  // Data Lomba
+  category             String
+  jerseySize           String  @map("jersey_size")
+  bibName              String  @map("bib_name")
+  emergencyContactName  String? @map("emergency_contact_name")
+  emergencyContactPhone String? @map("emergency_contact_phone")
+  bloodType            String? @map("blood_type")
+  medicalHistory       String? @map("medical_history")
+  runningClub          String? @map("running_club")
+
+  // Pembayaran
+  paymentMethod   String? @map("payment_method")
+  paymentStatus   String  @default("pending") @map("payment_status")
+  paymentProof    String? @map("payment_proof")
+  paymentAmount   Int     @map("payment_amount")
+  verifiedAt      DateTime? @map("verified_at")
+  verifiedBy      String?   @map("verified_by")
+  rejectionReason String? @map("rejection_reason")
+
+  // BIB
+  bibNumber Int? @unique @map("bib_number")
+
+  // Status
+  status String @default("registered")
+
+  @@map("participants")
+}
+
+model AdminUser {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("admin")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("admin_users")
+}
+
+model EventSetting {
+  id        Int      @id @default(autoincrement())
+  eventType String?  @map("event_type")
+  key       String
+  value     String
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  @@unique([eventType, key])
+  @@map("event_settings")
+}

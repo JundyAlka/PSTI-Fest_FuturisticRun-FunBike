@@ -1,0 +1,367 @@
+"use client";
+/* eslint-disable @next/next/no-img-element */
+import { useEffect, useState } from "react";
+import { Settings, Save, ToggleLeft, ToggleRight, CreditCard, Building2, QrCode } from "lucide-react";
+import LoadingPanel from "@/components/LoadingPanel";
+
+interface SettingsState {
+  registration_open: string;
+  quota_5k: string;
+  event_date: string;
+  event_location: string;
+  early_bird_deadline: string;
+  registration_deadline: string;
+  // Payment settings
+  payment_bank_name: string;
+  payment_bank_account: string;
+  payment_bank_holder: string;
+  payment_qris_nmid: string;
+  payment_qris_image_url: string;
+  registration_fee: string;
+  payment_transfer_enabled: string;
+  payment_qris_enabled: string;
+}
+
+const defaultSettings: SettingsState = {
+  registration_open: "true",
+  quota_5k: "200",
+  event_date: "",
+  event_location: "",
+  early_bird_deadline: "",
+  registration_deadline: "",
+  payment_bank_name: "BRI",
+  payment_bank_account: "",
+  payment_bank_holder: "Himatekno UMP",
+  payment_qris_nmid: "",
+  payment_qris_image_url: "",
+  registration_fee: "200000",
+  payment_transfer_enabled: "true",
+  payment_qris_enabled: "true",
+};
+
+function SectionCard({ icon: Icon, title, color = "#00E5FF", children }: {
+  icon: React.ElementType; title: string; color?: string; children: React.ReactNode;
+}) {
+  return (
+    <div className="card-animated glass-card rounded-2xl p-6 border border-[#1E3A5F]">
+      <div className="flex items-center gap-2 mb-5">
+        <Icon size={16} style={{ color }} />
+        <h2 className="text-white font-bold text-sm" style={{ fontFamily: "Orbitron, sans-serif" }}>
+          {title}
+        </h2>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Toggle({ label, desc, value, onChange }: { label: string; desc: string; value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div className="card-animated flex items-center justify-between p-4 rounded-xl bg-[#0A0E27] border border-[#1E3A5F]">
+      <div>
+        <div className="text-white font-semibold text-sm">{label}</div>
+        <div className="text-[#B0C4DE] text-xs mt-0.5">{desc}</div>
+      </div>
+      <button
+        onClick={() => onChange(!value)}
+        className={`transition-colors flex-shrink-0 ${value ? "text-[#00E5FF]" : "text-[#B0C4DE]"}`}
+      >
+        {value ? <ToggleRight size={36} /> : <ToggleLeft size={36} />}
+      </button>
+    </div>
+  );
+}
+
+export default function PengaturanPage() {
+  const [settings, setSettings] = useState<SettingsState>(defaultSettings);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [activeTab, setActiveTab] = useState<"event" | "payment">("event");
+
+  useEffect(() => {
+    fetch("/api/admin/settings?eventType=futuristic-run")
+      .then((r) => r.json())
+      .then((data) => setSettings((prev) => ({ ...prev, ...data })))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    await fetch("/api/admin/settings?eventType=futuristic-run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settings),
+    });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
+  const set = (key: keyof SettingsState, value: string) =>
+    setSettings((s) => ({ ...s, [key]: value }));
+
+  const inp = "neon-input w-full rounded-xl px-4 py-3 text-sm";
+
+  const tabs = [
+    { id: "event" as const, label: "Event & Kuota", icon: Settings },
+    { id: "payment" as const, label: "Pembayaran", icon: CreditCard },
+  ];
+
+  const feeFormatted = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(
+    parseInt(settings.registration_fee || "0")
+  );
+
+  return (
+    <div className="page-animate p-6 sm:p-8 max-w-3xl">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-black text-white mb-1" style={{ fontFamily: "Orbitron, sans-serif" }}>
+          PENGATURAN
+        </h1>
+        <p className="text-[#B0C4DE] text-sm">Konfigurasi event, kuota, dan sistem pembayaran</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="card-animated flex gap-2 mb-6 p-1 glass-card rounded-xl border border-[#1E3A5F]">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+              activeTab === tab.id
+                ? "bg-[#00E5FF] text-[#0A0E27]"
+                : "text-[#B0C4DE] hover:text-white"
+            }`}
+            style={{ fontFamily: "Orbitron, sans-serif", fontSize: "0.7rem", letterSpacing: "1px" }}
+          >
+            <tab.icon size={14} />
+            {tab.label.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <LoadingPanel label="Memuat pengaturan" />
+      ) : (
+        <div className="stagger-list space-y-6">
+          {/* ── EVENT TAB ── */}
+          {activeTab === "event" && (
+            <>
+              <SectionCard icon={Settings} title="STATUS PENDAFTARAN">
+                <Toggle
+                  label="Pendaftaran Terbuka"
+                  desc={settings.registration_open === "true" ? "Peserta dapat mendaftar sekarang" : "Pendaftaran sedang ditutup"}
+                  value={settings.registration_open === "true"}
+                  onChange={(v) => set("registration_open", v ? "true" : "false")}
+                />
+              </SectionCard>
+
+              <SectionCard icon={Settings} title="KUOTA PESERTA" color="#8B00FF">
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "#8B00FF" }}>Run 5K</label>
+                  <input
+                    type="number"
+                    className={inp}
+                    value={settings.quota_5k}
+                    onChange={(e) => set("quota_5k", e.target.value)}
+                    min={1}
+                    max={9999}
+                  />
+                  <p className="text-[#B0C4DE] text-xs mt-1">Total slot yang tersedia untuk peserta Run 5K</p>
+                </div>
+              </SectionCard>
+
+              <SectionCard icon={Settings} title="INFO EVENT" color="#FF8C00">
+                <div className="space-y-4">
+                  {[
+                    { key: "event_date" as keyof SettingsState, label: "Tanggal Event", type: "date" },
+                    { key: "event_location" as keyof SettingsState, label: "Lokasi Event", type: "text", placeholder: "Nama venue / lokasi" },
+                    { key: "early_bird_deadline" as keyof SettingsState, label: "Batas Early Bird", type: "date" },
+                    { key: "registration_deadline" as keyof SettingsState, label: "Batas Pendaftaran", type: "date" },
+                  ].map(({ key, label, type, placeholder }) => (
+                    <div key={key}>
+                      <label className="block text-[#B0C4DE] text-sm mb-1.5">{label}</label>
+                      <input
+                        type={type}
+                        className={inp}
+                        value={settings[key]}
+                        placeholder={placeholder}
+                        onChange={(e) => set(key, e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>
+            </>
+          )}
+
+          {/* ── PAYMENT TAB ── */}
+          {activeTab === "payment" && (
+            <>
+              {/* Biaya pendaftaran */}
+              <SectionCard icon={CreditCard} title="BIAYA PENDAFTARAN">
+                <div>
+                  <label className="block text-[#B0C4DE] text-sm mb-1.5">Biaya Run 5K (Rp)</label>
+                  <input
+                    type="number"
+                    className={inp}
+                    value={settings.registration_fee}
+                    onChange={(e) => set("registration_fee", e.target.value)}
+                    min={0}
+                    step={1000}
+                  />
+                  <div className="mt-2 p-3 rounded-xl bg-[#FFD700]/5 border border-[#FFD700]/20 flex items-center justify-between">
+                    <span className="text-[#B0C4DE] text-xs">Tampil di form pendaftaran</span>
+                    <span className="text-[#FFD700] font-black text-sm" style={{ fontFamily: "Orbitron, sans-serif" }}>
+                      {feeFormatted}
+                    </span>
+                  </div>
+                </div>
+              </SectionCard>
+
+              {/* Metode pembayaran toggle */}
+              <SectionCard icon={CreditCard} title="METODE PEMBAYARAN AKTIF" color="#8B00FF">
+                <div className="space-y-3">
+                  <Toggle
+                    label="Transfer Bank"
+                    desc="Peserta dapat memilih transfer bank manual"
+                    value={settings.payment_transfer_enabled === "true"}
+                    onChange={(v) => set("payment_transfer_enabled", v ? "true" : "false")}
+                  />
+                  <Toggle
+                    label="QRIS"
+                    desc="Peserta dapat membayar via QRIS (scan QR)"
+                    value={settings.payment_qris_enabled === "true"}
+                    onChange={(v) => set("payment_qris_enabled", v ? "true" : "false")}
+                  />
+                </div>
+              </SectionCard>
+
+              {/* Transfer Bank */}
+              <SectionCard icon={Building2} title="REKENING BANK" color="#00E5FF">
+                <div className="space-y-4">
+                  {[
+                    { key: "payment_bank_name" as keyof SettingsState, label: "Nama Bank", placeholder: "Contoh: BRI, BNI, Mandiri" },
+                    { key: "payment_bank_account" as keyof SettingsState, label: "Nomor Rekening", placeholder: "Contoh: 1234-5678-9012-3456" },
+                    { key: "payment_bank_holder" as keyof SettingsState, label: "Atas Nama", placeholder: "Nama pemilik rekening" },
+                  ].map(({ key, label, placeholder }) => (
+                    <div key={key}>
+                      <label className="block text-[#B0C4DE] text-sm mb-1.5">{label}</label>
+                      <input
+                        type="text"
+                        className={inp}
+                        value={settings[key]}
+                        placeholder={placeholder}
+                        onChange={(e) => set(key, e.target.value)}
+                      />
+                    </div>
+                  ))}
+
+                  {/* Preview */}
+                  {settings.payment_bank_account && (
+                    <div className="p-4 rounded-xl border border-[#00E5FF]/20 bg-[#00E5FF]/5 space-y-2">
+                      <div className="text-[#00E5FF] text-xs font-bold tracking-widest mb-2" style={{ fontFamily: "Orbitron, sans-serif" }}>
+                        PREVIEW TAMPILAN PESERTA
+                      </div>
+                      {[
+                        { label: "Bank", value: settings.payment_bank_name || "-" },
+                        { label: "No. Rekening", value: settings.payment_bank_account },
+                        { label: "Atas Nama", value: settings.payment_bank_holder || "-" },
+                        { label: "Jumlah Transfer", value: `${feeFormatted} (tepat)` },
+                      ].map((r) => (
+                        <div key={r.label} className="flex justify-between text-sm">
+                          <span className="text-[#B0C4DE]">{r.label}</span>
+                          <span className="text-white font-semibold">{r.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </SectionCard>
+
+              {/* QRIS */}
+              <SectionCard icon={QrCode} title="QRIS" color="#8B00FF">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[#B0C4DE] text-sm mb-1.5">NMID (Nomor Merchant)</label>
+                    <input
+                      type="text"
+                      className={inp}
+                      value={settings.payment_qris_nmid}
+                      placeholder="Contoh: ID1020304050607"
+                      onChange={(e) => set("payment_qris_nmid", e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[#B0C4DE] text-sm mb-1.5">URL Gambar QR Code</label>
+                    <input
+                      type="text"
+                      className={inp}
+                      value={settings.payment_qris_image_url}
+                      placeholder="https://... (URL gambar QR Code QRIS Anda)"
+                      onChange={(e) => set("payment_qris_image_url", e.target.value)}
+                    />
+                    <p className="text-[#B0C4DE] text-xs mt-1.5">
+                      Upload gambar QR Code ke Google Drive / Cloudinary lalu paste URL-nya di sini. Gambar ini akan ditampilkan ke peserta.
+                    </p>
+                  </div>
+
+                  {/* QRIS Preview */}
+                  <div className="p-4 rounded-xl border border-[#8B00FF]/20 bg-[#8B00FF]/5">
+                    <div className="text-[#8B00FF] text-xs font-bold tracking-widest mb-3" style={{ fontFamily: "Orbitron, sans-serif" }}>
+                      PREVIEW QR CODE
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="w-32 h-32 bg-white rounded-xl p-2 flex items-center justify-center flex-shrink-0">
+                        {settings.payment_qris_image_url ? (
+                          <img
+                            src={settings.payment_qris_image_url}
+                            alt="QRIS"
+                            className="w-full h-full object-contain rounded"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                          />
+                        ) : (
+                          <div className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400">
+                            <QrCode size={28} />
+                            <span className="text-[9px] mt-1 text-center">Belum ada QR</span>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-white font-bold text-sm">{settings.payment_bank_holder || "Himatekno UMP"}</div>
+                        {settings.payment_qris_nmid && (
+                          <div className="text-[#B0C4DE] text-xs mt-0.5">NMID: {settings.payment_qris_nmid}</div>
+                        )}
+                        <div className="text-[#FFD700] font-black mt-1" style={{ fontFamily: "Orbitron, sans-serif" }}>
+                          {feeFormatted}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </SectionCard>
+            </>
+          )}
+
+          {/* Save button */}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-neon flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold disabled:opacity-50 cursor-pointer w-full sm:w-auto justify-center"
+          >
+            {saving ? (
+              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : saved ? (
+              "✓"
+            ) : (
+              <Save size={16} />
+            )}
+            {saved ? "✓ TERSIMPAN!" : saving ? "Menyimpan..." : "SIMPAN PENGATURAN"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

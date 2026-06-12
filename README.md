@@ -1,36 +1,139 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
 
-## Getting Started
+![Futuristic RUN 2026](public/logo-futuristicrun.png)
 
-First, run the development server:
+# PSTI FEST — Futuristic Run & Fun Bike
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### *Run The Future, Shine The Night*
+
+A modern, full-stack event registration platform powering **Futuristic RUN 2026** — a night running event with a futuristic neon aesthetic — and **Fun Bike 2026**. Built with Next.js 16, powered by InsForge (PostgreSQL), and designed for a seamless mobile-first experience.
+
+[![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Prisma](https://img.shields.io/badge/Prisma_7-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://prisma.io)
+[![InsForge](https://img.shields.io/badge/InsForge-6C63FF?style=flat-square)](https://insforge.dev)
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)](https://framer.com/motion)
+
+---
+
+</div>
+
+## ✨ Highlights
+
+- **Immersive Landing Page** — Full-screen hero with particle canvas, neon glow effects, glassmorphism cards, scroll-reveal animations, and a real-time countdown timer
+- **Multi-Step Registration** — 3-step form (Personal Data → Race Data → Payment) with real-time validation, localStorage persistence, and inline error handling
+- **Admin Dashboard** — Real-time stats, participant management, payment verification (approve/reject), CSV export, and per-event settings panel
+- **Multi-Event Architecture** — Database-driven event system supporting multiple events with independent categories, quotas, pricing, and settings
+- **Mobile-First Design** — Responsive layouts with breakpoints at 640px and 1024px, optimized touch targets, and accessible form controls
+- **Email Notifications** — Automated transactional emails via Resend for registration confirmation, payment verification, and rejection notices
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Next.js 16 App Router                │
+│                                                         │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────────────┐  │
+│  │  Landing  │  │ Register │  │   Admin Dashboard    │  │
+│  │  Page     │  │  Form    │  │  (Auth Protected)    │  │
+│  └─────┬─────┘  └────┬─────┘  └──────────┬───────────┘  │
+│        │              │                   │              │
+│  ┌─────┴──────────────┴───────────────────┴──────────┐  │
+│  │              API Routes (REST)                     │  │
+│  │  /api/register  /api/quota  /api/admin/*           │  │
+│  └───────────────────────┬───────────────────────────┘  │
+│                          │                              │
+│  ┌───────────────────────┴───────────────────────────┐  │
+│  │         InsForge SDK  (PostgreSQL + Storage)       │  │
+│  │  events · event_categories · participants ·        │  │
+│  │  event_settings · admin_users                      │  │
+│  └───────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🗃️ Database Schema
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Table | Purpose |
+|-------|---------|
+| `events` | Event definitions (slug, name, theme, dates) |
+| `event_categories` | Per-event categories with price, quota, min age |
+| `participants` | Full participant records with payment tracking |
+| `event_settings` | Key-value settings scoped per event |
+| `admin_users` | Admin accounts with bcrypt-hashed passwords |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🎨 Design System
 
-## Learn More
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--bg-base` | `#0A0E27` | Deep space navy background |
+| `--accent-1` | `#00E5FF` | Neon cyan — primary accent |
+| `--accent-2` | `#8B00FF` | Neon purple — secondary |
+| `--accent-3` | `#FF006E` | Neon pink — alerts, CTA |
+| `--text-accent` | `#FFD700` | Gold — pricing, highlights |
 
-To learn more about Next.js, take a look at the following resources:
+Typography: **Orbitron** (headings) + **Inter** (body) + **Rajdhani** (labels)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Visual language: Glassmorphism cards, neon glow borders, gradient buttons, particle canvas backgrounds, scroll-triggered reveal animations via Framer Motion.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📁 Project Structure
 
-## Deploy on Vercel
+```
+app-src/
+├── src/
+│   ├── app/
+│   │   ├── page.tsx                  # Landing page
+│   │   ├── daftar/page.tsx           # Registration form
+│   │   ├── konfirmasi/page.tsx       # Post-registration confirmation
+│   │   ├── admin/                    # Dashboard, participants, settings
+│   │   └── api/                      # REST API routes
+│   ├── components/
+│   │   ├── sections/                 # Hero, About, Categories, Jersey, Timeline, Rules, FAQ
+│   │   ├── forms/                    # Multi-step registration form
+│   │   └── admin/                    # Admin sidebar
+│   └── lib/
+│       ├── insforge.ts               # InsForge client
+│       ├── validations.ts            # Zod schemas
+│       ├── email.ts                  # Resend email helpers
+│       └── utils.ts                  # Shared utilities
+├── prisma/
+│   ├── schema.prisma                 # Data model
+│   ├── insforge-schema.sql           # PostgreSQL reference schema
+│   └── migrations/                   # SQLite migrations
+└── migrations/                       # InsForge (PostgreSQL) migrations
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🚀 Tech Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| UI | React 19, Tailwind CSS 4, Framer Motion |
+| Language | TypeScript 5 |
+| Database | PostgreSQL via InsForge |
+| ORM | Prisma 7 (SQLite for local dev) |
+| Auth | NextAuth.js v5 (credentials) |
+| Validation | Zod |
+| Email | Resend |
+| Export | PapaParse (CSV) |
+| Icons | Lucide React |
+
+## 📌 Current Events
+
+| Event | Category | Price | Quota |
+|-------|----------|-------|-------|
+| Futuristic RUN 2026 | Run 5K | Rp 200.000 | 200 |
+| Fun Bike 2026 | Fun Bike Ride | Rp 150.000 | 300 |
+
+## 📄 License
+
+This project was developed for **PSTI FEST 2026**.
+
+---
+
+<div align="center">
+
+*Built with passion for PSTI FEST — Futuristic RUN 2026*
+
+</div>
