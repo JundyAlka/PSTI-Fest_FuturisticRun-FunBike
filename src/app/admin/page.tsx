@@ -23,14 +23,26 @@ export default function AdminDashboard() {
   const [activeEvent, setActiveEvent] = useState<"futuristic-run" | "fun-bike">("futuristic-run");
 
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
+    const loadingTimer = setTimeout(() => {
+      if (!cancelled) setLoading(true);
+    }, 0);
+
     Promise.all([
       fetch(`/api/admin/stats?eventType=${activeEvent}`).then((r) => r.json()),
       fetch(`/api/admin/participants?limit=8&eventType=${activeEvent}`).then((r) => r.json()),
     ]).then(([s, p]) => {
+      if (cancelled) return;
       setStats(s);
       setRecent(p.participants ?? []);
-    }).finally(() => setLoading(false));
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(loadingTimer);
+    };
   }, [activeEvent]);
 
   const statCards = stats ? [
@@ -51,7 +63,7 @@ export default function AdminDashboard() {
             DASHBOARD
           </h1>
           <p className="text-[#B0C4DE] text-sm mt-1">
-            {activeEvent === "futuristic-run" ? "Futuristic RUN 2026" : "Fun Bike 2026"} — Overview
+            {activeEvent === "futuristic-run" ? "Futuristic Run 2026" : "Futuristic Bike 2026"} — Overview
           </p>
         </div>
         <a
@@ -65,8 +77,8 @@ export default function AdminDashboard() {
       {/* Event Tabs */}
       <div className="card-animated flex gap-2 mb-6 p-1 glass-card rounded-xl border border-[#1E3A5F]">
         {([
-          { id: "futuristic-run" as const, label: "FUTURISTIC RUN", color: "#00E5FF" },
-          { id: "fun-bike" as const, label: "FUN BIKE", color: "#FF6B2C" },
+          { id: "futuristic-run" as const, label: "Futuristic Run", color: "#00E5FF" },
+          { id: "fun-bike" as const, label: "Futuristic Bike", color: "#FF6B2C" },
         ]).map((tab) => (
           <button
             key={tab.id}

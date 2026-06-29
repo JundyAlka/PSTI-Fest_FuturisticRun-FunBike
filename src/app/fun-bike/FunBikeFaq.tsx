@@ -1,106 +1,82 @@
 "use client";
 import { useState } from "react";
-import { ChevronDown, Shield, HelpCircle } from "lucide-react";
+import { ChevronDown, HelpCircle } from "lucide-react";
+import TbdBadge, { hasAnnouncedValue } from "@/components/ui/TbdBadge";
 
-const items = [
-  {
-    type: "rule",
-    title: "Syarat & Ketentuan Umum",
-    content: "Peserta wajib mendaftarkan diri melalui website resmi. Pendaftaran dianggap sah setelah pembayaran terverifikasi. Peserta wajib membawa bukti pendaftaran dan helm pada hari H. Data yang telah diisi tidak dapat diubah setelah pendaftaran dikonfirmasi.",
-  },
-  {
-    type: "rule",
-    title: "Ketentuan Usia & Sepeda",
-    content: "Fun Bike terbuka untuk semua usia. Peserta di bawah 12 tahun wajib didampingi orang dewasa. Semua jenis sepeda diperbolehkan: road bike, MTB, hybrid, folding, BMX, dan sepeda kota. Sepeda wajib dalam kondisi laik jalan.",
-  },
-  {
-    type: "rule",
-    title: "Prosedur Pengambilan Race Pack",
-    content: "Race pack (jersey + goodie bag + nomor peserta) diambil pada 20–21 Juni 2026 di lokasi yang akan diinformasikan. Peserta wajib menunjukkan bukti registrasi. Race pack tidak dapat diwakilkan tanpa surat kuasa.",
-  },
-  {
-    type: "rule",
-    title: "Keselamatan & Helm",
-    content: "Penggunaan helm WAJIB selama event. Peserta yang tidak memakai helm tidak akan diperbolehkan start. Disarankan menggunakan lampu depan dan belakang sepeda. Patuhi instruksi marshal di sepanjang rute.",
-  },
-  {
-    type: "rule",
-    title: "Disclaimer Kesehatan",
-    content: "Peserta wajib dalam kondisi sehat. Peserta dengan kondisi medis tertentu dianjurkan berkonsultasi dengan dokter sebelum mendaftar. Panitia tidak bertanggung jawab atas cedera yang terjadi selama event.",
-  },
-  {
-    type: "faq",
-    title: "Apakah bisa mendaftar lebih dari satu event?",
-    content: "Ya! Anda bisa mendaftar Fun Bike dan Futuristic RUN secara terpisah dengan data yang berbeda. Namun, satu orang hanya boleh mendaftar satu kali per event.",
-  },
-  {
-    type: "faq",
-    title: "Bagaimana cara membayar?",
-    content: "Tersedia 2 metode: Transfer bank dan QRIS. Setelah mendaftar, ikuti instruksi pembayaran di halaman konfirmasi. Pembayaran akan diverifikasi dalam 1×24 jam kerja.",
-  },
-  {
-    type: "faq",
-    title: "Apakah jersey bisa ditukar ukurannya?",
-    content: "Ukuran jersey dipilih saat pendaftaran dan tidak dapat ditukar. Pastikan memilih ukuran yang tepat berdasarkan size chart yang tersedia.",
-  },
-  {
-    type: "faq",
-    title: "Apakah ada fasilitas parkir?",
-    content: "Panitia menyediakan area parkir sepeda dan kendaraan di sekitar lokasi start. Disarankan datang lebih awal.",
-  },
-  {
-    type: "faq",
-    title: "Apakah rute aman untuk pemula?",
-    content: "Ya! Rute Fun Bike dirancang ramah pemula dengan medan yang relatif datar. Ada beberapa tanjakan ringan namun tidak memerlukan keahlian khusus.",
-  },
-];
+type FaqItem = { q: string; a: string };
 
-export default function FunBikeFaq() {
+function parseFaqSetting(value: string | undefined): FaqItem[] | null {
+  if (!hasAnnouncedValue(value)) return null;
+  try {
+    const parsed = JSON.parse(value as string);
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((item) => ({ q: String(item.q ?? item.question ?? ""), a: String(item.a ?? item.answer ?? "") }))
+        .filter((item) => item.q && item.a);
+    }
+  } catch {
+    return (value as string)
+      .split(/\r?\n/)
+      .map((line) => {
+        const [question, ...answer] = line.split("|");
+        return { q: question?.trim() ?? "", a: answer.join("|").trim() };
+      })
+      .filter((item) => item.q && item.a);
+  }
+  return null;
+}
+
+export default function FunBikeFaq({ settings = {} }: { settings?: Record<string, string> }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const items = parseFaqSetting(settings.faq);
+
+  if (!items?.length) {
+    return (
+      <div className="card-animated mx-auto rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
+        <div className="mb-3 flex justify-center">
+          <TbdBadge className="border-[#FF6B2C]/20 bg-[#FF6B2C]/10 text-gray-700" />
+        </div>
+        <p className="text-sm leading-6 text-gray-500">
+          FAQ resmi akan tampil setelah admin mengisi key <span className="font-mono text-[#FF6B2C]">faq</span> di settings.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="stagger-list space-y-3">
       {items.map((item, i) => (
         <div
-          key={i}
-          className="card-animated glass-card-light rounded-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:border-[#FF6B2C]/30"
+          key={item.q}
+          className="card-animated glass-card-light overflow-hidden rounded-xl border border-gray-100 transition-all duration-300 hover:border-[#FF6B2C]/30"
         >
           <button
             onClick={() => setOpenIndex(openIndex === i ? null : i)}
-            className="w-full flex items-center justify-between p-5 text-left cursor-pointer group"
+            className="group flex w-full cursor-pointer items-center justify-between p-5 text-left"
           >
             <div className="flex items-center gap-3">
               <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg"
                 style={{
-                  background: item.type === "rule" ? "rgba(255,107,44,0.1)" : "rgba(123,193,66,0.1)",
-                  border: `1px solid ${item.type === "rule" ? "rgba(255,107,44,0.2)" : "rgba(123,193,66,0.2)"}`,
+                  background: "rgba(255,107,44,0.1)",
+                  border: "1px solid rgba(255,107,44,0.2)",
                 }}
               >
-                {item.type === "rule" ? (
-                  <Shield size={14} className="text-[#FF6B2C]" />
-                ) : (
-                  <HelpCircle size={14} className="text-[#7BC142]" />
-                )}
+                <HelpCircle size={14} className="text-[#FF6B2C]" />
               </div>
-              <span className="text-gray-900 font-medium text-sm sm:text-base group-hover:text-[#FF6B2C] transition-colors pr-4">
-                {item.title}
+              <span className="pr-4 text-sm font-medium text-gray-900 transition-colors group-hover:text-[#FF6B2C] sm:text-base">
+                {item.q}
               </span>
             </div>
             <ChevronDown
               size={18}
-              className={`text-[#FF6B2C] flex-shrink-0 transition-transform duration-300 ${
-                openIndex === i ? "rotate-180" : ""
-              }`}
+              className={`flex-shrink-0 text-[#FF6B2C] transition-transform duration-300 ${openIndex === i ? "rotate-180" : ""}`}
             />
           </button>
           <div className={`accordion-content ${openIndex === i ? "open" : ""}`}>
             <div className="px-5 pb-5">
-              <div
-                className="pl-11 text-gray-600 text-sm leading-relaxed border-l-2 ml-4"
-                style={{ borderColor: item.type === "rule" ? "rgba(255,107,44,0.3)" : "rgba(123,193,66,0.3)" }}
-              >
-                {item.content}
+              <div className="ml-4 border-l-2 border-[#FF6B2C]/30 pl-11 text-sm leading-relaxed text-gray-600">
+                {item.a}
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 import { type ReactNode, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface HoverTiltCardProps {
   children: ReactNode;
@@ -11,12 +11,14 @@ interface HoverTiltCardProps {
 
 export default function HoverTiltCard({ children, className = "", maxTilt = 10, glareColor = "#ffffff" }: HoverTiltCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [glareX, setGlareX] = useState(50);
   const [glareY, setGlareY] = useState(50);
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    if (reducedMotion || window.matchMedia("(pointer: coarse)").matches) return;
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
@@ -40,7 +42,7 @@ export default function HoverTiltCard({ children, className = "", maxTilt = 10, 
       className={`relative ${className}`}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      animate={{ rotateX, rotateY, transition: { type: "spring", stiffness: 200, damping: 25 } }}
+      animate={reducedMotion ? undefined : { rotateX, rotateY, transition: { type: "spring", stiffness: 200, damping: 25 } }}
       style={{ transformStyle: "preserve-3d", perspective: "1000px" }}
     >
       <div

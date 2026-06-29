@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import TbdBadge from "@/components/ui/TbdBadge";
 
 type QuotaMeterProps = {
   category?: string;
@@ -14,10 +15,12 @@ type QuotaState = {
   remaining: number;
 };
 
-export default function QuotaMeter({ category = "5K", fallbackTotal = 200, eventType = "futuristic-run" }: QuotaMeterProps) {
+export default function QuotaMeter({ category = "5K", fallbackTotal = 0, eventType = "futuristic-run" }: QuotaMeterProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const [quota, setQuota] = useState<QuotaState>({
     total: fallbackTotal,
     filled: 0,
@@ -56,6 +59,11 @@ export default function QuotaMeter({ category = "5K", fallbackTotal = 200, event
 
   useEffect(() => {
     let alive = true;
+    const resetTimer = window.setTimeout(() => {
+      if (!alive) return;
+      setLoading(true);
+      setError(false);
+    }, 0);
 
     fetch(`/api/quota?eventType=${encodeURIComponent(eventType)}`, { cache: "no-store" })
       .then((res) => {
@@ -73,7 +81,10 @@ export default function QuotaMeter({ category = "5K", fallbackTotal = 200, event
         if (alive) setQuota({ total, filled, remaining });
       })
       .catch(() => {
-        if (alive) setQuota({ total: fallbackTotal, filled: 0, remaining: fallbackTotal });
+        if (alive) {
+          setError(true);
+          setQuota({ total: fallbackTotal, filled: 0, remaining: fallbackTotal });
+        }
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -81,8 +92,9 @@ export default function QuotaMeter({ category = "5K", fallbackTotal = 200, event
 
     return () => {
       alive = false;
+      window.clearTimeout(resetTimer);
     };
-  }, [category, fallbackTotal, eventType]);
+  }, [category, fallbackTotal, eventType, retryKey]);
 
   useEffect(() => {
     if (!visible || loading) return;
@@ -133,10 +145,29 @@ export default function QuotaMeter({ category = "5K", fallbackTotal = 200, event
             <div className="skeleton-shimmer h-3 w-16 rounded" />
           </div>
         </div>
+      ) : error ? (
+        <div className="rounded-xl border border-[#FF8C00]/30 bg-[#FF8C00]/10 p-4 text-sm">
+          <div className="mb-2 font-semibold text-[#FFB000]">Kuota belum bisa dimuat.</div>
+          <p className="mb-3 text-[#B0C4DE]">Coba lagi sebentar. Pendaftaran tetap mengikuti kuota resmi panitia.</p>
+          <button
+            type="button"
+            onClick={() => setRetryKey((key) => key + 1)}
+            className="min-h-11 rounded-full border border-[#FFB000]/40 px-4 py-2 text-xs font-bold text-[#FFB000] transition-colors hover:bg-[#FFB000]/10"
+          >
+            Coba lagi
+          </button>
+        </div>
+      ) : quota.total <= 0 ? (
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <span className="text-[#B0C4DE]">Kuota Tersedia</span>
+          <TbdBadge className="border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#D7E8FF]" />
+        </div>
       ) : (
         <>
           <div className="mb-2 flex items-center justify-between gap-3 text-sm">
-            <span className="text-[#B0C4DE]">Kuota Tersedia</span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#00E5FF]/25 bg-[#00E5FF]/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-[#00E5FF]">
+              Sisa Slot
+            </span>
             <span className="font-bold text-[#00E5FF]" style={{ fontFamily: "Orbitron, sans-serif" }}>
               {`${displayRemaining} tersisa`}
             </span>

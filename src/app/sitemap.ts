@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
+import { DEFAULT_SITE_URL } from "@/content/brand";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://pstifest.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date().toISOString();

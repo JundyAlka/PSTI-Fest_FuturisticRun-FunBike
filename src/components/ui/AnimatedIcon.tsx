@@ -1,6 +1,7 @@
 "use client";
 import { type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { motion, useInView, useReducedMotion } from "framer-motion";
+import { useRef } from "react";
 
 interface AnimatedIconProps {
   children: ReactNode;
@@ -20,15 +21,20 @@ const animations = {
 };
 
 export default function AnimatedIcon({ children, color = "#00E5FF", size = 28, animate = "sway", className = "" }: AnimatedIconProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.35 });
+  const reducedMotion = useReducedMotion();
   const anim = animations[animate] || animations.sway;
+  const active = !reducedMotion && inView;
 
   return (
     <motion.div
+      ref={ref}
       className={`inline-flex items-center justify-center ${className}`}
       style={{ width: size, height: size, color }}
-      animate={anim.animate}
-      transition={anim.transition}
-      whileHover={{ scale: 1.2, rotate: 15, transition: { duration: 0.2 } }}
+      animate={active ? anim.animate : {}}
+      transition={active ? anim.transition : {}}
+      whileHover={reducedMotion ? undefined : { scale: 1.18, rotate: 12, transition: { duration: 0.2 } }}
     >
       {children}
     </motion.div>

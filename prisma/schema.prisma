@@ -52,7 +52,7 @@ model Participant {
 
   // Data Diri
   fullName   String  @map("full_name")
-  nik        String
+  nik        String?
   gender     String
   birthPlace String  @map("birth_place")
   birthDate  DateTime @map("birth_date")
@@ -71,11 +71,13 @@ model Participant {
   bloodType            String? @map("blood_type")
   medicalHistory       String? @map("medical_history")
   runningClub          String? @map("running_club")
+  bikeType             String? @map("bike_type")
 
   // Pembayaran
   paymentMethod   String? @map("payment_method")
   paymentStatus   String  @default("pending") @map("payment_status")
   paymentProof    String? @map("payment_proof")
+  paymentProofKey String? @map("payment_proof_key")
   paymentAmount   Int     @map("payment_amount")
   verifiedAt      DateTime? @map("verified_at")
   verifiedBy      String?   @map("verified_by")

@@ -11,7 +11,7 @@ export default function FunBikeDaftarPage() {
     <EventThemeProvider eventType="fun-bike">
       <main className="page-animate min-h-screen relative overflow-hidden" style={{ background: "linear-gradient(180deg, #FFF8F0 0%, #FFFFFF 50%, #FFF7ED 100%)" }}>
         <EventNavbar
-          brand={{ title: "FUN BIKE", subtitle: "2026", href: "/fun-bike" }}
+          brand={{ title: "Futuristic Bike", subtitle: "2026", href: "/fun-bike" }}
           navLinks={[{ label: "Kembali ke Info", href: "/fun-bike", isRoute: true }]}
           registerPath="/fun-bike/daftar"
           registerLabel="DAFTAR"
@@ -30,10 +30,10 @@ export default function FunBikeDaftarPage() {
             <h1 className="text-4xl sm:text-5xl font-black text-gray-900 mb-3" style={{ fontFamily: "Orbitron, sans-serif" }}>
               DAFTAR SEKARANG
             </h1>
-            <p className="text-gray-500">Isi formulir berikut untuk bergabung di Fun Bike 2026</p>
+            <p className="text-gray-500">Isi formulir berikut untuk bergabung di Futuristic Bike 2026</p>
           </div>
           <div className="section-reveal-delay-1">
-            <RegistrationForm eventType="fun-bike" categoryLabel="FUN BIKE RIDE" defaultPrice={150000} />
+            <RegistrationForm eventType="fun-bike" categoryLabel="Futuristic Bike Ride" defaultPrice={150000} />
           </div>
         </div>
       </main>

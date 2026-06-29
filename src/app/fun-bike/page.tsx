@@ -1,169 +1,255 @@
 import EventNavbar from "@/components/EventNavbar";
 import EventThemeProvider from "@/components/EventThemeProvider";
 import Link from "next/link";
-import { Bike, MapPin, Calendar, ChevronDown, Clock, Gift, Trophy, Shirt, Medal, Camera, Music, Coffee, Shield, ArrowRight, CheckCircle } from "lucide-react";
+import {
+  ArrowRight,
+  Bike,
+  Calendar,
+  CheckCircle,
+  Gift,
+  Map,
+  MapPin,
+  Music,
+  Navigation,
+  Package,
+  ShieldCheck,
+  Shirt,
+  Sun,
+  Ticket,
+  Clock,
+} from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import FunBikeCountdown from "./FunBikeCountdown";
 import FunBikeFaq from "./FunBikeFaq";
 import ScrollProgressBar from "@/components/ui/ScrollProgressBar";
-import AnimatedIcon from "@/components/ui/AnimatedIcon";
 import HoverTiltCard from "@/components/ui/HoverTiltCard";
-import { EVENT_SEO, eventMetadata, eventJsonLd } from "@/lib/seo";
+import RundownTimeline from "@/components/ui/RundownTimeline";
+import RundownActions from "@/components/ui/RundownActions";
+import MarqueeSponsors from "@/components/ui/MarqueeSponsors";
+import AnimatedIcon from "@/components/ui/AnimatedIcon";
+import SectionHeading from "@/components/ui/SectionHeading";
+import TbdBadge, { hasAnnouncedValue } from "@/components/ui/TbdBadge";
+import QuotaMeter from "@/components/QuotaMeter";
+import { CONTACT_EMAIL, FEST_FULL_NAME, FEST_NAME, FEST_YEAR, ORGANIZER_NAME } from "@/content/brand";
+import { EVENTS } from "@/content/events";
+import { getPublicEventOps } from "@/lib/eventOps";
+import { EVENT_SEO, eventJsonLd, eventMetadata, withOperationalEventSeo } from "@/lib/seo";
+import { eventStartIso, formatEventDate } from "@/lib/eventDate";
 
 const seo = EVENT_SEO["fun-bike"];
-export const metadata: Metadata = eventMetadata(seo);
+const event = EVENTS["fun-bike"];
+export const dynamic = "force-dynamic";
+export async function generateMetadata(): Promise<Metadata> {
+  const ops = await getPublicEventOps("fun-bike");
+  return eventMetadata(withOperationalEventSeo(seo, ops.eventDate, event.startTime, ops.location));
+}
 
 const navLinks = [
   { label: "Beranda", href: "#hero" },
-  { label: "Tentang", href: "#about" },
   { label: "Paket", href: "#package" },
   { label: "Rute", href: "#route" },
-  { label: "Jadwal", href: "#timeline" },
+  { label: "Rundown", href: "#timeline" },
+  { label: "Jersey", href: "#jersey" },
   { label: "FAQ", href: "#faq" },
   { label: "Daftar", href: "/fun-bike/daftar", isRoute: true },
 ];
 
-export default function FunBikePage() {
+function formatCurrency(amount: number | null) {
+  if (!hasAnnouncedValue(amount)) return null;
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(amount as number);
+}
+
+function RoutePlaceholder() {
+  return (
+    <div className="overflow-hidden rounded-3xl border border-[#38BDF8]/30 bg-white shadow-xl">
+      <div className="flex items-center justify-between gap-3 border-b border-gray-100 bg-gradient-to-r from-[#FFF7ED] via-[#FFFBEB] to-[#EFF6FF] p-4">
+        <div className="flex items-center gap-2">
+          <Map size={18} className="text-[#38BDF8]" />
+          <span className="text-sm font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>
+            Komponen Rute
+          </span>
+        </div>
+        <TbdBadge label="Rute sedang disurvei / diukur ulang" className="border-[#38BDF8]/30 bg-[#38BDF8]/10 text-gray-700" />
+      </div>
+      <div className="relative min-h-[320px] bg-[linear-gradient(135deg,#EFF6FF_0%,#FFFFFF_45%,#FFF7ED_100%)] p-5">
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(56,189,248,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(251,146,60,0.28) 1px, transparent 1px)",
+            backgroundSize: "36px 36px",
+          }}
+        />
+        <div className="relative z-10 grid h-full min-h-[280px] place-items-center rounded-2xl border border-dashed border-[#38BDF8]/45 bg-white/70 p-6 text-center">
+          <div>
+            <Navigation size={42} className="mx-auto mb-4 text-[#38BDF8]" />
+            <h3 className="mb-2 text-xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>
+              Siap Diisi Maps / Gambar / GPX
+            </h3>
+            <p className="mx-auto max-w-md text-sm leading-6 text-gray-500">
+              Slot ini sengaja tidak menampilkan jarak atau lintasan palsu. Nanti bisa diisi Google Maps embed, gambar rute statis,
+              atau hasil GPX setelah survei selesai.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default async function FunBikePage() {
+  const ops = await getPublicEventOps("fun-bike");
+  const priceLabel = formatCurrency(ops.price);
+  const contact = ops.contactPerson ?? ops.settings.contact_person;
+  const routeStatus = ops.settings.route_status || "Rute sedang disurvei / diukur ulang";
+  const operationalSeo = withOperationalEventSeo(seo, ops.eventDate, event.startTime, ops.location);
+
   return (
     <EventThemeProvider eventType="fun-bike">
-      <main className="page-animate min-h-screen" style={{ background: "linear-gradient(180deg, #FFF8F0 0%, #FFFFFF 30%, #F0FDF4 60%, #FFF8F0 100%)" }}>
+      <main className="page-animate min-h-screen bg-[#FFF8F0]">
         <ScrollProgressBar color="#FF6B2C" />
         <EventNavbar
-          brand={{ title: "FUN BIKE", subtitle: "2026", href: "/" }}
+          brand={{ title: event.name, subtitle: FEST_YEAR, href: "/" }}
           navLinks={navLinks}
           registerPath="/fun-bike/daftar"
-          registerLabel="DAFTAR SEKARANG"
+          registerLabel="DAFTAR"
           theme="light"
           accentColor="#FF6B2C"
         />
 
-        {/* ======== HERO ======== */}
-        <section id="hero" className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
-          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, #FF7F2A22 0%, #84CC1622 40%, #38BDF822 70%, #FFF8F0 100%)" }} />
-          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#FF6B2C] via-[#F59E0B] to-[#7BC142]" />
+        <section id="hero" className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,#FFF7ED_0%,#FFFBEB_36%,#E0F2FE_72%,#FFFFFF_100%)]" />
+          <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-[#FF6B2C] via-[#F59E0B] to-[#38BDF8]" />
+          <div className="absolute left-1/2 top-20 h-52 w-52 -translate-x-1/2 rounded-full bg-[#F59E0B]/25 blur-3xl" />
 
-          {/* Decorative orbs */}
-          <div className="absolute top-1/4 right-1/4 w-[300px] h-[300px] rounded-full blur-3xl opacity-20 bg-[#FF6B2C]" />
-          <div className="absolute bottom-1/3 left-1/4 w-[250px] h-[250px] rounded-full blur-3xl opacity-15 bg-[#7BC142]" />
-
-          <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 text-center">
-            <div className="badge-sunrise inline-block mb-5 fade-in-up">PSTI FEST 2026 PRESENTS</div>
-
+          <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-16 pt-28 text-center sm:px-6 lg:px-8">
+            <div className="badge-sunrise mb-5 inline-block fade-in-up">{FEST_FULL_NAME} PRESENTS</div>
             <h1 className="fade-in-up-delay-1 mb-4" style={{ fontFamily: "Orbitron, sans-serif", fontSize: "clamp(2.5rem, 7vw, 5rem)", fontWeight: 900, lineHeight: 1.1 }}>
-              <span style={{ background: "linear-gradient(135deg, #FF6B2C 0%, #F59E0B 50%, #7BC142 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                FUN BIKE
+              <span className="bg-gradient-to-r from-[#FF6B2C] via-[#F59E0B] to-[#38BDF8] bg-clip-text text-transparent">
+                {event.name}
               </span>
               <br />
-              <span className="text-gray-900">2026</span>
+              <span className="text-gray-900">{FEST_YEAR}</span>
             </h1>
-
-            <p className="fade-in-up-delay-2 text-[#FF6B2C] font-semibold tracking-[4px] mb-4 text-sm sm:text-base" style={{ fontFamily: "Rajdhani, sans-serif" }}>
-              RIDE THE SUNRISE . FEEL THE JOY
+            <p className="fade-in-up-delay-2 mb-4 text-sm font-semibold tracking-[4px] text-[#FF6B2C] sm:text-base" style={{ fontFamily: "Rajdhani, sans-serif" }}>
+              RIDE PAGI . SUNRISE CERAH . FUN RIDE
+            </p>
+            <p className="mx-auto mb-6 max-w-2xl text-base leading-relaxed text-gray-600 sm:text-lg">
+              Ride pagi bertema sunrise untuk satu paket Fun Ride. Panitia berkoordinasi dengan PLF dan ICF untuk rute,
+              flow start, dan pengalaman gowes yang rapi.
             </p>
 
-            <p className="fade-in-up-delay-2 max-w-2xl mx-auto text-gray-600 text-base sm:text-lg leading-relaxed mb-6">
-              Gowes santai menyambut matahari terbit dengan rute indah Purworejo.
-              Satu paket seru untuk semua level pesepeda — dari pemula sampai pro!
-            </p>
-
-            <div className="fade-in-up-delay-2 flex flex-wrap justify-center gap-4 text-gray-500 text-sm mb-8">
-              <span className="flex items-center gap-1.5"><MapPin size={14} className="text-[#FF6B2C]" /> Purworejo, Jawa Tengah</span>
-              <span className="flex items-center gap-1.5"><Calendar size={14} className="text-[#FF6B2C]" /> 22 Juni 2026</span>
-              <span className="flex items-center gap-1.5"><Bike size={14} className="text-[#FF6B2C]" /> Fun Ride</span>
+            <div className="fade-in-up-delay-2 mb-8 flex flex-wrap justify-center gap-4 text-sm text-gray-500">
+              <span className="flex items-center gap-1.5"><MapPin size={14} className="text-[#FF6B2C]" />{ops.location ?? <TbdBadge className="border-[#FF6B2C]/20 bg-[#FF6B2C]/10 text-gray-700" />}</span>
+              <span className="flex items-center gap-1.5"><Calendar size={14} className="text-[#FF6B2C]" />{ops.eventDate ?? <TbdBadge className="border-[#FF6B2C]/20 bg-[#FF6B2C]/10 text-gray-700" />}</span>
+              <span className="flex items-center gap-1.5"><Bike size={14} className="text-[#FF6B2C]" />Fun Ride</span>
             </div>
 
-            <div className="fade-in-up-delay-3 flex flex-col sm:flex-row gap-3 justify-center mb-10">
-              <Link href="/fun-bike/daftar" className="relative overflow-hidden btn-sunrise flex items-center justify-center gap-2 px-8 py-4 rounded-full text-sm font-bold cursor-pointer">
+            <div className="fade-in-up-delay-3 mb-10 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link href="/fun-bike/daftar" className="btn-sunrise relative flex cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full px-8 py-4 text-sm font-bold">
                 <span className="shine-sweep" />
-                <Bike size={16} /> DAFTAR SEKARANG <ArrowRight size={16} />
+                <Bike size={16} /> DAFTAR <ArrowRight size={16} />
               </Link>
-              <a href="#about" className="btn-outline-sunrise flex items-center justify-center gap-2 px-8 py-4 rounded-full text-sm font-semibold cursor-pointer">
-                Lihat Informasi
-              </a>
+              <Link href="/cek" className="btn-outline-sunrise flex cursor-pointer items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-semibold">
+                Cek Registrasi
+              </Link>
             </div>
 
             <div className="fade-in-up-delay-4">
-              <p className="text-gray-500 text-xs tracking-widest mb-3" style={{ fontFamily: "Orbitron, sans-serif" }}>HITUNG MUNDUR MENUJU HARI H</p>
-              <Suspense fallback={null}><FunBikeCountdown /></Suspense>
-            </div>
-          </div>
-
-          <a href="#about" className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 text-gray-400 hover:text-[#FF6B2C] transition-colors">
-            <span className="text-xs tracking-widest" style={{ fontFamily: "Orbitron, sans-serif" }}>SCROLL</span>
-            <ChevronDown size={20} className="animate-bounce" />
-          </a>
-        </section>
-
-        {/* ======== STATS ======== */}
-        <section className="py-12 bg-white">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 stagger-list">
-              {[
-                { value: "300", label: "Kuota Peserta", color: "#FF6B2C" },
-                { value: "15K", label: "Jarak Rute", color: "#7BC142" },
-                { value: "6+", label: "Titik Kumpul", color: "#38BDF8" },
-                { value: "2026", label: "Tahun Event", color: "#F59E0B" },
-              ].map((stat) => (
-                <div key={stat.label} className="card-animated glass-card-light p-6 rounded-2xl text-center">
-                  <div className="text-3xl font-black mb-1" style={{ fontFamily: "Orbitron, sans-serif", color: stat.color }}>{stat.value}</div>
-                  <div className="text-gray-600 text-xs">{stat.label}</div>
-                </div>
-              ))}
+              <p className="mb-3 text-xs tracking-widest text-gray-500" style={{ fontFamily: "Orbitron, sans-serif" }}>HITUNG MUNDUR START PAGI</p>
+              <Suspense fallback={null}><FunBikeCountdown targetDate={eventStartIso(ops.eventDate, event.startTime)} /></Suspense>
             </div>
           </div>
         </section>
 
-        {/* ======== ABOUT ======== */}
-        <section id="about" className="py-20 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-14">
-              <div className="badge-sunrise inline-block mb-4">TENTANG EVENT</div>
-              <h2 className="text-4xl sm:text-5xl font-black text-gray-900 mb-4" style={{ fontFamily: "Orbitron, sans-serif" }}>
-                TENTANG FUN BIKE
-              </h2>
-              <div className="w-24 h-1 mx-auto rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#7BC142]" />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div className="slide-in-left">
-                <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                  <span className="text-gray-900 font-semibold">Fun Bike 2026</span> adalah event gowes santai bertema sunrise ride yang
-                  diselenggarakan oleh <span className="text-[#FF6B2C] font-semibold">Himatekno UMPWR</span>. Bersepeda menyusuri rute indah
-                  Purworejo saat matahari terbit — pengalaman yang menyegarkan dan tak terlupakan.
-                </p>
-                <p className="text-gray-500 leading-relaxed mb-8">
-                  Terbuka untuk semua jenis sepeda dan semua level pesepeda. Tidak ada kompetisi — yang penting
-                  kebersamaan, kesehatan, dan menikmati perjalanan!
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 stagger-list">
-                  {[
-                    { icon: Shirt, text: "Jersey cycling eksklusif" },
-                    { icon: Medal, text: "Finisher medal" },
-                    { icon: Coffee, text: "Snack & minuman di rest point" },
-                    { icon: Gift, text: "Doorprize menarik" },
-                    { icon: Camera, text: "Dokumentasi profesional" },
-                    { icon: Music, text: "Hiburan di titik finish" },
-                  ].map((b, i) => (
-                    <div key={i} className="card-animated flex items-center gap-3 glass-card-light p-3 rounded-xl border border-gray-100 hover:border-[#FF6B2C]/30 transition-all duration-300 group">
-                      <div className="w-8 h-8 rounded-lg bg-[#FF6B2C]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#FF6B2C]/20 transition-all">
-                        <b.icon size={16} className="text-[#FF6B2C]" />
+        <section id="package" className="overflow-hidden bg-white pb-12 pt-10 sm:py-20">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+            <SectionHeading
+              eyebrow="Paket"
+              title="FUN RIDE"
+              subtitle="Satu paket final, tanpa pilihan jarak atau kategori ganda."
+              accentColor="#C2410C"
+              accentColor2="#0284C7"
+              lightSurface
+              titleFontFamily="Rajdhani, sans-serif"
+              className="mb-10 sm:mb-14"
+            />
+
+            <div className="card-animated relative mx-auto max-w-2xl">
+              <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF6B2C] via-[#F59E0B] to-[#38BDF8] opacity-30 blur-xl" />
+              <HoverTiltCard maxTilt={5} glareColor="#FF6B2C">
+                <div className="relative overflow-hidden rounded-3xl border border-[#FF6B2C]/20 bg-white shadow-xl">
+                  <div className="h-1.5 w-full bg-gradient-to-r from-[#FF6B2C] via-[#F59E0B] to-[#38BDF8]" />
+                  <div className="p-8 sm:p-12">
+                    <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center">
+                      <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl border border-[#FF6B2C]/20 bg-[#FF6B2C]/10">
+                        <Bike size={34} className="text-[#FF6B2C]" />
                       </div>
-                      <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">{b.text}</span>
+                      <div>
+                        <div className="mb-1 text-sm tracking-widest text-gray-400" style={{ fontFamily: "Rajdhani, sans-serif" }}>{event.name} {FEST_YEAR}</div>
+                        <h3 className="text-4xl font-black text-gray-900 sm:text-5xl" style={{ fontFamily: "Orbitron, sans-serif" }}>FUN RIDE</h3>
+                        <p className="text-sm text-gray-500">Paket ride pagi bertema sunrise.</p>
+                      </div>
                     </div>
-                  ))}
+
+                    <div className="mb-6 rounded-2xl border border-[#FF6B2C]/10 bg-gradient-to-br from-[#FFF7ED] to-[#EFF6FF] p-6 text-center">
+                      <div className="mb-1 text-sm tracking-widest text-gray-500">HTM</div>
+                      {priceLabel ? (
+                        <div className="text-4xl font-black text-[#FF6B2C] sm:text-5xl" style={{ fontFamily: "Orbitron, sans-serif" }}>{priceLabel}</div>
+                      ) : (
+                        <TbdBadge className="border-[#FF6B2C]/30 bg-[#FF6B2C]/10 px-4 py-2 text-gray-700" />
+                      )}
+                    </div>
+
+                    <div className="mb-8 rounded-xl border border-[#38BDF8]/20 bg-[#EFF6FF]/55 p-4">
+                      <QuotaMeter category={ops.categoryCode ?? event.categoryCode} fallbackTotal={ops.quota ?? 0} eventType="fun-bike" />
+                    </div>
+
+                    <div className="mb-8 grid gap-3 sm:grid-cols-2">
+                      {event.benefit.map((item) => (
+                        <div key={item} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
+                          <AnimatedIcon color="#7BC142" size={16} animate={item.toLowerCase().includes("jersey") ? "sway" : item.toLowerCase().includes("door") ? "bounce" : "pulse"}>
+                            <CheckCircle size={16} />
+                          </AnimatedIcon>
+                          <span className="text-sm text-gray-600">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Link href="/fun-bike/daftar" className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#FF6B2C] to-[#F59E0B] py-4 text-base font-black text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl" style={{ fontFamily: "Orbitron, sans-serif", letterSpacing: "2px" }}>
+                      <Bike size={20} /> DAFTAR SEKARANG <ArrowRight size={20} />
+                    </Link>
+                  </div>
                 </div>
-              </div>
-              <div className="stagger-list slide-in-right grid grid-cols-2 gap-4">
+              </HoverTiltCard>
+            </div>
+          </div>
+        </section>
+
+        <section id="route" className="overflow-hidden bg-[linear-gradient(180deg,#EFF6FF_0%,#FFF7ED_100%)] py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-12 text-center">
+              <div className="badge-sunrise mb-4 inline-block">RUTE & TITIK KUMPUL</div>
+              <h2 className="mb-4 text-4xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>RUTE SEDANG DIFINALKAN</h2>
+              <TbdBadge label={routeStatus} className="border-[#38BDF8]/30 bg-[#38BDF8]/10 text-gray-700" />
+            </div>
+            <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+              <RoutePlaceholder />
+              <div className="space-y-4">
                 {[
-                  { value: "300", label: "Kuota Peserta", sub: "Fun Ride", color: "#FF6B2C" },
-                  { value: "15K", label: "Jarak Rute", sub: "Satu rute", color: "#7BC142" },
-                  { value: "5+", label: "Rest Point", sub: "Sepanjang rute", color: "#38BDF8" },
-                  { value: "06:00", label: "Start Pagi", sub: "Sunrise ride", color: "#F59E0B" },
-                ].map((stat) => (
-                  <div key={stat.label} className="card-animated glass-card-light p-6 rounded-2xl text-center border border-gray-100 hover:shadow-lg transition-all duration-300">
-                    <div className="text-3xl font-black mb-1" style={{ fontFamily: "Orbitron, sans-serif", color: stat.color }}>{stat.value}</div>
-                    <div className="text-gray-800 font-semibold text-sm mb-0.5">{stat.label}</div>
-                    <div className="text-gray-400 text-xs">{stat.sub}</div>
+                  { icon: MapPin, label: "Titik kumpul", value: ops.location },
+                  { icon: ShieldCheck, label: "Status rute", value: routeStatus },
+                  { icon: Navigation, label: "Format siap isi", value: "Google Maps embed / gambar rute / GPX" },
+                ].map(({ icon: Icon, label, value }) => (
+                  <div key={label} className="card-animated rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                    <Icon size={20} className="mb-3 text-[#FF6B2C]" />
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-gray-400">{label}</p>
+                    <div className="mt-2 text-sm font-semibold text-gray-800">{value || <TbdBadge className="border-[#FF6B2C]/20 bg-[#FF6B2C]/10 text-gray-700" />}</div>
                   </div>
                 ))}
               </div>
@@ -171,138 +257,116 @@ export default function FunBikePage() {
           </div>
         </section>
 
-        {/* ======== PACKAGE (Single Hero Card) ======== */}
-        <section id="package" className="py-20 overflow-hidden" style={{ background: "linear-gradient(180deg, #FFF7ED 0%, #FFFFFF 100%)" }}>
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-14">
-              <div className="badge-sunrise inline-block mb-4">PAKET LOMBA</div>
-              <h2 className="text-4xl sm:text-5xl font-black text-gray-900 mb-4" style={{ fontFamily: "Orbitron, sans-serif" }}>SATU PAKET SERU</h2>
-              <div className="w-24 h-1 mx-auto rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#F59E0B]" />
-              <p className="text-gray-500 text-sm mt-4">Satu paket lengkap, tanpa ribet — langsung gowes!</p>
+        <section id="timeline" className="overflow-hidden bg-white py-14 sm:py-20">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-10 text-center sm:mb-14">
+              <div className="badge-sunrise mb-4 inline-block">DETAIL ACARA</div>
+              <h2 className="mb-4 text-4xl font-black text-gray-950" style={{ fontFamily: "Rajdhani, sans-serif" }}>SUSUNAN ACARA</h2>
+              <div className="mx-auto mb-5 flex max-w-2xl flex-wrap justify-center gap-2 text-sm">
+                <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 font-semibold text-gray-700">
+                  <Calendar size={15} className="text-[#C2410C]" />
+                  {formatEventDate(ops.eventDate) ?? <TbdBadge className="border-orange-200 bg-white text-gray-700" />}
+                </span>
+                <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 font-semibold text-gray-700">
+                  <Clock size={15} className="text-[#0369A1]" /> {event.eventTime}
+                </span>
+              </div>
+              <p className="mx-auto max-w-3xl text-sm leading-7 text-gray-600 sm:text-base">
+                {event.deskripsiPelaksanaan}
+              </p>
+              <div className="mx-auto mt-5 h-1 w-24 rounded-full bg-gradient-to-r from-[#C2410C] via-[#F59E0B] to-[#0284C7]" />
             </div>
 
-            <div className="card-animated relative max-w-2xl mx-auto">
-              <div className="absolute -inset-1 rounded-3xl blur-xl opacity-30" style={{ background: "linear-gradient(135deg, #FF6B2C, #7BC142)" }} />
-              <HoverTiltCard maxTilt={5} glareColor="#FF6B2C">
-              <div className="relative bg-white rounded-3xl overflow-hidden border border-[#FF6B2C]/20 shadow-xl">
-                <div className="h-1.5 w-full bg-gradient-to-r from-[#FF6B2C] via-[#F59E0B] to-[#7BC142]" />
-                <div className="p-8 sm:p-12">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-8">
-                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl flex-shrink-0 bg-[#FF6B2C]/10 border border-[#FF6B2C]/20">
-                      🚴
-                    </div>
-                    <div>
-                      <div className="text-gray-400 text-sm mb-1 tracking-widest" style={{ fontFamily: "Rajdhani, sans-serif" }}>FUN BIKE 2026</div>
-                      <h3 className="text-4xl sm:text-5xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>FUN RIDE</h3>
-                      <p className="text-gray-500 text-sm">Terbuka untuk semua usia dan jenis sepeda</p>
-                    </div>
-                  </div>
+            <RundownTimeline items={event.rundown} theme="bike" eventDate={ops.eventDate} />
 
-                  <div className="text-center mb-8 p-6 rounded-2xl bg-gradient-to-br from-[#FFF7ED] to-[#F0FDF4] border border-[#FF6B2C]/10">
-                    <div className="text-gray-500 text-sm mb-1 tracking-widest">BIAYA PENDAFTARAN</div>
-                    <div className="text-5xl font-black text-[#FF6B2C]" style={{ fontFamily: "Orbitron, sans-serif" }}>Rp 150.000</div>
-                    <div className="text-gray-400 text-sm mt-1">per peserta</div>
-                  </div>
+            <RundownActions
+              items={event.rundown}
+              eventName={event.name}
+              eventDate={ops.eventDate}
+              theme="bike"
+            />
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8 stagger-list">
-                    {[
-                      { icon: "👕", label: "Jersey Cycling Eksklusif" },
-                      { icon: "🥇", label: "Finisher Medal" },
-                      { icon: "🎒", label: "Goodie Bag" },
-                      { icon: "💧", label: "Water Station & Snack" },
-                      { icon: "📸", label: "Dokumentasi Foto" },
-                      { icon: "🎁", label: "Doorprize & Hiburan" },
-                      { icon: "📜", label: "e-Sertifikat Peserta" },
-                      { icon: "🏥", label: "Tim Medis Siaga" },
-                    ].map((f) => (
-                      <div key={f.label} className="card-animated flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                        <span className="text-xl flex-shrink-0">{f.icon}</span>
-                        <span className="text-gray-600 text-sm">{f.label}</span>
-                      </div>
+            <div className="mt-12 sm:mt-16">
+              <h3 className="mb-5 text-center text-2xl font-black text-gray-950" style={{ fontFamily: "Rajdhani, sans-serif" }}>
+                INFO PELAKSANAAN
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[
+                  { icon: Music, label: "Hiburan", value: "Band SUNFLOW & Ollsame", color: "#0369A1" },
+                  { icon: Gift, label: "Doorprize", value: "Hadiah pembelian panitia + dukungan sponsor", color: "#C2410C" },
+                  { icon: Navigation, label: "Status rute", value: "Rute sedang disurvei dan diukur ulang", color: "#0284C7" },
+                  { icon: ShieldCheck, label: "Koordinasi", value: "Pelaksanaan dikoordinasikan bersama PLF & ICF", color: "#B45309" },
+                ].map(({ icon: Icon, label, value, color }) => (
+                  <article key={label} className="card-animated rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-5 shadow-sm">
+                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border" style={{ borderColor: `${color}33`, background: `${color}0F` }}>
+                      <Icon size={18} style={{ color }} />
+                    </div>
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-500">{label}</p>
+                    <p className="mt-2 text-sm font-semibold leading-6 text-gray-900">{value}</p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="jersey" className="overflow-hidden bg-[linear-gradient(180deg,#FFF7ED_0%,#FFFFFF_100%)] pb-6 pt-12 sm:py-20">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-12 text-center">
+              <div className="badge-sunrise mb-4 inline-block">JERSEY & RACEPACK</div>
+              <h2 className="mb-4 text-4xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>JERSEY FUN BIKE SUDAH FIKS</h2>
+              <p className="mx-auto max-w-2xl text-sm leading-6 text-gray-500">
+                Paket peserta berisi jersey Fun Bike, racepack/goodie, dan kebutuhan ride pagi sesuai ketentuan panitia.
+              </p>
+            </div>
+            <div className="grid gap-5 lg:grid-cols-3">
+              {[
+                { icon: Shirt, title: "Jersey Fun Bike", items: ["Desain sudah fiks", "Tema sunrise cerah", "Dipilih ukurannya saat daftar"] },
+                { icon: Package, title: "Racepack / Goodie", items: event.racepack },
+                { icon: Ticket, title: "Benefit", items: event.benefit },
+              ].map(({ icon: Icon, title, items }) => (
+                <div key={title} className="card-animated rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+                  <AnimatedIcon color="#FF6B2C" animate={title.includes("Jersey") ? "sway" : title.includes("Racepack") ? "bounce" : "pulse"} className="mb-4">
+                    <Icon size={24} />
+                  </AnimatedIcon>
+                  <h3 className="mb-4 text-lg font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>{title}</h3>
+                  <ul className="space-y-3">
+                    {items.map((item) => (
+                      <li key={item} className="flex items-start gap-2 text-sm text-gray-600">
+                        <CheckCircle size={15} className="mt-0.5 flex-shrink-0 text-[#7BC142]" />
+                        {item}
+                      </li>
                     ))}
-                  </div>
-
-                  <Link href="/fun-bike/daftar" className="relative overflow-hidden w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-base transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl bg-gradient-to-r from-[#FF6B2C] to-[#F59E0B] text-white" style={{ fontFamily: "Orbitron, sans-serif", letterSpacing: "2px" }}>
-                    <span className="shine-sweep" />
-                    <Bike size={20} /> DAFTAR SEKARANG <ArrowRight size={20} />
-                  </Link>
-                </div>
-              </div>
-              </HoverTiltCard>
-            </div>
-          </div>
-        </section>
-
-        {/* ======== RACE PACK / GOODIE ======== */}
-        <section className="py-20 bg-white overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-14">
-              <div className="badge-sunrise inline-block mb-4">RACE PACK</div>
-              <h2 className="text-4xl font-black text-gray-900 mb-4" style={{ fontFamily: "Orbitron, sans-serif" }}>GOODIE BAG</h2>
-              <div className="w-24 h-1 mx-auto rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#7BC142]" />
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 stagger-list max-w-3xl mx-auto">
-              {[
-                { emoji: "👕", name: "Jersey Cycling", desc: "Dryfit premium" },
-                { emoji: "🏷️", name: "Nomor Peserta", desc: "ID tag sepeda" },
-                { emoji: "🎒", name: "Totebag", desc: "Eksklusif PSTI" },
-                { emoji: "💧", name: "Tumbler", desc: "Reusable bottle" },
-              ].map((item) => (
-                <div key={item.name} className="card-animated glass-card-light p-5 rounded-2xl text-center border border-gray-100 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1">
-                  <div className="text-4xl mb-3">{item.emoji}</div>
-                  <div className="text-gray-900 font-bold text-sm mb-0.5">{item.name}</div>
-                  <div className="text-gray-400 text-xs">{item.desc}</div>
+                  </ul>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ======== ROUTE + MEETING POINT ======== */}
-        <section id="route" className="py-20 overflow-hidden" style={{ background: "linear-gradient(180deg, #F0FDF4 0%, #FFF8F0 100%)" }}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-14">
-              <div className="badge-sunrise inline-block mb-4">RUTE & LOKASI</div>
-              <h2 className="text-4xl font-black text-gray-900 mb-4" style={{ fontFamily: "Orbitron, sans-serif" }}>RUTE PERJALANAN</h2>
-              <div className="w-24 h-1 mx-auto rounded-full bg-gradient-to-r from-[#7BC142] to-[#38BDF8]" />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="card-animated glass-card-light p-6 rounded-2xl border border-gray-100">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2" style={{ fontFamily: "Orbitron, sans-serif" }}>
-                  <MapPin size={20} className="text-[#FF6B2C]" /> DETAIL RUTE
-                </h3>
-                <ul className="space-y-3 text-gray-600 text-sm">
-                  {[
-                    "Jarak tempuh: ±15 km",
-                    "Medan: Jalan aspal datar, sedikit tanjakan ringan",
-                    "Start & Finish: Alun-alun Purworejo",
-                    "Rute melewati: Sawah, pedesaan, dan jalur hijau",
-                    "Marking rute: Pita warna & petunjuk arah setiap 2 km",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <CheckCircle size={14} className="text-[#7BC142] mt-0.5 flex-shrink-0" />
-                      {item}
-                    </li>
+        <section className="overflow-hidden bg-white pb-5 pt-4 sm:py-20">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="rounded-3xl border border-gray-100 bg-gradient-to-br from-[#FFF7ED] to-white p-6">
+                <AnimatedIcon color="#FF6B2C" animate="bounce" className="mb-4">
+                  <Gift size={24} />
+                </AnimatedIcon>
+                <h2 className="mb-4 text-3xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>DOORPRIZE</h2>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {event.doorprize.map((item) => (
+                    <div key={item} className="shimmer-showcase rounded-xl border border-white bg-white/75 p-4 text-sm font-semibold text-gray-700 shadow-sm">{item}</div>
                   ))}
-                </ul>
+                </div>
               </div>
-              <div className="card-animated glass-card-light p-6 rounded-2xl border border-gray-100">
-                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2" style={{ fontFamily: "Orbitron, sans-serif" }}>
-                  <Clock size={20} className="text-[#FF6B2C]" /> TITIK KUMPUL & JAM
-                </h3>
-                <div className="space-y-4 text-sm">
-                  {[
-                    { time: "05:00", event: "Titik kumpul dibuka di Alun-alun Purworejo", color: "#FF6B2C" },
-                    { time: "05:30", event: "Briefing keselamatan & pemanasan bersama", color: "#F59E0B" },
-                    { time: "06:00", event: "FLAG OFF — Gowes bersama dimulai!", color: "#7BC142" },
-                    { time: "08:00", event: "Rest point — snack & minum", color: "#38BDF8" },
-                    { time: "09:00", event: "Finish — hiburan, doorprize & foto bersama", color: "#FF6B2C" },
-                  ].map((item) => (
-                    <div key={item.time} className="flex items-start gap-3">
-                      <div className="w-14 text-center rounded-lg py-1 px-2 flex-shrink-0 text-xs font-bold" style={{ background: `${item.color}15`, color: item.color, fontFamily: "Orbitron, sans-serif", border: `1px solid ${item.color}30` }}>
-                        {item.time}
-                      </div>
-                      <span className="text-gray-600 pt-0.5">{item.event}</span>
+              <div className="rounded-3xl border border-gray-100 bg-gradient-to-br from-[#EFF6FF] to-white p-6">
+                <AnimatedIcon color="#38BDF8" animate="sway" className="mb-4">
+                  <Music size={24} />
+                </AnimatedIcon>
+                <h2 className="mb-4 text-3xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>HIBURAN</h2>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {event.hiburan.map((item) => (
+                    <div key={item} className="rounded-xl border border-white bg-white/75 p-4 text-sm font-semibold text-gray-700 shadow-sm">
+                      {item}
                     </div>
                   ))}
                 </div>
@@ -311,173 +375,85 @@ export default function FunBikePage() {
           </div>
         </section>
 
-        {/* ======== TIMELINE ======== */}
-        <section id="timeline" className="py-20 bg-white overflow-hidden">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-14">
-              <div className="badge-sunrise inline-block mb-4">JADWAL</div>
-              <h2 className="text-4xl font-black text-gray-900 mb-4" style={{ fontFamily: "Orbitron, sans-serif" }}>TIMELINE EVENT</h2>
-              <div className="w-24 h-1 mx-auto rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#7BC142]" />
+        <section id="faq" className="overflow-hidden bg-white pb-12 pt-5 sm:py-20">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-14 text-center">
+              <div className="badge-sunrise mb-4 inline-block">BANTUAN</div>
+              <h2 className="mb-4 text-4xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>FAQ</h2>
             </div>
-            <div className="space-y-4 stagger-list">
-              {[
-                { date: "1 Mei 2026", title: "Pembukaan Pendaftaran", desc: "Pendaftaran Fun Bike 2026 resmi dibuka.", color: "#FF6B2C" },
-                { date: "14 Juni 2026", title: "Batas Pendaftaran", desc: "Pendaftaran ditutup pukul 23:59 WIB.", color: "#F59E0B" },
-                { date: "17 Juni 2026", title: "Pengumuman Nomor Peserta", desc: "Nomor peserta diumumkan via email & website.", color: "#7BC142" },
-                { date: "20–21 Juni 2026", title: "Pengambilan Race Pack", desc: "Ambil jersey, goodie bag, & nomor peserta.", color: "#38BDF8" },
-                { date: "22 Juni 2026", title: "HARI H — FUN BIKE 2026", desc: "Start 06:00 WIB. Ride The Sunrise! 🚴", color: "#FF6B2C", isLast: true },
-              ].map((ev) => (
-                <div key={ev.date} className={`card-animated glass-card-light p-5 rounded-xl border transition-all duration-300 hover:shadow-md ${ev.isLast ? "border-[#FF6B2C]/40 shadow-lg" : "border-gray-100"}`}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Calendar size={12} style={{ color: ev.color }} />
-                    <span className="text-xs font-semibold" style={{ color: ev.color, fontFamily: "Orbitron, sans-serif" }}>{ev.date}</span>
-                  </div>
-                  <h3 className="text-gray-900 font-bold mb-1 flex items-center gap-2">
-                    {ev.isLast && <Bike size={14} style={{ color: ev.color }} />}
-                    {ev.title}
-                  </h3>
-                  <p className="text-gray-500 text-sm">{ev.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ======== BENEFITS GRID ======== */}
-        <section className="py-20 overflow-hidden" style={{ background: "linear-gradient(180deg, #FFF7ED 0%, #FFFFFF 100%)" }}>
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-14">
-              <div className="badge-sunrise inline-block mb-4">BENEFIT</div>
-              <h2 className="text-4xl font-black text-gray-900 mb-4" style={{ fontFamily: "Orbitron, sans-serif" }}>YANG KAMU DAPATKAN</h2>
-              <div className="w-24 h-1 mx-auto rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#7BC142]" />
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 stagger-list">
-              {[
-                { icon: Shirt, label: "Jersey Eksklusif", color: "#FF6B2C", anim: "sway" as const },
-                { icon: Medal, label: "Finisher Medal", color: "#F59E0B", anim: "rotate" as const },
-                { icon: Gift, label: "Doorprize", color: "#7BC142", anim: "bounce" as const },
-                { icon: Camera, label: "Dokumentasi", color: "#38BDF8", anim: "pulse" as const },
-                { icon: Coffee, label: "Snack & Minum", color: "#FF6B2C", anim: "sway" as const },
-                { icon: Music, label: "Hiburan", color: "#F59E0B", anim: "bounce" as const },
-                { icon: Trophy, label: "e-Sertifikat", color: "#7BC142", anim: "none" as const },
-                { icon: Shield, label: "Asuransi Event", color: "#38BDF8", anim: "none" as const },
-              ].map((b) => (
-                <div key={b.label} className="card-animated glass-card-light p-5 rounded-2xl text-center border border-gray-100 hover:shadow-lg transition-all duration-300 group hover:-translate-y-1">
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center transition-all" style={{ background: `${b.color}12` }}>
-                    <AnimatedIcon color={b.color} size={22} animate={b.anim}>
-                      <b.icon size={22} />
-                    </AnimatedIcon>
-                  </div>
-                  <div className="text-gray-900 font-semibold text-sm">{b.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ======== DOORPRIZE ======== */}
-        <section className="py-20 bg-white overflow-hidden">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="badge-sunrise inline-block mb-4">HADIAH</div>
-            <h2 className="text-4xl font-black text-gray-900 mb-4" style={{ fontFamily: "Orbitron, sans-serif" }}>DOORPRIZE</h2>
-            <div className="w-24 h-1 mx-auto rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#F59E0B] mb-8" />
-            <p className="text-gray-500 mb-8">Semua peserta berkesempatan memenangkan doorprize menarik di acara puncak!</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 stagger-list">
-              {["🚲 Sepeda Gunung", "⌚ Smartwatch", "🎧 Earbuds TWS", "📱 Power Bank", "🎒 Tas Ransel", "🎁 Kejutan Lainnya"].map((prize) => (
-                <div key={prize} className="card-animated shimmer-showcase glass-card-light p-4 rounded-xl border border-gray-100 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-                  <span className="text-gray-800 font-semibold text-sm">{prize}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ======== SPONSOR ======== */}
-        <section className="py-16 overflow-hidden" style={{ background: "linear-gradient(180deg, #FFFFFF 0%, #FFF8F0 100%)" }}>
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="badge-sunrise inline-block mb-4">DIDUKUNG OLEH</div>
-            <h2 className="text-2xl font-black text-gray-900 mb-8" style={{ fontFamily: "Orbitron, sans-serif" }}>SPONSOR & PARTNER</h2>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="card-animated glass-card-light rounded-xl p-4 flex items-center justify-center border border-gray-100 h-20">
-                  <span className="text-gray-300 text-xs text-center" style={{ fontFamily: "Orbitron, sans-serif" }}>SPONSOR {i + 1}</span>
-                </div>
-              ))}
-            </div>
-            <div className="marquee-track mt-6">
-              {["Himatekno UMPWR", "PSTI FEST", "Purworejo Sport", "Bike Community", "Sunrise Coffee", "Green Cycling ID", "FunBike Store", "SportMax", "Local Bike Shop", "Cycling ID"].map((name, i) => (
-                <div key={i} className="mx-8 py-2 px-6 rounded-xl border border-gray-200 bg-white/50 text-gray-400 text-sm whitespace-nowrap flex-shrink-0" style={{ fontFamily: "Orbitron, sans-serif" }}>{name}</div>
-              ))}
-              {["Himatekno UMPWR", "PSTI FEST", "Purworejo Sport", "Bike Community", "Sunrise Coffee", "Green Cycling ID", "FunBike Store", "SportMax", "Local Bike Shop", "Cycling ID"].map((name, i) => (
-                <div key={`dup-${i}`} className="mx-8 py-2 px-6 rounded-xl border border-gray-200 bg-white/50 text-gray-400 text-sm whitespace-nowrap flex-shrink-0" style={{ fontFamily: "Orbitron, sans-serif" }}>{name}</div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ======== RULES + FAQ ======== */}
-        <section id="faq" className="py-20 bg-white overflow-hidden">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-14">
-              <div className="badge-sunrise inline-block mb-4">BANTUAN</div>
-              <h2 className="text-4xl font-black text-gray-900 mb-4" style={{ fontFamily: "Orbitron, sans-serif" }}>RULES & FAQ</h2>
-              <div className="w-24 h-1 mx-auto rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#7BC142]" />
-            </div>
-            <Suspense fallback={null}><FunBikeFaq /></Suspense>
+            <Suspense fallback={null}><FunBikeFaq settings={ops.settings} /></Suspense>
             <div className="mt-10 text-center">
-              <p className="text-gray-500 text-sm mb-3">Masih punya pertanyaan?</p>
-              <a href="https://wa.me/6281234567890" target="_blank" rel="noopener noreferrer" className="btn-outline-sunrise inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm cursor-pointer">
-                💬 Hubungi Panitia via WhatsApp
-              </a>
+              <p className="mb-3 text-sm text-gray-500">Contact person</p>
+              {contact ? (
+                <a href={`https://wa.me/${contact.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="btn-outline-sunrise inline-flex cursor-pointer items-center gap-2 rounded-full px-6 py-3 text-sm">
+                  Hubungi Panitia
+                </a>
+              ) : (
+                <TbdBadge className="border-[#FF6B2C]/20 bg-[#FF6B2C]/10 text-gray-700" />
+              )}
             </div>
           </div>
         </section>
 
-        {/* ======== CTA FINAL ======== */}
-        <section className="py-20 overflow-hidden" style={{ background: "linear-gradient(135deg, #FF6B2C 0%, #F59E0B 50%, #7BC142 100%)" }}>
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl sm:text-5xl font-black text-white mb-4" style={{ fontFamily: "Orbitron, sans-serif" }}>
-              SIAP GOWES?
-            </h2>
-            <p className="text-white/80 text-lg mb-8">Jangan sampai kehabisan kuota! Daftarkan dirimu di Fun Bike 2026 sekarang.</p>
-            <Link href="/fun-bike/daftar" className="inline-flex items-center gap-2 px-10 py-4 rounded-full bg-white text-[#FF6B2C] font-black text-base transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl" style={{ fontFamily: "Orbitron, sans-serif", letterSpacing: "2px" }}>
+        <section className="overflow-hidden bg-white py-12">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-6 text-center">
+              <div className="badge-sunrise mb-3 inline-block">DIDUKUNG OLEH</div>
+              <h2 className="text-2xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>SPONSOR & PARTNER</h2>
+            </div>
+            <MarqueeSponsors
+              speed={34}
+              items={["Himatekno UMPWR", FEST_NAME, "PLF", "ICF", "SUNFLOW", "Ollsame"].map((name) => (
+                <div key={name} className="rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-bold text-gray-500 shadow-sm" style={{ fontFamily: "Orbitron, sans-serif" }}>
+                  {name}
+                </div>
+              ))}
+            />
+          </div>
+        </section>
+
+        <section className="overflow-hidden bg-gradient-to-r from-[#FF6B2C] via-[#F59E0B] to-[#38BDF8] py-20">
+          <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
+            <Sun size={42} className="mx-auto mb-5 text-white" />
+            <h2 className="mb-4 text-4xl font-black text-white sm:text-5xl" style={{ fontFamily: "Orbitron, sans-serif" }}>SIAP RIDE PAGI?</h2>
+            <p className="mb-8 text-lg text-white/85">Ambil slot Fun Ride dan ikuti sunrise ride {FEST_NAME}.</p>
+            <Link href="/fun-bike/daftar" className="inline-flex items-center gap-2 rounded-full bg-white px-10 py-4 text-base font-black text-[#FF6B2C] transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl" style={{ fontFamily: "Orbitron, sans-serif", letterSpacing: "2px" }}>
               <Bike size={20} /> DAFTAR SEKARANG <ArrowRight size={20} />
             </Link>
           </div>
         </section>
 
-        {/* ======== FOOTER ======== */}
-        <footer className="bg-gray-900 border-t border-gray-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <footer className="border-t border-gray-800 bg-gray-900">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 text-center sm:text-left">
               <div>
-                <h3 className="text-white font-bold text-sm mb-2" style={{ fontFamily: "Orbitron, sans-serif" }}>FUN BIKE 2026</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">Event gowes sunrise PSTI FEST 2026.</p>
+                <h3 className="mb-2 text-sm font-bold text-white" style={{ fontFamily: "Orbitron, sans-serif" }}>{event.name} {FEST_YEAR}</h3>
+                <p className="text-sm leading-relaxed text-gray-400">Event gowes sunrise {FEST_FULL_NAME} oleh {ORGANIZER_NAME}.</p>
               </div>
               <div>
-                <h3 className="text-white font-bold text-sm mb-2" style={{ fontFamily: "Orbitron, sans-serif" }}>EVENT LAIN</h3>
+                <h3 className="mb-2 text-sm font-bold text-white" style={{ fontFamily: "Orbitron, sans-serif" }}>EVENT LAIN</h3>
                 <ul className="space-y-2 text-sm">
-                  <li><Link href="/futuristic-run" className="text-gray-400 hover:text-[#00E5FF] transition-colors">Futuristic RUN 2026</Link></li>
-                  <li><Link href="/" className="text-gray-400 hover:text-white transition-colors">PSTI FEST Hub</Link></li>
+                  <li><Link href="/futuristic-run" className="text-gray-400 transition-colors hover:text-[#00E5FF]">Futuristic Run {FEST_YEAR}</Link></li>
+                  <li><Link href="/" className="text-gray-400 transition-colors hover:text-white">{FEST_NAME} Hub</Link></li>
                 </ul>
               </div>
               <div>
-                <h3 className="text-white font-bold text-sm mb-2" style={{ fontFamily: "Orbitron, sans-serif" }}>KONTAK</h3>
+                <h3 className="mb-2 text-sm font-bold text-white" style={{ fontFamily: "Orbitron, sans-serif" }}>KONTAK</h3>
                 <ul className="space-y-2 text-sm text-gray-400">
-                  <li>info@pstifest.com</li>
-                  <li>+62 812-3456-7890</li>
+                  <li>{CONTACT_EMAIL}</li>
+                  <li>{contact ?? <TbdBadge />}</li>
                 </ul>
               </div>
             </div>
-            <div className="mt-8 pt-6 border-t border-gray-800 text-center">
-              <p className="text-gray-500 text-xs">&copy; 2026 <span className="text-[#FF6B2C]">PSTI FEST</span>. All rights reserved.</p>
+            <div className="mt-8 border-t border-gray-800 pt-6 text-center">
+              <p className="text-xs text-gray-500">&copy; {FEST_YEAR} <span className="text-[#FF6B2C]">{FEST_NAME}</span>. All rights reserved.</p>
             </div>
           </div>
         </footer>
       </main>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd(seo)) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd(operationalSeo)) }}
       />
     </EventThemeProvider>
   );

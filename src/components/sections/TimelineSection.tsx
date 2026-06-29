@@ -1,80 +1,76 @@
-import { Calendar, Flag } from "lucide-react";
+import { CalendarDays, Clock3, RadioTower, ShieldCheck, TicketCheck, Trophy, Waves } from "lucide-react";
 import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
+import RundownTimeline from "@/components/ui/RundownTimeline";
+import RundownActions from "@/components/ui/RundownActions";
+import { EVENTS } from "@/content/events";
+import TbdBadge from "@/components/ui/TbdBadge";
+import { formatEventDate } from "@/lib/eventDate";
 
-const events = [
-  { date: "1 Mei 2026", title: "Pembukaan Pendaftaran", desc: "Pendaftaran Early Bird dibuka untuk kategori Run 5K.", color: "#00E5FF", done: true },
-  { date: "31 Mei 2026", title: "Batas Early Bird", desc: "Harga spesial early bird berakhir. Daftar sebelum kehabisan!", color: "#8B00FF", done: false },
-  { date: "14 Juni 2026", title: "Batas Pendaftaran Normal", desc: "Pendaftaran reguler resmi ditutup pada pukul 23:59 WIB.", color: "#FF006E", done: false },
-  { date: "17 Juni 2026", title: "Pengumuman BIB Number", desc: "Nomor BIB peserta diumumkan via email & website.", color: "#FF8C00", done: false },
-  { date: "20–21 Juni 2026", title: "Pengambilan Race Pack", desc: "Ambil jersey, bib, & perlengkapan di lokasi yang ditentukan.", color: "#FFD700", done: false },
-  { date: "22 Juni 2026", title: "HARI H — FUTURISTIC RUN 2026", desc: "Start pukul 05:00 WIB. Run The Future, Shine The Night! 🏁", color: "#00E5FF", done: false, isLast: true },
+const event = EVENTS["futuristic-run"];
+
+const technicalInfo = [
+  { icon: RadioTower, label: "Pacer", value: "Pacer resmi dari PASI", color: "#FFD700" },
+  { icon: ShieldCheck, label: "Marshal", value: "Marshal dan pengamanan dari panitia", color: "#8B00FF" },
+  { icon: Waves, label: "Water station", value: "Titik water station dekat Caramel", color: "#00E5FF" },
+  { icon: TicketCheck, label: "BIB & finish control", value: "BIB dibedakan per kategori dan warna, dengan centang refreshment serta medali", color: "#FF006E" },
+  { icon: Trophy, label: "Kategori juara", value: "Juara Umum 1-3 dan Juara Pelajar 1-3", color: "#FFD700" },
 ];
 
-export default function TimelineSection() {
+export default function TimelineSection({ eventDate }: { eventDate: string | null }) {
   return (
-    <section id="timeline" className="section-reveal relative py-24 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0A0E27] via-[#0F1535] to-[#0A0E27]" />
+    <section id="timeline" className="section-reveal relative overflow-hidden py-6 sm:py-10">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0A0E27] via-[#070A20] to-[#0A0E27]" />
+      <div
+        className="absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(0,229,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(139,0,255,1) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+        }}
+      />
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="section-reveal-delay-1 text-center mb-16">
-          <div className="badge-neon inline-block mb-4">JADWAL</div>
-          <AnimatedSectionTitle text="TIMELINE EVENT" className="text-4xl sm:text-5xl font-black mb-4" />
-          <div className="w-24 h-1 mx-auto rounded-full bg-gradient-to-r from-[#00E5FF] to-[#FF006E]" />
+      <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        <div className="section-reveal-delay-1 mb-8 text-center sm:mb-10">
+          <div className="badge-neon mb-4 inline-block">DETAIL ACARA</div>
+          <AnimatedSectionTitle text="SUSUNAN ACARA" className="mb-4 text-4xl font-black sm:text-5xl" />
+          <div className="mx-auto mb-5 flex max-w-2xl flex-wrap justify-center gap-2 text-sm">
+            <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#00E5FF]/20 bg-[#00E5FF]/[0.06] px-3 text-[#D7E8FF]">
+              <CalendarDays size={15} className="text-[#00E5FF]" />
+              {formatEventDate(eventDate) ?? <TbdBadge />}
+            </span>
+            <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#8B00FF]/25 bg-[#8B00FF]/[0.07] px-3 text-[#D7E8FF]">
+              <Clock3 size={15} className="text-[#C084FC]" /> {event.eventTime}
+            </span>
+          </div>
+          <p className="mx-auto max-w-3xl text-sm leading-7 text-[#B0C4DE] sm:text-base">
+            {event.deskripsiPelaksanaan}
+          </p>
+          <div className="mx-auto mt-5 h-1 w-24 rounded-full bg-gradient-to-r from-[#00E5FF] to-[#FF006E]" />
         </div>
 
-        <div className="relative">
-          {/* Center line */}
-          <div className="absolute left-6 sm:left-1/2 top-0 bottom-0 w-px sm:-translate-x-1/2 timeline-line opacity-30" />
+        <RundownTimeline items={event.rundown} theme="run" eventDate={eventDate} />
 
-          <div className="stagger-list space-y-8">
-            {events.map((ev, i) => {
-              const isRight = i % 2 === 0;
-              return (
-                <div
-                  key={i}
-                  className={`relative flex items-center gap-6 sm:gap-0 ${
-                    isRight ? "sm:flex-row" : "sm:flex-row-reverse"
-                  }`}
-                >
-                  {/* Card */}
-                  <div className={`flex-1 ${isRight ? "sm:pr-10 sm:text-right" : "sm:pl-10"} pl-14 sm:pl-0`}>
-                    <div
-                      className={`card-animated glass-card p-5 rounded-xl border transition-all duration-300 hover:scale-[1.02] ${
-                        ev.isLast ? "border-[#00E5FF]/50 glow-cyan" : "border-[#1E3A5F] hover:border-opacity-60"
-                      }`}
-                      style={!ev.isLast ? { borderColor: `${ev.color}22` } : undefined}
-                    >
-                      <div className="flex items-center gap-2 mb-1" style={isRight ? { justifyContent: "flex-end" } : {}}>
-                        <Calendar size={12} style={{ color: ev.color }} />
-                        <span className="text-xs font-semibold" style={{ color: ev.color, fontFamily: "Orbitron, sans-serif" }}>
-                          {ev.date}
-                        </span>
-                      </div>
-                      <h3 className="text-white font-bold mb-1 flex items-center gap-2" style={isRight ? { justifyContent: "flex-end" } : {}}>
-                        {ev.isLast && <Flag size={14} style={{ color: ev.color }} />}
-                        {ev.title}
-                      </h3>
-                      <p className="text-[#B0C4DE] text-sm">{ev.desc}</p>
-                    </div>
-                  </div>
+        <RundownActions
+          items={event.rundown}
+          eventName={event.name}
+          eventDate={eventDate}
+          theme="run"
+        />
 
-                  {/* Dot */}
-                  <div
-                    className="motion-glow absolute left-6 sm:left-1/2 sm:-translate-x-1/2 w-5 h-5 rounded-full border-2 border-[#0A0E27] flex items-center justify-center flex-shrink-0 z-10"
-                    style={{
-                      background: ev.done ? ev.color : `${ev.color}33`,
-                      borderColor: ev.color,
-                      boxShadow: `0 0 12px ${ev.color}80`,
-                    }}
-                  >
-                    {ev.done && <div className="w-2 h-2 rounded-full bg-white" />}
-                  </div>
-
-                  {/* Right side spacer */}
-                  <div className="hidden sm:flex flex-1" />
+        <div className="mt-12 sm:mt-16">
+          <h3 className="mb-5 text-center text-xl font-black text-white sm:text-2xl" style={{ fontFamily: "Orbitron, sans-serif" }}>
+            INFO TEKNIS PELAKSANAAN
+          </h3>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {technicalInfo.map(({ icon: Icon, label, value, color }) => (
+              <article key={label} className="card-animated rounded-2xl border border-[#1E3A5F] bg-[#0B1030]/90 p-5">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border" style={{ borderColor: `${color}55`, background: `${color}16` }}>
+                  <Icon size={18} style={{ color }} />
                 </div>
-              );
-            })}
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#B0C4DE]">{label}</p>
+                <p className="mt-2 text-sm font-semibold leading-6 text-white">{value}</p>
+              </article>
+            ))}
           </div>
         </div>
       </div>

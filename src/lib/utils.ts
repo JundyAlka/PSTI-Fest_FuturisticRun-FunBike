@@ -11,6 +11,7 @@ export const CATEGORY_QUOTAS: Record<string, number> = {
 
 export const CATEGORY_LABELS: Record<string, string> = {
   "5K": "Run 5K",
+  funbike: "Futuristic Bike Ride",
 };
 
 // ── Event category helpers (DB-driven) ──────────────────────────────────────

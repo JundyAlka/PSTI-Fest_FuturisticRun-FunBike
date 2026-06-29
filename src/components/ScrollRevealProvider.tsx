@@ -34,6 +34,7 @@ export default function ScrollRevealProvider() {
     const observeElements = () => {
       const elements = Array.from(document.querySelectorAll<HTMLElement>(selector));
       elements.forEach((element) => {
+        if (element.closest("[data-no-scroll-reveal]")) return;
         if (seen.has(element)) return;
         seen.add(element);
         if (reducedMotion) {

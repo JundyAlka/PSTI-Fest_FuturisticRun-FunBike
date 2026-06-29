@@ -12,6 +12,8 @@ export default function ParticleCanvas() {
 
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) return;
 
     interface Particle {
       x: number; y: number; vx: number; vy: number;
@@ -19,7 +21,8 @@ export default function ParticleCanvas() {
     }
 
     const colors = ["#00E5FF", "#2A4FFF", "#8B00FF", "#FF006E"];
-    const particles: Particle[] = Array.from({ length: 80 }, () => ({
+    const particleCount = width < 640 ? 24 : 80;
+    const particles: Particle[] = Array.from({ length: particleCount }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
       vx: (Math.random() - 0.5) * 0.5,

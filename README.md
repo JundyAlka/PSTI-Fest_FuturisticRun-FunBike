@@ -1,12 +1,12 @@
 <div align="center">
 
-![Futuristic RUN 2026](public/logo-futuristicrun.png)
+<img src="public/logo-futuristicrun.png" alt="Futuristic Run 2026" width="300" />
 
-# PSTI FEST — Futuristic Run & Fun Bike
+# Futuristic Vibes — Futuristic Run & Futuristic Bike
 
 ### *Run The Future, Shine The Night*
 
-A modern, full-stack event registration platform powering **Futuristic RUN 2026** — a night running event with a futuristic neon aesthetic — and **Fun Bike 2026**. Built with Next.js 16, powered by InsForge (PostgreSQL), and designed for a seamless mobile-first experience.
+A modern, full-stack event registration platform powering **Futuristic Run 2026** — a night running event with a futuristic neon aesthetic — and **Futuristic Bike 2026**. Built with Next.js 16, powered by InsForge (PostgreSQL), and designed for a seamless mobile-first experience.
 
 [![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org)
 [![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
@@ -123,17 +123,17 @@ app-src/
 
 | Event | Category | Price | Quota |
 |-------|----------|-------|-------|
-| Futuristic RUN 2026 | Run 5K | Rp 200.000 | 200 |
-| Fun Bike 2026 | Fun Bike Ride | Rp 150.000 | 300 |
+| Futuristic Run 2026 | Run 5K | Rp 200.000 | 200 |
+| Futuristic Bike 2026 | Futuristic Bike Ride | Rp 150.000 | 300 |
 
 ## 📄 License
 
-This project was developed for **PSTI FEST 2026**.
+This project was developed for **Futuristic Vibes 2026**.
 
 ---
 
 <div align="center">
 
-*Built with passion for PSTI FEST — Futuristic RUN 2026*
+*Built with passion for Futuristic Vibes — Futuristic Run 2026*
 
 </div>

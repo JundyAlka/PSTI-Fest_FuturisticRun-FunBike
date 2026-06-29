@@ -128,8 +128,8 @@ export default function PesertaPage() {
       {/* Event Tabs */}
       <div className="card-animated flex gap-2 mb-5 p-1 glass-card rounded-xl border border-[#1E3A5F]">
         {([
-          { id: "futuristic-run" as const, label: "FUTURISTIC RUN", color: "#00E5FF" },
-          { id: "fun-bike" as const, label: "FUN BIKE", color: "#FF6B2C" },
+          { id: "futuristic-run" as const, label: "Futuristic Run", color: "#00E5FF" },
+          { id: "fun-bike" as const, label: "Futuristic Bike", color: "#FF6B2C" },
         ]).map((tab) => (
           <button
             key={tab.id}
@@ -245,7 +245,7 @@ export default function PesertaPage() {
                         color: p.event_type === "fun-bike" ? "#FF6B2C" : "#00E5FF",
                         border: `1px solid ${p.event_type === "fun-bike" ? "rgba(255,107,44,0.2)" : "rgba(0,229,255,0.2)"}`,
                       }}>
-                        {p.event_type === "fun-bike" ? "Fun Bike" : "Run"}
+                        {p.event_type === "fun-bike" ? "Futuristic Bike" : "Run"}
                       </span>
                     </td>
                     <td className="px-4 py-3"><span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(0,229,255,0.1)", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.2)" }}>{p.category}</span></td>

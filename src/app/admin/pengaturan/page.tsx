@@ -7,6 +7,7 @@ import LoadingPanel from "@/components/LoadingPanel";
 interface SettingsState {
   registration_open: string;
   quota_5k: string;
+  quota_funbike: string;
   event_date: string;
   event_location: string;
   early_bird_deadline: string;
@@ -20,11 +21,25 @@ interface SettingsState {
   registration_fee: string;
   payment_transfer_enabled: string;
   payment_qris_enabled: string;
+  benefit_prize_details: string;
+  benefit_race_pack_contents: string;
+  location_lat: string;
+  location_lng: string;
+  location_plus_code: string;
+  prize_umum_1: string;
+  prize_umum_2: string;
+  prize_umum_3: string;
+  prize_pelajar_1: string;
+  prize_pelajar_2: string;
+  prize_pelajar_3: string;
 }
+
+type EventType = "futuristic-run" | "fun-bike";
 
 const defaultSettings: SettingsState = {
   registration_open: "true",
   quota_5k: "200",
+  quota_funbike: "300",
   event_date: "",
   event_location: "",
   early_bird_deadline: "",
@@ -37,6 +52,17 @@ const defaultSettings: SettingsState = {
   registration_fee: "200000",
   payment_transfer_enabled: "true",
   payment_qris_enabled: "true",
+  benefit_prize_details: "",
+  benefit_race_pack_contents: "",
+  location_lat: "",
+  location_lng: "",
+  location_plus_code: "",
+  prize_umum_1: "",
+  prize_umum_2: "",
+  prize_umum_3: "",
+  prize_pelajar_1: "",
+  prize_pelajar_2: "",
+  prize_pelajar_3: "",
 };
 
 function SectionCard({ icon: Icon, title, color = "#00E5FF", children }: {
@@ -73,6 +99,7 @@ function Toggle({ label, desc, value, onChange }: { label: string; desc: string;
 }
 
 export default function PengaturanPage() {
+  const [eventType, setEventType] = useState<EventType>("futuristic-run");
   const [settings, setSettings] = useState<SettingsState>(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -99,7 +126,7 @@ export default function PengaturanPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/api/upload-qris?eventType=futuristic-run", {
+      const res = await fetch(`/api/upload-qris?eventType=${eventType}`, {
         method: "POST",
         body: formData,
       });
@@ -118,18 +145,30 @@ export default function PengaturanPage() {
   };
 
   useEffect(() => {
-    fetch("/api/admin/settings?eventType=futuristic-run")
+    fetch(`/api/admin/settings?eventType=${eventType}`)
       .then((r) => r.json())
       .then((data) => setSettings((prev) => ({ ...prev, ...data })))
       .finally(() => setLoading(false));
-  }, []);
+  }, [eventType]);
+
+  const selectEventType = (nextEventType: EventType) => {
+    if (nextEventType === eventType) return;
+    setLoading(true);
+    setSaved(false);
+    setSettings({ ...defaultSettings, registration_fee: nextEventType === "fun-bike" ? "150000" : "200000" });
+    setEventType(nextEventType);
+  };
 
   const handleSave = async () => {
     setSaving(true);
-    await fetch("/api/admin/settings?eventType=futuristic-run", {
+    const payload = Object.fromEntries(Object.entries(settings).filter(([key]) => {
+      if (eventType === "fun-bike") return key !== "quota_5k" && !key.startsWith("prize_") && !key.startsWith("benefit_");
+      return key !== "quota_funbike";
+    }));
+    await fetch(`/api/admin/settings?eventType=${eventType}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(settings),
+      body: JSON.stringify(payload),
     });
     setSaving(false);
     setSaved(true);
@@ -157,7 +196,24 @@ export default function PengaturanPage() {
         <h1 className="text-2xl font-black text-white mb-1" style={{ fontFamily: "Orbitron, sans-serif" }}>
           PENGATURAN
         </h1>
-        <p className="text-[#B0C4DE] text-sm">Konfigurasi event, kuota, dan sistem pembayaran</p>
+        <p className="text-[#B0C4DE] text-sm">Konfigurasi event, kuota, tanggal, hadiah, dan sistem pembayaran</p>
+      </div>
+
+      <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl border border-[#1E3A5F] bg-[#080C20] p-1" aria-label="Pilih event">
+        {([
+          { id: "futuristic-run" as const, label: "Futuristic Run" },
+          { id: "fun-bike" as const, label: "Futuristic Bike" },
+        ]).map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => selectEventType(item.id)}
+            className={`min-h-11 rounded-lg px-3 text-xs font-bold transition-colors ${eventType === item.id ? "bg-[#00E5FF] text-[#07111F]" : "text-[#B0C4DE] hover:text-white"}`}
+            style={{ fontFamily: "Orbitron, sans-serif" }}
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
 
       {/* Tabs */}
@@ -197,16 +253,16 @@ export default function PengaturanPage() {
 
               <SectionCard icon={Settings} title="KUOTA PESERTA" color="#8B00FF">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "#8B00FF" }}>Run 5K</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "#8B00FF" }}>{eventType === "futuristic-run" ? "Run 5K" : "Fun Ride"}</label>
                   <input
                     type="number"
                     className={inp}
-                    value={settings.quota_5k}
-                    onChange={(e) => set("quota_5k", e.target.value)}
+                    value={eventType === "futuristic-run" ? settings.quota_5k : settings.quota_funbike}
+                    onChange={(e) => set(eventType === "futuristic-run" ? "quota_5k" : "quota_funbike", e.target.value)}
                     min={1}
                     max={9999}
                   />
-                  <p className="text-[#B0C4DE] text-xs mt-1">Total slot yang tersedia untuk peserta Run 5K</p>
+                  <p className="text-[#B0C4DE] text-xs mt-1">Total slot yang tersedia untuk event terpilih</p>
                 </div>
               </SectionCard>
 
@@ -229,8 +285,74 @@ export default function PengaturanPage() {
                       />
                     </div>
                   ))}
+                  {eventType === "futuristic-run" && (
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      {[
+                        { key: "location_lat" as keyof SettingsState, label: "Latitude", placeholder: "-7.7130878" },
+                        { key: "location_lng" as keyof SettingsState, label: "Longitude", placeholder: "110.0090583" },
+                        { key: "location_plus_code" as keyof SettingsState, label: "Plus Code", placeholder: "72P5+QJ" },
+                      ].map(({ key, label, placeholder }) => (
+                        <div key={key}>
+                          <label className="block text-[#B0C4DE] text-sm mb-1.5">{label}</label>
+                          <input type="text" className={inp} value={settings[key]} placeholder={placeholder} onChange={(e) => set(key, e.target.value)} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </SectionCard>
+
+              {eventType === "futuristic-run" && <SectionCard icon={Settings} title="BENEFIT PESERTA" color="#00E5FF">
+                <div className="space-y-4">
+                  {[
+                    {
+                      key: "benefit_prize_details" as keyof SettingsState,
+                      label: "Detail Hadiah Juara",
+                      placeholder: "Contoh: nominal/trofi Juara Umum 1–3 dan Pelajar 1–3",
+                      help: "Kosongkan sampai nominal atau bentuk hadiah sudah final.",
+                    },
+                    {
+                      key: "benefit_race_pack_contents" as keyof SettingsState,
+                      label: "Isi Final Race Pack + BIB",
+                      placeholder: "Contoh: Jersey, BIB warna per kategori, goodie bag, kotak centang refreshment & medali",
+                      help: "Konten ini langsung menggantikan badge Segera diumumkan di halaman Run.",
+                    },
+                  ].map(({ key, label, placeholder, help }) => (
+                    <div key={key}>
+                      <label className="mb-1.5 block text-sm text-[#B0C4DE]">{label}</label>
+                      <textarea
+                        className={`${inp} min-h-24 resize-y`}
+                        value={settings[key]}
+                        placeholder={placeholder}
+                        onChange={(e) => set(key, e.target.value)}
+                        maxLength={500}
+                      />
+                      <p className="mt-1 text-xs text-[#B0C4DE]">{help}</p>
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>}
+
+              {eventType === "futuristic-run" && <SectionCard icon={Settings} title="HADIAH PER KATEGORI" color="#FFD700">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {[
+                    ["prize_umum_1", "Juara Umum 1"], ["prize_umum_2", "Juara Umum 2"], ["prize_umum_3", "Juara Umum 3"],
+                    ["prize_pelajar_1", "Juara Pelajar 1"], ["prize_pelajar_2", "Juara Pelajar 2"], ["prize_pelajar_3", "Juara Pelajar 3"],
+                  ].map(([key, label]) => (
+                    <div key={key}>
+                      <label className="mb-1.5 block text-sm text-[#B0C4DE]">{label}</label>
+                      <input
+                        type="text"
+                        className={inp}
+                        value={settings[key as keyof SettingsState]}
+                        placeholder="Kosong = Segera diumumkan"
+                        maxLength={500}
+                        onChange={(e) => set(key as keyof SettingsState, e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </SectionCard>}
             </>
           )}
 

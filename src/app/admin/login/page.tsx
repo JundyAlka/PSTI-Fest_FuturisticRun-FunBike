@@ -1,9 +1,11 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Zap, Eye, EyeOff, AlertCircle } from "lucide-react";
 import LogoMark from "@/components/LogoMark";
+import { FEST_NAME, FEST_YEAR } from "@/content/brand";
+import { EVENTS } from "@/content/events";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -56,7 +58,7 @@ export default function AdminLoginPage() {
           <h1 className="text-2xl font-black text-white mb-1" style={{ fontFamily: "Orbitron, sans-serif" }}>
             ADMIN PANEL
           </h1>
-          <p className="text-[#B0C4DE] text-sm">Futuristic RUN 2026 · PSTI FEST</p>
+          <p className="text-[#B0C4DE] text-sm">{EVENTS["futuristic-run"].name} {FEST_YEAR} - {FEST_NAME}</p>
         </div>
 
         <div className="card-animated glass-card rounded-2xl p-8 border border-[#1E3A5F]">
@@ -87,7 +89,7 @@ export default function AdminLoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   className={`${inp} pr-10`}
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -123,3 +125,4 @@ export default function AdminLoginPage() {
     </div>
   );
 }
+

@@ -4,6 +4,12 @@ import { RegisterSchema } from "@/lib/validations";
 import { generateRegistrationNumber, getEventCategories, getEventInfo } from "@/lib/utils";
 import { sendRegistrationEmail } from "@/lib/email";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { checkInsforgeHealth, serviceUnavailable } from "@/lib/insforgeHealth";
+
+type AtomicRegistrationResult = {
+  reg_number: string;
+  id: number;
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,6 +34,11 @@ export async function POST(req: NextRequest) {
 
     const data = parsed.data;
     const eventType = data.eventType ?? "futuristic-run";
+    const health = await checkInsforgeHealth();
+    if (!health.ok) {
+      console.error("[POST /api/register] InsForge health check failed", health.error);
+      return serviceUnavailable();
+    }
 
     // Fetch categories for this event
     const categories = await getEventCategories(eventType);
@@ -138,13 +149,10 @@ export async function POST(req: NextRequest) {
 
     const amount = catRow.price;
 
-    const { data: participant, error: insertError } = await insforge.database
-      .from("participants")
-      .insert([{
-        reg_number: `${eventType.toUpperCase().replace(/-/g, "")}-TEMP-${Date.now()}`,
+    const participantPayload = {
         event_type: eventType,
         full_name: data.fullName.trim(),
-        nik: data.nik || "",
+        nik: data.nik || null,
         gender: data.gender,
         birth_place: data.birthPlace.trim(),
         birth_date: data.birthDate,
@@ -163,21 +171,49 @@ export async function POST(req: NextRequest) {
         payment_status: "pending",
         payment_amount: amount,
         status: "registered",
-        ...(data.bikeType ? { running_club: data.bikeType } : {}),
-      }])
-      .select()
-      .single();
+        medical_history: data.medicalHistory || null,
+        running_club: eventType === "futuristic-run" ? (data.runningClub || null) : null,
+        bike_type: eventType === "fun-bike" ? (data.bikeType || null) : null,
+    };
 
-    if (insertError || !participant) {
-      throw insertError ?? new Error("Insert failed");
+    let regNumber = "";
+
+    const { data: atomicRows, error: atomicError } = await insforge.database.rpc("register_participant_atomic", {
+      payload: participantPayload,
+    });
+
+    const atomicResult = Array.isArray(atomicRows) ? atomicRows[0] as AtomicRegistrationResult | undefined : undefined;
+
+    if (!atomicError && atomicResult?.reg_number) {
+      regNumber = atomicResult.reg_number;
+    } else {
+      if (atomicError) {
+        console.warn("[POST /api/register] Atomic registration unavailable, falling back to compatibility insert");
+      }
+
+      const tempReg = `${eventType.toUpperCase().replace(/-/g, "")}-TEMP-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const { data: participant, error: insertError } = await insforge.database
+        .from("participants")
+        .insert([{
+          reg_number: tempReg,
+          ...participantPayload,
+        }])
+        .select()
+        .single();
+
+      if (insertError || !participant) {
+        throw insertError ?? new Error("Insert failed");
+      }
+
+      regNumber = generateRegistrationNumber(eventType, participant.id);
+      const { error: updateError } = await insforge.database
+        .from("participants")
+        .update({ reg_number: regNumber })
+        .eq("id", participant.id)
+        .eq("reg_number", tempReg);
+
+      if (updateError) throw updateError;
     }
-
-    // Update with proper reg number
-    const regNumber = generateRegistrationNumber(eventType, participant.id);
-    await insforge.database
-      .from("participants")
-      .update({ reg_number: regNumber })
-      .eq("id", participant.id);
 
     // Send email (non-blocking)
     sendRegistrationEmail({

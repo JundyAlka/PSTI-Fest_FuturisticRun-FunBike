@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { Search, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, CheckCircle, Clock, FileText, Search, Upload, XCircle } from "lucide-react";
 
 type RegResult = {
   found: boolean;
@@ -10,6 +11,8 @@ type RegResult = {
   paymentStatus?: string;
   status?: string;
   bibNumber?: number;
+  paymentProof?: string | null;
+  rejectionReason?: string | null;
   message?: string;
 };
 
@@ -59,10 +62,10 @@ export default function CekPage() {
     >
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full blur-3xl opacity-10 bg-gradient-to-r from-[#00E5FF] to-[#8B00FF]" />
 
-      <div className="relative z-10 max-w-lg mx-auto px-4 sm:px-6 pt-28 pb-20">
+      <div className="relative z-10 mx-auto max-w-2xl px-4 pb-24 pt-28 sm:px-6">
         <div className="text-center mb-10">
           <div className="badge-neon inline-block mb-4">CEK STATUS</div>
-          <h1 className="text-4xl sm:text-5xl font-black text-white mb-3" style={{ fontFamily: "Orbitron, sans-serif" }}>
+          <h1 className="text-3xl font-black text-white mb-3 sm:text-5xl" style={{ fontFamily: "Orbitron, sans-serif" }}>
             CEK PENDAFTARAN
           </h1>
           <p className="text-[#B0C4DE]">Masukkan nomor registrasi Anda untuk melihat status</p>
@@ -70,9 +73,9 @@ export default function CekPage() {
 
         {/* Search */}
         <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-6 mb-6">
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <input
-              className="neon-input flex-1 rounded-xl px-4 py-3 text-sm"
+              className="neon-input min-h-12 flex-1 rounded-xl px-4 py-3 text-sm"
               placeholder="Contoh: FR2026-0001"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -81,7 +84,7 @@ export default function CekPage() {
             <button
               onClick={check}
               disabled={loading || !query.trim()}
-              className="btn-neon flex items-center gap-2 px-6 py-3 rounded-xl text-sm cursor-pointer disabled:opacity-50"
+              className="btn-neon flex min-h-12 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm cursor-pointer disabled:opacity-50"
             >
               {loading ? (
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -95,7 +98,7 @@ export default function CekPage() {
 
         {/* Result */}
         {result && (
-          <div className="card-animated glass-card rounded-2xl border p-6" style={{ borderColor: `${accentColor}40` }}>
+          <div className="card-animated glass-card rounded-2xl border p-5 sm:p-6" style={{ borderColor: `${accentColor}40` }}>
             {result.found ? (
               <div className="space-y-4">
                 <div className="text-center">
@@ -107,18 +110,68 @@ export default function CekPage() {
                   </div>
                 </div>
                 <div className="h-px" style={{ backgroundImage: `linear-gradient(90deg, transparent, ${accentColor}40, transparent)` }} />
-                <div className="space-y-3">
+                <div className="space-y-3 rounded-2xl border border-white/8 bg-white/5 p-4">
                   {[
                     { label: "Nama", value: result.name },
                     { label: "Kategori", value: result.category },
-                    { label: "Status", value: undefined, node: statusBadge(result.paymentStatus ?? result.status ?? "") },
+                    { label: "Pembayaran", value: undefined, node: statusBadge(result.paymentStatus ?? result.status ?? "") },
                     ...(result.bibNumber ? [{ label: "No. BIB", value: String(result.bibNumber) }] : []),
                   ].map((row) => (
-                    <div key={row.label} className="flex justify-between text-sm">
+                    <div key={row.label} className="flex flex-col gap-1 text-sm min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                       <span className="text-[#B0C4DE]">{row.label}</span>
                       {row.node ?? <span className="text-white font-semibold">{row.value}</span>}
                     </div>
                   ))}
+                </div>
+
+                {result.rejectionReason && (
+                  <div className="rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-left text-sm text-red-100">
+                    <p className="font-semibold text-red-200">Catatan panitia</p>
+                    <p className="mt-1">{result.rejectionReason}</p>
+                  </div>
+                )}
+
+                {result.paymentProof && (
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left">
+                    <p className="mb-2 text-sm font-semibold text-white">Bukti pembayaran tersimpan</p>
+                    {result.paymentProof.endsWith(".pdf") ? (
+                      <a href={result.paymentProof} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#00E5FF]">
+                        <FileText size={16} /> Lihat bukti PDF
+                      </a>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={result.paymentProof} alt="Bukti pembayaran" className="max-h-72 w-full rounded-xl object-contain" />
+                    )}
+                  </div>
+                )}
+
+                <div className="rounded-2xl border border-[#00E5FF]/20 bg-[#00E5FF]/8 p-4 text-left">
+                  <p className="text-sm font-bold text-white">Langkah lanjut</p>
+                  <p className="mt-1 text-sm leading-relaxed text-[#B0C4DE]">
+                    {result.paymentStatus === "verified"
+                      ? "Pembayaran sudah terverifikasi. Simpan nomor registrasi dan ikuti informasi race pack dari panitia."
+                      : result.paymentStatus === "rejected"
+                        ? "Upload ulang bukti pembayaran yang valid melalui halaman konfirmasi."
+                        : result.paymentProof
+                          ? "Bukti sudah masuk. Tunggu verifikasi panitia dalam 1x24 jam kerja."
+                          : "Selesaikan pembayaran, lalu upload bukti pembayaran melalui halaman konfirmasi."}
+                  </p>
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                    {result.paymentStatus === "rejected" || !result.paymentProof ? (
+                      <Link
+                        href={`/konfirmasi?reg=${encodeURIComponent(result.regNumber ?? query)}${isFunBike ? "&event=fun-bike" : "&event=futuristic-run"}#upload-bukti`}
+                        className="btn-neon inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm"
+                      >
+                        <Upload size={15} /> Upload Bukti
+                      </Link>
+                    ) : null}
+                    <Link
+                      href={isFunBike ? "/fun-bike" : "/futuristic-run"}
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/10 px-4 text-sm font-semibold text-[#D7E8FF] transition hover:bg-white/5"
+                    >
+                      Lihat Info Event
+                    </Link>
+                  </div>
                 </div>
               </div>
             ) : (

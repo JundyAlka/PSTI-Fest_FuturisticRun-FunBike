@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { insforge } from "@/lib/insforge";
+import { EVENTS } from "@/content/events";
 import Papa from "papaparse";
 
 export async function GET(req: NextRequest) {
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
 
   const rows = (participants ?? []).map((p) => ({
     "No. Registrasi": p.reg_number,
-    "Event": p.event_type === "fun-bike" ? "Fun Bike" : "Futuristic Run",
+    "Event": p.event_type === "fun-bike" ? EVENTS["fun-bike"].name : EVENTS["futuristic-run"].name,
     "Nama Lengkap": p.full_name,
     NIK: p.nik,
     "Jenis Kelamin": p.gender === "male" ? "Laki-laki" : "Perempuan",

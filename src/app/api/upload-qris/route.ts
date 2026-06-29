@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { insforge } from "@/lib/insforge";
+import { checkInsforgeHealth, serviceUnavailable } from "@/lib/insforgeHealth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,6 +9,8 @@ export async function POST(req: NextRequest) {
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const eventType = req.nextUrl.searchParams.get("eventType") ?? "futuristic-run";
+    const health = await checkInsforgeHealth();
+    if (!health.ok) return serviceUnavailable("Upload QRIS sementara tidak tersedia. Coba lagi beberapa saat.");
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
@@ -29,7 +32,7 @@ export async function POST(req: NextRequest) {
     const fileName = `qris/${eventType}-${Date.now()}.${ext}`;
     const blob = new Blob([await file.arrayBuffer()], { type: file.type });
 
-    const { error: uploadError } = await insforge.storage
+    const { data: uploadData, error: uploadError } = await insforge.storage
       .from("qris-images")
       .upload(fileName, blob);
 
@@ -38,7 +41,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Gagal mengunggah QRIS" }, { status: 500 });
     }
 
-    const publicUrl = insforge.storage.from("qris-images").getPublicUrl(fileName);
+    const publicUrl = uploadData?.url ?? insforge.storage.from("qris-images").getPublicUrl(fileName);
+    const objectKey = uploadData?.key ?? fileName;
 
     // Auto-update the setting
     const { data: existing } = await insforge.database
@@ -49,19 +53,35 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     if (existing) {
-      await insforge.database
+      const { error: updateError } = await insforge.database
         .from("event_settings")
         .update({ value: publicUrl, updated_at: new Date().toISOString() })
         .eq("id", existing.id);
+      if (updateError) throw updateError;
     } else {
-      await insforge.database
+      const { error: insertError } = await insforge.database
         .from("event_settings")
         .insert([{ event_type: eventType, key: "payment_qris_image_url", value: publicUrl }]);
+      if (insertError) throw insertError;
     }
+
+    const { data: existingKey } = await insforge.database
+      .from("event_settings")
+      .select("id")
+      .eq("event_type", eventType)
+      .eq("key", "payment_qris_image_key")
+      .maybeSingle();
+
+    const keyResult = existingKey
+      ? await insforge.database.from("event_settings").update({ value: objectKey }).eq("id", existingKey.id)
+      : await insforge.database.from("event_settings").insert([
+          { event_type: eventType, key: "payment_qris_image_key", value: objectKey },
+        ]);
+    if (keyResult.error) throw keyResult.error;
 
     return NextResponse.json({ success: true, url: publicUrl });
   } catch (err) {
     console.error("[POST /api/upload-qris]", err);
-    return NextResponse.json({ error: "Terjadi kesalahan server" }, { status: 500 });
+    return serviceUnavailable("Upload QRIS sementara tidak tersedia. Coba lagi beberapa saat.");
   }
 }

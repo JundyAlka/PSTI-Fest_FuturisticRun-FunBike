@@ -65,9 +65,22 @@ export const ALLOWED_SETTING_KEYS = [
   "payment_bank_holder",
   "payment_qris_nmid",
   "payment_qris_image_url",
+  "payment_qris_image_key",
   "registration_fee",
   "payment_transfer_enabled",
   "payment_qris_enabled",
+  "contact_person",
+  "benefit_prize_details",
+  "benefit_race_pack_contents",
+  "location_lat",
+  "location_lng",
+  "location_plus_code",
+  "prize_umum_1",
+  "prize_umum_2",
+  "prize_umum_3",
+  "prize_pelajar_1",
+  "prize_pelajar_2",
+  "prize_pelajar_3",
 ] as const;
 
 export const AdminSettingsSchema = z.object({

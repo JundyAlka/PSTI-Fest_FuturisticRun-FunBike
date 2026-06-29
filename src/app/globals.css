@@ -29,6 +29,35 @@ body {
   overflow-x: hidden;
 }
 
+html,
+body {
+  max-width: 100%;
+}
+
+main,
+section,
+header,
+footer,
+nav,
+aside {
+  min-width: 0;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--color-primary-dark); }
@@ -393,6 +422,35 @@ body {
   animation: shimmerSweep 1s ease;
 }
 
+.tbd-badge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 22%, rgba(255,255,255,0.10) 46%, transparent 70%);
+  transform: translateX(-120%);
+  animation: shimmerSweep 3.6s ease-in-out infinite;
+}
+
+.benefit-card:hover .benefit-icon {
+  box-shadow: 0 0 30px rgba(0,229,255,0.22), 0 0 38px rgba(139,0,255,0.10);
+}
+
+.location-map-skeleton {
+  background-image: linear-gradient(105deg, transparent 18%, rgba(0,229,255,0.13) 42%, rgba(139,0,255,0.14) 52%, transparent 76%);
+  background-size: 220% 100%;
+  animation: skeletonShimmer 1.8s ease-in-out infinite;
+}
+
+.location-map-pulse {
+  animation: locationPulse 2.2s ease-out infinite;
+}
+
+@keyframes locationPulse {
+  0% { opacity: 0.8; transform: translate(-50%, -50%) scale(0.35); }
+  75%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.45); }
+}
+
 .stagger-list > * {
   animation: scaleInSoft 0.65s ease both;
   animation-play-state: paused;
@@ -682,11 +740,70 @@ body {
 
 /* Mobile menu */
 .mobile-menu {
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: opacity 0.25s ease, transform 0.3s ease;
 }
 .mobile-menu.open {
-  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+  transform: scaleX(1);
+}
+
+.hub-event-copy {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.hub-event-card {
+  min-width: 0;
+  touch-action: manipulation;
+}
+
+.hub-event-card:active {
+  transform: translateY(-2px) scale(0.99);
+}
+
+.hub-event-meta > span {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  .badge-neon,
+  .badge-sunrise {
+    font-size: 0.58rem;
+    letter-spacing: 1.4px;
+    padding: 4px 10px;
+  }
+
+  .hub-event-card:hover {
+    transform: none;
+  }
+
+  .glass-premium,
+  .glass-premium-light {
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

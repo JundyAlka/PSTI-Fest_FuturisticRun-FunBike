@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import bcrypt from "bcryptjs";
+import { FEST_NAME } from "../src/content/brand";
 
 const adapter = new PrismaBetterSqlite3({ url: "file:./prisma/dev.db" });
 const prisma = new PrismaClient({ adapter });
@@ -12,16 +13,16 @@ async function main() {
   const events = [
     {
       slug: "futuristic-run",
-      name: "Futuristic RUN 2026",
+      name: "Futuristic Run",
       theme: "futuristic",
       isOpen: true,
-      eventDate: new Date("2026-06-22"),
-      location: "Purworejo, Jawa Tengah",
+      eventDate: null,
+      location: "Alun-Alun Purworejo",
       deadline: new Date("2026-06-14"),
     },
     {
       slug: "fun-bike",
-      name: "Fun Bike 2026",
+      name: "Futuristic Bike",
       theme: "sunrise",
       isOpen: true,
       eventDate: null,
@@ -33,7 +34,7 @@ async function main() {
   for (const ev of events) {
     await prisma.event.upsert({
       where: { slug: ev.slug },
-      update: { name: ev.name, theme: ev.theme },
+      update: { name: ev.name, theme: ev.theme, eventDate: ev.eventDate, location: ev.location },
       create: ev,
     });
   }
@@ -42,7 +43,7 @@ async function main() {
   // ── Event Categories ───────────────────────────────────────────────────────
   const eventCategories = [
     { eventType: "futuristic-run", code: "5K", label: "Run 5K", price: 200000, quota: 200, minAge: 13 },
-    { eventType: "fun-bike", code: "funbike", label: "Fun Bike Ride", price: 150000, quota: 300, minAge: 10 },
+    { eventType: "fun-bike", code: "funbike", label: "Futuristic Bike Ride", price: 150000, quota: 300, minAge: 10 },
   ];
 
   for (const ec of eventCategories) {
@@ -56,20 +57,20 @@ async function main() {
 
   // ── Admin user ─────────────────────────────────────────────────────────────
   const existingAdmin = await prisma.adminUser.findUnique({
-    where: { email: "admin@pstifest.com" },
+    where: { email: "admin@futuristicvibes.id" },
   });
 
   if (!existingAdmin) {
     const hashed = await bcrypt.hash("admin123", 12);
     await prisma.adminUser.create({
       data: {
-        email: "admin@pstifest.com",
+        email: "admin@futuristicvibes.id",
         password: hashed,
-        name: "Admin PSTI FEST",
+        name: `Admin ${FEST_NAME}`,
         role: "admin",
       },
     });
-    console.log("✅ Admin created: admin@pstifest.com / admin123");
+    console.log("✅ Admin created: admin@futuristicvibes.id / admin123");
   } else {
     console.log("ℹ️  Admin already exists");
   }
@@ -78,10 +79,21 @@ async function main() {
   const settings = [
     { eventType: "futuristic-run", key: "registration_open", value: "true" },
     { eventType: "futuristic-run", key: "registration_fee", value: "200000" },
-    { eventType: "futuristic-run", key: "event_date", value: "2026-06-22" },
-    { eventType: "futuristic-run", key: "event_location", value: "Purworejo, Jawa Tengah" },
+    { eventType: "futuristic-run", key: "event_date", value: "" },
+    { eventType: "futuristic-run", key: "event_location", value: "Alun-Alun Purworejo" },
+    { eventType: "futuristic-run", key: "location_lat", value: "-7.7130878" },
+    { eventType: "futuristic-run", key: "location_lng", value: "110.0090583" },
+    { eventType: "futuristic-run", key: "location_plus_code", value: "72P5+QJ" },
     { eventType: "futuristic-run", key: "early_bird_deadline", value: "2026-05-31" },
     { eventType: "futuristic-run", key: "registration_deadline", value: "2026-06-14" },
+    { eventType: "futuristic-run", key: "benefit_prize_details", value: "" },
+    { eventType: "futuristic-run", key: "benefit_race_pack_contents", value: "" },
+    { eventType: "futuristic-run", key: "prize_umum_1", value: "" },
+    { eventType: "futuristic-run", key: "prize_umum_2", value: "" },
+    { eventType: "futuristic-run", key: "prize_umum_3", value: "" },
+    { eventType: "futuristic-run", key: "prize_pelajar_1", value: "" },
+    { eventType: "futuristic-run", key: "prize_pelajar_2", value: "" },
+    { eventType: "futuristic-run", key: "prize_pelajar_3", value: "" },
   ];
 
   for (const s of settings) {
@@ -129,7 +141,7 @@ async function main() {
           status: "registered",
           bibNumber: status === "verified" ? 1000 + i : null,
           verifiedAt: status === "verified" ? new Date() : null,
-          verifiedBy: status === "verified" ? "admin@pstifest.com" : null,
+          verifiedBy: status === "verified" ? "admin@futuristicvibes.id" : null,
         },
       });
     }

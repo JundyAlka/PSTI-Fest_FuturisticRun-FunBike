@@ -2,46 +2,46 @@
 import { useState } from "react";
 import { ChevronDown, Shield } from "lucide-react";
 import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
+import TbdBadge, { hasAnnouncedValue } from "@/components/ui/TbdBadge";
 
-const rules = [
-  {
-    title: "Syarat & Ketentuan Umum",
-    content: "Peserta wajib mendaftarkan diri melalui website resmi. Pendaftaran dianggap sah setelah pembayaran terverifikasi oleh panitia. Peserta wajib membawa bukti pendaftaran pada hari H. Data yang telah diisi tidak dapat diubah setelah pendaftaran dikonfirmasi.",
-  },
-  {
-    title: "Ketentuan Usia Peserta",
-    content: "Run 5K terbuka untuk peserta minimal usia 13 tahun. Peserta di bawah 17 tahun wajib melampirkan izin orang tua atau wali.",
-  },
-  {
-    title: "Prosedur Pengambilan Race Pack",
-    content: "Race pack (jersey + BIB + perlengkapan) diambil pada tanggal 20–21 Juni 2026 di lokasi yang akan diinformasikan. Peserta wajib menunjukkan bukti registrasi. Race pack tidak dapat diwakilkan kecuali dengan surat kuasa. Race pack yang tidak diambil tidak dapat diklaim kembali.",
-  },
-  {
-    title: "Larangan & Sanksi",
-    content: "Dilarang menggunakan kendaraan bermotor selama perlombaan. Dilarang menggunakan doping atau substansi terlarang. Peserta yang melanggar peraturan akan didiskualifikasi tanpa pengembalian biaya. Panitia berhak membatalkan pendaftaran jika ditemukan kecurangan.",
-  },
-  {
-    title: "Disclaimer Kesehatan & Risiko",
-    content: "Peserta wajib dalam kondisi sehat pada saat perlombaan. Peserta dengan kondisi medis tertentu dianjurkan berkonsultasi dengan dokter sebelum mendaftar. Panitia tidak bertanggung jawab atas cedera atau kondisi medis yang terjadi selama event. Disarankan membawa kartu asuransi kesehatan.",
-  },
-  {
-    title: "Kebijakan Refund",
-    content: "Biaya pendaftaran tidak dapat dikembalikan (non-refundable) setelah verifikasi pembayaran. Tidak ada transferabilitas nomor BIB antar peserta. Jika event dibatalkan oleh panitia, akan ada pengembalian biaya sesuai kebijakan yang akan diinformasikan.",
-  },
-];
+function parseSettingList(value: string | undefined) {
+  if (!hasAnnouncedValue(value)) return null;
+  try {
+    const parsed = JSON.parse(value as string);
+    if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+  } catch {
+    return (value as string).split(/\r?\n|;/).map((item) => item.trim()).filter(Boolean);
+  }
+  return null;
+}
 
-export default function RulesSection() {
+export default function RulesSection({ settings = {} }: { settings?: Record<string, string> }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const settingRules = parseSettingList(settings.rules);
+  const rules = settingRules?.map((content, index) => ({
+    title: index === 0 ? "Ketentuan Resmi" : `Ketentuan ${index + 1}`,
+    content,
+  })) ?? [];
 
   return (
-    <section id="rules" className="section-reveal relative py-24 overflow-hidden bg-[#0A0E27]">
+    <section id="rules" className="section-reveal relative py-6 sm:py-10 overflow-hidden bg-[#0A0E27]">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="section-reveal-delay-1 text-center mb-16">
+        <div className="section-reveal-delay-1 text-center mb-10">
           <div className="badge-neon inline-block mb-4">KETENTUAN</div>
           <AnimatedSectionTitle text="PERATURAN" className="text-4xl sm:text-5xl font-black mb-4" />
           <div className="w-24 h-1 mx-auto rounded-full bg-gradient-to-r from-[#00E5FF] to-[#FF006E]" />
         </div>
 
+        {rules.length === 0 ? (
+          <div className="card-animated mx-auto max-w-xl rounded-2xl border border-[#1E3A5F] bg-[#0B1030]/80 p-8 text-center">
+            <div className="mb-3 flex justify-center">
+              <TbdBadge />
+            </div>
+            <p className="text-sm leading-6 text-[#B0C4DE]">
+              Rules resmi akan tampil setelah admin mengisi key <span className="font-mono text-[#00E5FF]">rules</span> di settings.
+            </p>
+          </div>
+        ) : (
         <div className="stagger-list space-y-3">
           {rules.map((rule, i) => (
             <div
@@ -80,6 +80,7 @@ export default function RulesSection() {
             </div>
           ))}
         </div>
+        )}
       </div>
     </section>
   );

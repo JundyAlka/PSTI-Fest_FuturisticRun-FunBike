@@ -1,11 +1,11 @@
-import { type ReactNode } from "react";
-
 interface SectionHeadingProps {
   eyebrow: string;
   title: string;
   subtitle?: string;
   accentColor?: string;
   accentColor2?: string;
+  lightSurface?: boolean;
+  titleFontFamily?: string;
   className?: string;
 }
 
@@ -15,6 +15,8 @@ export default function SectionHeading({
   subtitle,
   accentColor = "#00E5FF",
   accentColor2 = "#8B00FF",
+  lightSurface = false,
+  titleFontFamily = "Orbitron, sans-serif",
   className = "",
 }: SectionHeadingProps) {
   return (
@@ -31,10 +33,12 @@ export default function SectionHeading({
         {eyebrow}
       </div>
       <h2
-        className="text-4xl sm:text-5xl font-black mb-4"
+        className={`text-4xl sm:text-5xl font-black mb-4 ${lightSurface ? "italic" : ""}`}
         style={{
-          fontFamily: "Orbitron, sans-serif",
-          background: `linear-gradient(135deg, ${accentColor}, #ffffff 40%, ${accentColor2})`,
+          fontFamily: titleFontFamily,
+          background: lightSurface
+            ? `linear-gradient(100deg, ${accentColor} 0%, #F97316 44%, ${accentColor2} 100%)`
+            : `linear-gradient(135deg, ${accentColor}, #ffffff 40%, ${accentColor2})`,
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",

@@ -179,7 +179,7 @@ function InputField({ label, id, error, required, theme, children }: {
 
 export default function RegistrationForm({ eventType = "futuristic-run", categoryLabel, defaultPrice }: RegistrationFormProps) {
   const isFunBike = eventType === "fun-bike";
-  const catLabel = categoryLabel ?? (isFunBike ? "FUN BIKE RIDE" : "RUN 5K");
+  const catLabel = categoryLabel ?? (isFunBike ? "Futuristic Bike Ride" : "RUN 5K");
   const t = isFunBike ? lightTheme : darkTheme;
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(makeInitial(eventType));
@@ -187,16 +187,42 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
   const [submitting, setSubmitting] = useState(false);
   const [payment, setPayment] = useState<PaymentInfo>(defaultPayment);
   const [paymentLoading, setPaymentLoading] = useState(true);
+  const [paymentError, setPaymentError] = useState(false);
+  const [paymentRetryKey, setPaymentRetryKey] = useState(0);
 
   useEffect(() => {
+    let alive = true;
+    const resetTimer = window.setTimeout(() => {
+      if (!alive) return;
+      setPaymentLoading(true);
+      setPaymentError(false);
+    }, 0);
+
     fetch(`/api/payment-info?eventType=${encodeURIComponent(eventType)}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (!data.error) setPayment(data);
+      .then((r) => {
+        if (!r.ok) throw new Error("Failed to load payment info");
+        return r.json();
       })
-      .catch(() => {})
-      .finally(() => setPaymentLoading(false));
-  }, [eventType]);
+      .then((data) => {
+        if (!alive) return;
+        if (!data.error) {
+          setPayment(data);
+        } else {
+          setPaymentError(true);
+        }
+      })
+      .catch(() => {
+        if (alive) setPaymentError(true);
+      })
+      .finally(() => {
+        if (alive) setPaymentLoading(false);
+      });
+
+    return () => {
+      alive = false;
+      window.clearTimeout(resetTimer);
+    };
+  }, [eventType, paymentRetryKey]);
 
   const fee = defaultPrice ?? payment.registrationFee;
 
@@ -218,15 +244,21 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
   }, [eventType]);
 
   useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
       const saved = localStorage.getItem(draftKey);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === "object") {
-          setForm((f) => ({ ...f, ...parsed }));
+          timeout = setTimeout(() => {
+            setForm((f) => ({ ...f, ...parsed }));
+          }, 0);
         }
       }
     } catch { /* ignore */ }
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -321,6 +353,10 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
         setApiError(data.message ?? "Pendaftaran gagal. Coba lagi.");
         return;
       }
+      if (typeof data.regNumber !== "string" || !/^(FR|FB)2026-\d{4,}$/.test(data.regNumber)) {
+        setApiError("Pendaftaran belum dapat dikonfirmasi. Silakan cek status atau hubungi panitia.");
+        return;
+      }
       trackFormSubmit(eventType, data.regNumber);
       clearDraft();
       router.push(`/konfirmasi?reg=${data.regNumber}&event=${eventType}`);
@@ -331,7 +367,7 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
     }
   };
 
-  const eventName = isFunBike ? "Fun Bike 2026" : "Futuristic RUN 2026";
+  const eventName = isFunBike ? "Futuristic Bike 2026" : "Futuristic Run 2026";
 
   // Section header icon bg/border per theme
   const sectionIconBg1 = isFunBike ? "rgba(255,107,44,0.1)" : "rgba(0,229,255,0.12)";
@@ -345,18 +381,18 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
   const sectionIconColor3 = isFunBike ? "#7BC142" : "#FFD700";
 
   return (
-    <div className={`${t.container} rounded-3xl overflow-hidden relative`}>
+    <div className={`${t.container} rounded-2xl sm:rounded-3xl overflow-hidden relative`}>
       {/* Top accent line */}
       <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, transparent, ${t.accent}, transparent)` }} />
 
       {/* Step indicator */}
-      <div className={`p-6 sm:p-8 border-b ${t.borderColor}`}>
+      <div className={`p-4 sm:p-8 border-b ${t.borderColor}`}>
         <div className="flex items-center justify-between max-w-md mx-auto">
           {steps.map((s, i) => (
             <div key={i} className="flex items-center flex-1">
               <div className="flex flex-col items-center">
                 <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${
+                  className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-500 ${
                     i < step ? t.stepDone : i === step ? t.stepActive : t.stepBase
                   }`}
                 >
@@ -377,7 +413,7 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
                 </span>
               </div>
               {i < steps.length - 1 && (
-                <div className={`flex-1 mx-3 h-[2px] rounded-full overflow-hidden ${isFunBike ? "bg-gray-200" : "bg-[#1E3A5F]/40"}`}>
+                <div className={`flex-1 mx-2 sm:mx-3 h-[2px] rounded-full overflow-hidden ${isFunBike ? "bg-gray-200" : "bg-[#1E3A5F]/40"}`}>
                   <div
                     className="h-full rounded-full transition-all duration-700 ease-out"
                     style={{
@@ -392,7 +428,7 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
         </div>
       </div>
 
-      <div className="p-6 sm:p-8 lg:p-10">
+      <div className="p-4 sm:p-8 lg:p-10">
         {/* Step 1 */}
         {step === 0 && (
           <div className="section-reveal space-y-6">
@@ -467,7 +503,7 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
               </div>
             </div>
             {/* Category locked */}
-            <div className={`${t.inner} p-5 rounded-2xl flex items-center justify-between`} style={{ borderColor: isFunBike ? "rgba(245,158,11,0.2)" : "rgba(139,0,255,0.2)" }}>
+            <div className={`${t.inner} p-4 sm:p-5 rounded-2xl flex flex-col min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between gap-3`} style={{ borderColor: isFunBike ? "rgba(245,158,11,0.2)" : "rgba(139,0,255,0.2)" }}>
               <div className="flex items-center gap-3">
                 <div className="text-2xl">{isFunBike ? "🚴" : "⚡"}</div>
                 <div>
@@ -475,7 +511,7 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
                   <div className={`${t.textH} font-black`} style={{ fontFamily: "Orbitron, sans-serif", letterSpacing: "1px" }}>{catLabel}</div>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="min-[430px]:text-right">
                 <div className={`text-[10px] uppercase tracking-widest font-semibold mb-0.5 ${t.textM}`}>Biaya</div>
                 <div className="text-[#FFD700] font-black text-lg" style={{ fontFamily: "Orbitron, sans-serif" }}>{feeFormatted}</div>
               </div>
@@ -547,7 +583,7 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
             </div>
 
             {/* Summary */}
-            <div className={`${t.inner} rounded-2xl p-6 space-y-3`} style={{ borderColor: `${t.accentGlow}0.15)` }}>
+            <div className={`${t.inner} rounded-2xl p-4 sm:p-6 space-y-3`} style={{ borderColor: `${t.accentGlow}0.15)` }}>
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles size={14} style={{ color: t.accent }} />
                 <h4 className="font-bold text-xs tracking-[2px]" style={{ fontFamily: "Orbitron, sans-serif", color: t.accent }}>RINGKASAN PENDAFTARAN</h4>
@@ -561,9 +597,9 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
                 { label: "Email", value: form.email },
                 { label: "Total Bayar", value: paymentLoading ? "..." : feeFormatted },
               ].map((row) => (
-                <div key={row.label} className={`flex justify-between text-sm py-1.5 border-b last:border-0 ${isFunBike ? "border-gray-100" : "border-white/[0.04]"}`}>
-                  <span className={t.textS}>{row.label}</span>
-                  <span className={`${t.textP} font-semibold ${row.label === "Total Bayar" ? "text-[#FFD700] font-black text-base" : ""}`}>{row.value}</span>
+                <div key={row.label} className={`flex items-start justify-between gap-4 text-sm py-1.5 border-b last:border-0 ${isFunBike ? "border-gray-100" : "border-white/[0.04]"}`}>
+                  <span className={`${t.textS} flex-shrink-0`}>{row.label}</span>
+                  <span className={`${t.textP} min-w-0 break-words text-right font-semibold ${row.label === "Total Bayar" ? "text-[#FFD700] font-black text-base" : ""}`}>{row.value}</span>
                 </div>
               ))}
             </div>
@@ -571,11 +607,24 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
             {paymentLoading ? (
               <div className="space-y-4">
                 <div className="skeleton-shimmer h-4 w-32 rounded" />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 min-[430px]:grid-cols-2 gap-3">
                   <div className="skeleton-shimmer h-24 rounded-xl" />
                   <div className="skeleton-shimmer h-24 rounded-xl" />
                 </div>
                 <div className="skeleton-shimmer h-32 rounded-xl" />
+              </div>
+            ) : paymentError ? (
+              <div className={`${t.inner} rounded-2xl p-5 text-sm`}>
+                <div className="mb-2 font-bold" style={{ color: t.accent }}>Info pembayaran belum bisa dimuat.</div>
+                <p className={t.textM}>Coba lagi sebentar. Jika masih gagal, hubungi panitia sebelum melakukan pembayaran.</p>
+                <button
+                  type="button"
+                  onClick={() => setPaymentRetryKey((key) => key + 1)}
+                  className="mt-4 min-h-11 rounded-full px-4 py-2 text-xs font-bold"
+                  style={{ border: `1px solid ${t.accent}`, color: t.accent }}
+                >
+                  Coba lagi
+                </button>
               </div>
             ) : (
             <>
@@ -584,7 +633,7 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
               <label className={`block text-xs font-semibold uppercase tracking-wider mb-3 ${t.textLabel}`}>
                 Metode Pembayaran <span className="text-[#FF006E]">*</span>
               </label>
-              <div className="stagger-list grid grid-cols-2 gap-3 mb-4">
+              <div className="stagger-list grid grid-cols-1 min-[430px]:grid-cols-2 gap-3 mb-4">
                 {[
                   payment.transferEnabled && { value: "transfer", label: "Transfer Bank", icon: "🏦", desc: payment.bankName },
                   payment.qrisEnabled && { value: "qris", label: "QRIS", icon: "📱", desc: "Scan & bayar langsung" },
@@ -593,7 +642,7 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
                     key={m.value}
                     type="button"
                     onClick={() => set("paymentMethod", m.value)}
-                    className={`${t.inner} p-5 rounded-2xl text-center transition-all duration-300 cursor-pointer group ${
+                    className={`${t.inner} p-4 sm:p-5 rounded-2xl text-center transition-all duration-300 cursor-pointer group ${
                       form.paymentMethod === m.value
                         ? isFunBike ? "border-[#FF6B2C] shadow-[0_0_20px_rgba(255,107,44,0.12)]" : ""
                         : isFunBike ? "hover:border-gray-200" : "hover:border-white/[0.12]"
@@ -609,8 +658,8 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
 
               {/* Transfer Bank details */}
               {form.paymentMethod === "transfer" && (
-                <div className={`${t.inner} rounded-2xl p-6 space-y-3`} style={{ borderColor: `${t.accentGlow}0.15)` }}>
-                  <div className="flex items-center justify-between mb-2">
+                <div className={`${t.inner} rounded-2xl p-4 sm:p-6 space-y-3`} style={{ borderColor: `${t.accentGlow}0.15)` }}>
+                  <div className="flex flex-col min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between gap-3 mb-2">
                     <div className="font-bold text-xs tracking-[2px]" style={{ fontFamily: "Orbitron, sans-serif", color: t.accent }}>INFO REKENING</div>
                     <button
                       type="button"
@@ -634,9 +683,9 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
                     { label: "Atas Nama", value: payment.bankHolder },
                     { label: "Jumlah Transfer", value: `${feeFormatted} (tepat)` },
                   ].map(row => (
-                    <div key={row.label} className={`flex justify-between text-sm py-1.5 border-b last:border-0 ${isFunBike ? "border-gray-100" : "border-white/[0.04]"}`}>
-                      <span className={t.textS}>{row.label}</span>
-                      <span className={`${t.textP} font-semibold`}>{row.value}</span>
+                    <div key={row.label} className={`flex items-start justify-between gap-4 text-sm py-1.5 border-b last:border-0 ${isFunBike ? "border-gray-100" : "border-white/[0.04]"}`}>
+                      <span className={`${t.textS} flex-shrink-0`}>{row.label}</span>
+                      <span className={`${t.textP} min-w-0 break-words text-right font-semibold`}>{row.value}</span>
                     </div>
                   ))}
                   <div className={`pt-3 border-t text-xs flex items-start gap-2 ${isFunBike ? "border-gray-100 text-gray-400" : "border-white/[0.06] text-[#5A7899]"}`}>
@@ -648,10 +697,10 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
 
               {/* QRIS details */}
               {form.paymentMethod === "qris" && (
-                <div className={`${t.inner} rounded-2xl p-6`} style={{ borderColor: isFunBike ? "rgba(123,193,66,0.2)" : "rgba(139,0,255,0.15)" }}>
+                <div className={`${t.inner} rounded-2xl p-4 sm:p-6`} style={{ borderColor: isFunBike ? "rgba(123,193,66,0.2)" : "rgba(139,0,255,0.15)" }}>
                   <div className="font-bold text-xs tracking-[2px] mb-5" style={{ fontFamily: "Orbitron, sans-serif", color: isFunBike ? "#7BC142" : "#8B00FF" }}>PEMBAYARAN QRIS</div>
                   <div className="flex flex-col items-center gap-4">
-                    <div className={`w-52 h-52 rounded-2xl p-3 flex items-center justify-center ${t.qrBg}`}>
+                    <div className={`w-48 h-48 sm:w-52 sm:h-52 rounded-2xl p-3 flex items-center justify-center ${t.qrBg}`}>
                       {payment.qrisImageUrl ? (
                         <img src={payment.qrisImageUrl} alt="QRIS" className="w-full h-full object-contain rounded" />
                       ) : (
@@ -716,12 +765,12 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
         )}
 
         {/* Navigation buttons */}
-        <div className="flex gap-3 mt-8">
+        <div className="flex flex-col min-[430px]:flex-row gap-3 mt-8">
           {step > 0 && (
             <button
               onClick={back}
               disabled={submitting}
-              className={`flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm cursor-pointer flex-1 sm:flex-none justify-center disabled:opacity-50 transition-all duration-300 font-semibold ${t.btnBack}`}
+              className={`flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm cursor-pointer flex-1 min-[430px]:flex-none justify-center disabled:opacity-50 transition-all duration-300 font-semibold ${t.btnBack}`}
               style={{ fontFamily: "Orbitron, sans-serif", letterSpacing: "1px" }}
             >
               <ChevronLeft size={16} /> KEMBALI

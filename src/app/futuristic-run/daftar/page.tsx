@@ -27,7 +27,7 @@ export default function DaftarPage() {
         <div className="section-reveal text-center mb-10">
           <div className="badge-neon inline-block mb-4">PENDAFTARAN ONLINE</div>
           <AnimatedSectionTitle text="DAFTAR SEKARANG" level={1} className="text-4xl sm:text-5xl font-black mb-3" />
-          <p className="text-[#B0C4DE]">Isi formulir berikut untuk bergabung di Futuristic RUN 2026</p>
+          <p className="text-[#B0C4DE]">Isi formulir berikut untuk bergabung di Futuristic Run 2026</p>
         </div>
         <div className="section-reveal-delay-1">
           <RegistrationForm eventType="futuristic-run" />

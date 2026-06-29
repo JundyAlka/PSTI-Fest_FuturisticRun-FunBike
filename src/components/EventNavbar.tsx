@@ -84,15 +84,15 @@ export default function EventNavbar({
               className="flex items-center gap-3 group"
             >
               {brand.logo}
-              <div className="hidden sm:block">
+              <div className="block min-w-0">
                 <span
-                  className={`font-black text-sm tracking-widest ${textPrimary}`}
+                  className={`block truncate font-black text-xs sm:text-sm tracking-widest ${textPrimary}`}
                   style={{ fontFamily: "Orbitron, sans-serif" }}
                 >
                   {brand.title}
                 </span>
                 <span
-                  className={`text-xs block tracking-[4px] ${textSecondary}`}
+                  className={`text-[10px] sm:text-xs block tracking-[3px] sm:tracking-[4px] ${textSecondary}`}
                   style={{ fontFamily: "Orbitron, sans-serif" }}
                 >
                   {brand.subtitle}
@@ -101,7 +101,7 @@ export default function EventNavbar({
             </Link>
 
             {/* Desktop nav */}
-            <div className="hidden md:flex items-center gap-6">
+            <div className="hidden lg:flex items-center gap-6">
               {navLinks.map((link) => {
                 const sectionId = link.href.replace("#", "");
                 const isActive = activeSection === sectionId;
@@ -148,7 +148,7 @@ export default function EventNavbar({
             <div className="flex items-center gap-3">
               <Link
                 href={registerPath}
-                className="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-white font-bold cursor-pointer transition-all duration-300 hover:-translate-y-0.5"
+                className="hidden lg:flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-white font-bold cursor-pointer transition-all duration-300 hover:-translate-y-0.5"
                 style={{
                   background: btnBg,
                   border: `1px solid ${btnBorder}`,
@@ -160,7 +160,7 @@ export default function EventNavbar({
                 {registerLabel}
               </Link>
               <button
-                className={`md:hidden p-2 ${textPrimary}`}
+                className={`lg:hidden p-2 ${textPrimary}`}
                 onClick={() => setMenuOpen(!menuOpen)}
                 aria-label="Toggle menu"
               >
@@ -173,8 +173,8 @@ export default function EventNavbar({
 
       {/* Mobile Drawer */}
       <div
-        className={`fixed inset-y-0 right-0 w-72 z-50 border-l transition-transform duration-300 ${
-          menuOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed inset-y-0 right-0 w-72 z-50 origin-right border-l transition-all duration-300 ${
+          menuOpen ? "scale-x-100 opacity-100" : "pointer-events-none scale-x-0 opacity-0"
         }`}
         style={{
           background: theme === "dark" ? "rgba(15,21,53,0.95)" : "#FFF8F0",

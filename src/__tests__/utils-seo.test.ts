@@ -92,22 +92,22 @@ describe("SEO", () => {
       expect(EVENT_SEO["fun-bike"]).toBeDefined();
     });
 
-    it("has correct event dates", () => {
-      expect(EVENT_SEO["futuristic-run"].eventDate).toContain("2026-06-22");
-      expect(EVENT_SEO["fun-bike"].eventDate).toContain("2026-06-22");
+    it("does not hardcode operational event dates", () => {
+      expect(EVENT_SEO["futuristic-run"].eventDate).toBeNull();
+      expect(EVENT_SEO["fun-bike"].eventDate).toBeNull();
     });
   });
 
   describe("eventMetadata", () => {
     it("generates correct title", () => {
       const meta = eventMetadata(EVENT_SEO["futuristic-run"]);
-      expect(meta.title).toContain("Futuristic RUN 2026");
+      expect(meta.title).toContain("Futuristic Run 2026");
     });
 
     it("includes Open Graph", () => {
       const meta = eventMetadata(EVENT_SEO["fun-bike"]);
       expect(meta.openGraph).toBeDefined();
-      expect(meta.openGraph?.title).toContain("Fun Bike 2026");
+      expect(meta.openGraph?.title).toContain("Futuristic Bike 2026");
     });
 
     it("includes Twitter card", () => {
@@ -126,7 +126,7 @@ describe("SEO", () => {
     it("includes Daftar in title", () => {
       const meta = registerMetadata(EVENT_SEO["futuristic-run"]);
       expect(meta.title).toContain("Daftar");
-      expect(meta.title).toContain("Futuristic RUN 2026");
+      expect(meta.title).toContain("Futuristic Run 2026");
     });
   });
 
@@ -134,30 +134,29 @@ describe("SEO", () => {
     it("generates SportsEvent schema", () => {
       const jsonLd = eventJsonLd(EVENT_SEO["futuristic-run"]);
       expect(jsonLd["@type"]).toBe("SportsEvent");
-      expect(jsonLd.name).toBe("Futuristic RUN 2026");
+      expect(jsonLd.name).toBe("Futuristic Run 2026");
     });
 
-    it("includes location", () => {
+    it("omits location when operational data is not available", () => {
       const jsonLd = eventJsonLd(EVENT_SEO["fun-bike"]);
-      expect(jsonLd.location["@type"]).toBe("Place");
-      expect(jsonLd.location.address.addressLocality).toBe("Purworejo");
+      expect(jsonLd.location).toBeUndefined();
     });
 
     it("includes organizer", () => {
       const jsonLd = eventJsonLd(EVENT_SEO["futuristic-run"]);
-      expect(jsonLd.organizer.name).toBe("Himatekno UMPWR");
+      const organizer = jsonLd.organizer as { name: string };
+      expect(organizer.name).toBe("Himatekno UMPWR");
     });
 
-    it("includes pricing", () => {
+    it("omits pricing when operational data is not available", () => {
       const jsonLd = eventJsonLd(EVENT_SEO["futuristic-run"]);
-      expect(jsonLd.offers.price).toBe("200000");
-      expect(jsonLd.offers.priceCurrency).toBe("IDR");
+      expect(jsonLd.offers).toBeUndefined();
     });
   });
 
   describe("hubMetadata", () => {
     it("has correct title", () => {
-      expect(hubMetadata.title).toContain("PSTI FEST 2026");
+      expect(hubMetadata.title).toContain("Futuristic Vibes 2026");
     });
 
     it("has Open Graph images", () => {

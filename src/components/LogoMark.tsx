@@ -14,7 +14,7 @@ export default function LogoMark({ size = 40, className = "", priority = false }
     >
       <Image
         src="/logo-futuristicrun.png"
-        alt="Futuristic RUN logo"
+        alt="Futuristic Run logo"
         fill
         sizes={`${size}px`}
         className="object-cover"

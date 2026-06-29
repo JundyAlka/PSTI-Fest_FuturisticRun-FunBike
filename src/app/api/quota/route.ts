@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { insforge } from "@/lib/insforge";
 import { getEventCategories } from "@/lib/utils";
 import { rateLimitOr429 } from "@/lib/rateLimit";
+import { checkInsforgeHealth, serviceUnavailable } from "@/lib/insforgeHealth";
 
 export async function GET(req: NextRequest) {
   try {
     const rl = rateLimitOr429(req, "quota", 30, 60_000);
     if (!rl.allowed) return rl.response;
+
+    const health = await checkInsforgeHealth();
+    if (!health.ok) return serviceUnavailable("Informasi kuota sementara tidak tersedia. Coba lagi beberapa saat.");
 
     const eventType = req.nextUrl.searchParams.get("eventType") ?? "futuristic-run";
 
@@ -34,6 +38,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     console.error("[GET /api/quota]", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return serviceUnavailable("Informasi kuota sementara tidak tersedia. Coba lagi beberapa saat.");
   }
 }

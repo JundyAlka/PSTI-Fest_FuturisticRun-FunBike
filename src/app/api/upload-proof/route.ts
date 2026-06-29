@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { insforge } from "@/lib/insforge";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { PAYMENT_PROOF_MAX_SIZE, PAYMENT_PROOF_TYPES } from "@/lib/validations";
+import { checkInsforgeHealth, serviceUnavailable } from "@/lib/insforgeHealth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,6 +19,9 @@ export async function POST(req: NextRequest) {
     if (!regNumber) {
       return NextResponse.json({ error: "regNumber required" }, { status: 400 });
     }
+
+    const health = await checkInsforgeHealth();
+    if (!health.ok) return serviceUnavailable("Upload bukti pembayaran sementara tidak tersedia. Coba lagi beberapa saat.");
 
     // Verify participant exists
     const { data: participant, error: pError } = await insforge.database
@@ -77,13 +81,19 @@ export async function POST(req: NextRequest) {
     }
 
     // InsForge storage: getPublicUrl(path) returns string directly
-    const publicUrl = insforge.storage.from("payment-proofs").getPublicUrl(fileName);
+    const publicUrl = uploadData?.url ?? insforge.storage.from("payment-proofs").getPublicUrl(fileName);
+    const objectKey = uploadData?.key ?? fileName;
 
     // Update participant record
-    await insforge.database
+    const { error: updateError } = await insforge.database
       .from("participants")
-      .update({ payment_proof: publicUrl })
+      .update({ payment_proof: publicUrl, payment_proof_key: objectKey })
       .eq("id", participant.id);
+
+    if (updateError) {
+      console.error("[upload-proof] Database update failed");
+      return NextResponse.json({ error: "File terunggah, tetapi data belum dapat disimpan. Silakan coba lagi." }, { status: 503 });
+    }
 
     return NextResponse.json({
       success: true,
@@ -92,6 +102,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error("[POST /api/upload-proof]", err);
-    return NextResponse.json({ error: "Terjadi kesalahan server" }, { status: 500 });
+    return serviceUnavailable("Upload bukti pembayaran sementara tidak tersedia. Coba lagi beberapa saat.");
   }
 }

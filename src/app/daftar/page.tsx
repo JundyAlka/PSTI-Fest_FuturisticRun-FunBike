@@ -2,22 +2,24 @@ import RegistrationForm from "@/components/forms/RegistrationForm";
 import Navbar from "@/components/Navbar";
 import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
 import type { Metadata } from "next";
+import { FEST_NAME } from "@/content/brand";
+import { EVENTS } from "@/content/events";
+
+const event = EVENTS["futuristic-run"];
 
 export const metadata: Metadata = {
-  title: "Daftar Futuristic RUN 2026 — Run The Future | PSTI FEST",
-  description: "Daftarkan diri Anda untuk Futuristic RUN 2026 kategori Run 5K dan dapatkan jersey eksklusif.",
+  title: `Daftar ${event.name} 2026 - ${event.tagline} | ${FEST_NAME}`,
+  description: `Daftarkan diri Anda untuk ${event.name} 2026 kategori Run 5K dan dapatkan race pack eksklusif.`,
 };
 
 export default function DaftarPage() {
   return (
     <main className="page-animate min-h-screen bg-[#0A0E27] relative overflow-hidden">
       <Navbar />
-      {/* BG effects */}
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage:
-            "radial-gradient(rgba(0,229,255,0.5) 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(rgba(0,229,255,0.5) 1px, transparent 1px)",
           backgroundSize: "40px 40px",
         }}
       />
@@ -29,7 +31,7 @@ export default function DaftarPage() {
         <div className="section-reveal text-center mb-10">
           <div className="badge-neon inline-block mb-4">PENDAFTARAN ONLINE</div>
           <AnimatedSectionTitle text="DAFTAR SEKARANG" level={1} className="text-4xl sm:text-5xl font-black mb-3" />
-          <p className="text-[#B0C4DE]">Isi formulir berikut untuk bergabung di Futuristic RUN 2026</p>
+          <p className="text-[#B0C4DE]">Isi formulir berikut untuk bergabung di {event.name} 2026</p>
         </div>
         <div className="section-reveal-delay-1">
           <RegistrationForm />
@@ -38,3 +40,4 @@ export default function DaftarPage() {
     </main>
   );
 }
+

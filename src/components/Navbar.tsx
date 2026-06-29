@@ -9,7 +9,9 @@ const navLinks = [
   { label: "Tentang", href: "#about" },
   { label: "Kategori", href: "#categories" },
   { label: "Jersey", href: "#jersey" },
-  { label: "Jadwal", href: "#timeline" },
+  { label: "Juara", href: "#juara" },
+  { label: "Racepack", href: "#racepack" },
+  { label: "Rundown", href: "#timeline" },
   { label: "FAQ", href: "#faq" },
   { label: "Pendaftaran", href: "/futuristic-run/daftar", isRoute: true },
 ];
@@ -23,7 +25,7 @@ export default function Navbar() {
     const onScroll = () => {
       setScrolled(window.scrollY > 60);
       // detect active section
-      const sections = ["hero", "about", "categories", "jersey", "timeline", "rules", "faq"];
+      const sections = ["hero", "about", "categories", "jersey", "juara", "racepack", "timeline", "rules", "faq"];
       for (const s of sections.reverse()) {
         const el = document.getElementById(s);
         if (el && window.scrollY >= el.offsetTop - 120) {
@@ -52,9 +54,9 @@ export default function Navbar() {
                 e.preventDefault();
                 window.location.assign("/");
               }}
-              className="flex items-center gap-3 group"
+              className="flex min-h-11 items-center gap-3 group"
             >
-              <LogoMark size={60} priority className="pulse-glow" />
+              <LogoMark size={46} priority />
               <div className="hidden sm:block">
                 <span
                   className="font-black text-sm tracking-widest glow-cyan-text"
@@ -72,7 +74,7 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop nav */}
-            <div className="stagger-list hidden md:flex items-center gap-6">
+            <div className="stagger-list hidden lg:flex items-center gap-6">
               {navLinks.map((link) => {
                 const sectionId = link.href.replace("#", "");
                 const isActive = activeSection === sectionId;
@@ -113,14 +115,14 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               <Link
                 href="/futuristic-run/daftar"
-                className="relative overflow-hidden btn-neon hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-full text-sm cursor-pointer"
+                className="relative overflow-hidden btn-neon hidden lg:flex items-center gap-2 px-5 py-2.5 rounded-full text-sm cursor-pointer"
               >
                 <span className="shine-sweep" />
                 <Zap size={14} />
                 DAFTAR SEKARANG
               </Link>
               <button
-                className="md:hidden text-white p-2"
+                className="lg:hidden text-white p-2"
                 onClick={() => setMenuOpen(!menuOpen)}
                 aria-label="Toggle menu"
               >
