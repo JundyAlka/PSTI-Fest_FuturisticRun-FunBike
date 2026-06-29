@@ -1,10 +1,6 @@
--- The Run date is not yet locked. event_settings.event_date is the only public source.
-UPDATE public.event_settings
-SET value = '', updated_at = NOW()
-WHERE event_type = 'futuristic-run' AND key = 'event_date';
-
+-- Operational location and prize keys. event_date remains admin-managed.
 UPDATE public.events
-SET event_date = NULL, location = 'Alun-Alun Purworejo', updated_at = NOW()
+SET location = 'Alun-Alun Purworejo', updated_at = NOW()
 WHERE slug = 'futuristic-run';
 
 UPDATE public.event_settings

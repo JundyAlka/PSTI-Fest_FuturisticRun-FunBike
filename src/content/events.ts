@@ -89,7 +89,7 @@ export const EVENTS: Record<EventSlug, EventContent> = {
     secondaryColor: "#8B00FF",
     categoryCode: "5K",
     categoryLabel: "Run 5K",
-    eventDate: null,
+    eventDate: "2026-08-01",
     eventTime: "19.00-22.00 WIB",
     startTime: "20:00",
     location: {
