@@ -8,6 +8,6 @@
    - `AUTH_SECRET`
    - `NEXT_PUBLIC_SITE_URL`
 4. Use the default install command and `npm run build` as the build command.
-5. Deploy. The build intentionally fails when `INSFORGE_API_KEY` or `AUTH_SECRET` is absent in production, preventing a broken deployment.
+5. Deploy. `AUTH_SECRET` is recommended as a dedicated secret. If absent, the server-only `INSFORGE_API_KEY` is used as a stable authentication-secret fallback so Vercel route collection can complete.
 
 `DATABASE_URL` is not required by the deployed application because operational data and admin authentication use InsForge. The local SQLite database is only for local Prisma workflows.

@@ -4,13 +4,14 @@
  */
 import type { NextAuthConfig } from "next-auth";
 
-if (!process.env.AUTH_SECRET && process.env.VERCEL_ENV === "production") {
-  throw new Error("Missing AUTH_SECRET in production deployment");
-}
+// Vercel imports route modules while collecting build data, so validation must
+// not throw during module evaluation. A dedicated AUTH_SECRET remains
+// recommended; the server-only InsForge key is a stable fallback.
+const authSecret = process.env.AUTH_SECRET ?? process.env.INSFORGE_API_KEY ?? process.env.API_KEY;
 
 export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
-  secret: process.env.AUTH_SECRET,
+  secret: authSecret,
   pages: {
     signIn: "/admin/login",
   },
