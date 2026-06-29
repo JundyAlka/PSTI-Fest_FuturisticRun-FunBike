@@ -3,7 +3,6 @@ import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
 import RundownTimeline from "@/components/ui/RundownTimeline";
 import RundownActions from "@/components/ui/RundownActions";
 import { EVENTS } from "@/content/events";
-import TbdBadge from "@/components/ui/TbdBadge";
 import { formatEventDate } from "@/lib/eventDate";
 
 const event = EVENTS["futuristic-run"];
@@ -13,10 +12,10 @@ const technicalInfo = [
   { icon: ShieldCheck, label: "Marshal", value: "Marshal dan pengamanan dari panitia", color: "#8B00FF" },
   { icon: Waves, label: "Water station", value: "Titik water station dekat Caramel", color: "#00E5FF" },
   { icon: TicketCheck, label: "BIB & finish control", value: "BIB dibedakan per kategori dan warna, dengan centang refreshment serta medali", color: "#FF006E" },
-  { icon: Trophy, label: "Kategori juara", value: "Juara Umum 1-3 dan Juara Pelajar 1-3", color: "#FFD700" },
+  { icon: Trophy, label: "Kategori juara", value: "Umum, SMP, dan SD — Putra & Putri", color: "#FFD700" },
 ];
 
-export default function TimelineSection({ eventDate }: { eventDate: string | null }) {
+export default function TimelineSection({ eventDate }: { eventDate: string }) {
   return (
     <section id="timeline" className="section-reveal relative overflow-hidden py-6 sm:py-10">
       <div className="absolute inset-0 bg-gradient-to-b from-[#0A0E27] via-[#070A20] to-[#0A0E27]" />
@@ -36,7 +35,7 @@ export default function TimelineSection({ eventDate }: { eventDate: string | nul
           <div className="mx-auto mb-5 flex max-w-2xl flex-wrap justify-center gap-2 text-sm">
             <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#00E5FF]/20 bg-[#00E5FF]/[0.06] px-3 text-[#D7E8FF]">
               <CalendarDays size={15} className="text-[#00E5FF]" />
-              {formatEventDate(eventDate) ?? <TbdBadge />}
+              {formatEventDate(eventDate)}
             </span>
             <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#8B00FF]/25 bg-[#8B00FF]/[0.07] px-3 text-[#D7E8FF]">
               <Clock3 size={15} className="text-[#C084FC]" /> {event.eventTime}

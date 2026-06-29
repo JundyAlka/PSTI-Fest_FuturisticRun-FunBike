@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { insforge } from "@/lib/insforge";
 import { ALLOWED_SETTING_KEYS } from "@/lib/validations";
+import { normalizeEventDate } from "@/lib/eventDate";
 
 const allowedKeysSet = new Set<string>(ALLOWED_SETTING_KEYS);
 
@@ -34,6 +35,9 @@ export async function POST(req: NextRequest) {
   for (const [key, value] of Object.entries(body)) {
     if (!allowedKeysSet.has(key)) continue; // silently ignore unknown keys
     if (typeof value !== "string" || value.length > 500) continue; // reject oversized values
+    if (key === "event_date" && !normalizeEventDate(value)) {
+      return NextResponse.json({ error: "Tanggal event harus berupa waktu WIB yang valid." }, { status: 400 });
+    }
     safeBody[key] = value;
   }
 

@@ -33,12 +33,13 @@ export default function FunBikeFaq({ settings = {} }: { settings?: Record<string
   if (!items?.length) {
     return (
       <div className="card-animated mx-auto rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
-        <div className="mb-3 flex justify-center">
-          <TbdBadge className="border-[#FF6B2C]/20 bg-[#FF6B2C]/10 text-gray-700" />
+        <div className="flex justify-center">
+          <TbdBadge
+            label="Informasi segera hadir"
+            microcopy="Pertanyaan umum dan jawabannya sedang disiapkan oleh panitia."
+            className="max-w-md border-[#FF6B2C]/20 bg-[#FF6B2C]/10 text-gray-700"
+          />
         </div>
-        <p className="text-sm leading-6 text-gray-500">
-          FAQ resmi akan tampil setelah admin mengisi key <span className="font-mono text-[#FF6B2C]">faq</span> di settings.
-        </p>
       </div>
     );
   }

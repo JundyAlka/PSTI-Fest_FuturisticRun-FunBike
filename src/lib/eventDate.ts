@@ -1,31 +1,49 @@
+export type EventDateSlug = "futuristic-run" | "fun-bike";
+
+/** Fallback tunggal ketika event_settings tidak dapat dibaca. */
+export const DEFAULT_EVENT_DATES: Record<EventDateSlug, string> = {
+  "futuristic-run": "2026-08-01T18:00:00+07:00",
+  "fun-bike": "2026-08-02T05:00:00+07:00",
+};
+
+const WIB_ISO_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+07:00$/;
+
 export function normalizeEventDate(value: string | null | undefined): string | null {
   const candidate = value?.trim();
-  if (!candidate || !/^\d{4}-\d{2}-\d{2}$/.test(candidate)) return null;
-
-  const [year, month, day] = candidate.split("-").map(Number);
-  const parsed = new Date(Date.UTC(year, month - 1, day));
-  if (
-    parsed.getUTCFullYear() !== year ||
-    parsed.getUTCMonth() !== month - 1 ||
-    parsed.getUTCDate() !== day
-  ) return null;
-
-  return candidate;
+  if (!candidate || !WIB_ISO_PATTERN.test(candidate)) return null;
+  return Number.isFinite(Date.parse(candidate)) ? candidate : null;
 }
 
-export function eventStartIso(eventDate: string | null | undefined, startTime: string): string | null {
-  const normalized = normalizeEventDate(eventDate);
-  return normalized ? `${normalized}T${startTime}:00+07:00` : null;
+export function resolveEventDate(slug: EventDateSlug, value: string | null | undefined): string {
+  return normalizeEventDate(value) ?? DEFAULT_EVENT_DATES[slug];
 }
 
-export function formatEventDate(eventDate: string | null | undefined): string | null {
-  const normalized = normalizeEventDate(eventDate);
-  if (!normalized) return null;
+export function formatTanggalID(date: Date | string): string {
+  const parsed = date instanceof Date ? date : new Date(date);
+  if (!Number.isFinite(parsed.getTime())) return "";
   return new Intl.DateTimeFormat("id-ID", {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
     timeZone: "Asia/Jakarta",
-  }).format(new Date(`${normalized}T00:00:00+07:00`));
+  }).format(parsed);
+}
+
+export function formatEventDate(eventDate: string | null | undefined): string | null {
+  const normalized = normalizeEventDate(eventDate);
+  return normalized ? formatTanggalID(normalized) : null;
+}
+
+export function formatWibTime(eventDate: string): string {
+  return new Intl.DateTimeFormat("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: "Asia/Jakarta",
+  }).format(new Date(eventDate)).replace(":", ".");
+}
+
+export function eventDateOnly(eventDate: string): string {
+  return eventDate.slice(0, 10);
 }

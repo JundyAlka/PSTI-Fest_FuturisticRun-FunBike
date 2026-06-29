@@ -89,7 +89,7 @@ export default function AdminLoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   className={`${inp} pr-10`}
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

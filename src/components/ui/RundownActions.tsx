@@ -2,6 +2,7 @@
 
 import { CalendarPlus, Download } from "lucide-react";
 import type { RundownItem } from "@/content/events";
+import { eventDateOnly, formatTanggalID } from "@/lib/eventDate";
 
 type RundownActionsProps = {
   items: RundownItem[];
@@ -14,7 +15,7 @@ type RundownActionsProps = {
  * Build a plain-text rundown for PDF-like download (as .txt, no heavy lib needed).
  */
 function buildRundownText(items: RundownItem[], eventName: string, eventDate: string | null): string {
-  const header = `SUSUNAN ACARA — ${eventName}${eventDate ? `\nTanggal: ${eventDate}` : ""}\n${"═".repeat(50)}\n\n`;
+  const header = `SUSUNAN ACARA — ${eventName}${eventDate ? `\nTanggal: ${formatTanggalID(eventDate)}` : ""}\n${"═".repeat(50)}\n\n`;
   const body = items
     .map(
       (item, i) =>
@@ -29,8 +30,10 @@ function buildRundownText(items: RundownItem[], eventName: string, eventDate: st
  */
 function buildICS(eventName: string, eventDate: string, startTime: string, endTime: string): string {
   const parseTime = (t: string) => t.replace(".", "");
-  const dtStart = `${eventDate.replace(/-/g, "")}T${parseTime(startTime)}00`;
-  const dtEnd = `${eventDate.replace(/-/g, "")}T${parseTime(endTime)}00`;
+  const dateOnly = eventDateOnly(eventDate);
+  const compactDate = dateOnly.replace(/-/g, "");
+  const dtStart = `${compactDate}T${parseTime(startTime)}00`;
+  const dtEnd = `${compactDate}T${parseTime(endTime)}00`;
 
   return [
     "BEGIN:VCALENDAR",
@@ -44,7 +47,7 @@ function buildICS(eventName: string, eventDate: string, startTime: string, endTi
     `SUMMARY:${eventName}`,
     `DESCRIPTION:Susunan Acara ${eventName}. Lihat detail di website resmi.`,
     "STATUS:CONFIRMED",
-    `UID:${eventDate}-${eventName.replace(/\s+/g, "-").toLowerCase()}@futuristicvibes.id`,
+    `UID:${dateOnly}-${eventName.replace(/\s+/g, "-").toLowerCase()}@futuristicvibes.id`,
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");

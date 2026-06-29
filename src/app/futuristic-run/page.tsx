@@ -24,13 +24,13 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const ops = await getPublicEventOps("futuristic-run");
   const location = event.location ? resolveEventLocation(event.location, ops.settings).label : null;
-  return eventMetadata(withOperationalEventSeo(seo, ops.eventDate, event.startTime, location));
+  return eventMetadata(withOperationalEventSeo(seo, ops.eventDate, location));
 }
 
 export default async function FuturisticRunPage() {
   const ops = await getPublicEventOps("futuristic-run");
   const locationLabel = event.location ? resolveEventLocation(event.location, ops.settings).label : "";
-  const operationalSeo = withOperationalEventSeo(seo, ops.eventDate, event.startTime, locationLabel || null);
+  const operationalSeo = withOperationalEventSeo(seo, ops.eventDate, locationLabel || null);
 
   return (
     <>
@@ -47,7 +47,7 @@ export default async function FuturisticRunPage() {
       <TimelineSection eventDate={ops.eventDate} />
       <RulesSection settings={ops.settings} />
       <FaqSection settings={ops.settings} contactPerson={ops.contactPerson} />
-      <Footer />
+      <Footer eventDate={ops.eventDate} locationLabel={locationLabel} />
     </main>
     <script
       type="application/ld+json"

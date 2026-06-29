@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { insforge } from "@/lib/insforge";
 import { rateLimitOr429 } from "@/lib/rateLimit";
 import { checkInsforgeHealth, serviceUnavailable } from "@/lib/insforgeHealth";
+import { resolveEventDate, type EventDateSlug } from "@/lib/eventDate";
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,7 +12,8 @@ export async function GET(req: NextRequest) {
     const health = await checkInsforgeHealth();
     if (!health.ok) return serviceUnavailable("Informasi pembayaran sementara tidak tersedia. Coba lagi beberapa saat.");
 
-    const eventType = req.nextUrl.searchParams.get("eventType") ?? "futuristic-run";
+    const requestedEventType = req.nextUrl.searchParams.get("eventType");
+    const eventType: EventDateSlug = requestedEventType === "fun-bike" ? "fun-bike" : "futuristic-run";
 
     const { data: settings, error } = await insforge.database
       .from("event_settings")
@@ -26,6 +28,8 @@ export async function GET(req: NextRequest) {
         "registration_fee",
         "payment_transfer_enabled",
         "payment_qris_enabled",
+        "event_date",
+        "event_location",
       ]);
 
     if (error) throw error;
@@ -41,6 +45,8 @@ export async function GET(req: NextRequest) {
       registrationFee: parseInt(map.registration_fee ?? "200000"),
       transferEnabled: map.payment_transfer_enabled === "true",
       qrisEnabled: map.payment_qris_enabled === "true",
+      eventDate: resolveEventDate(eventType, map.event_date),
+      eventLocation: map.event_location ?? "-",
     });
   } catch (err) {
     console.error("[GET /api/payment-info]", err);

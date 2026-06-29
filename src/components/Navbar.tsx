@@ -9,7 +9,7 @@ const navLinks = [
   { label: "Tentang", href: "#about" },
   { label: "Kategori", href: "#categories" },
   { label: "Jersey", href: "#jersey" },
-  { label: "Juara", href: "#juara" },
+  { label: "Hadiah", href: "#hadiah" },
   { label: "Racepack", href: "#racepack" },
   { label: "Rundown", href: "#timeline" },
   { label: "FAQ", href: "#faq" },
@@ -25,7 +25,7 @@ export default function Navbar() {
     const onScroll = () => {
       setScrolled(window.scrollY > 60);
       // detect active section
-      const sections = ["hero", "about", "categories", "jersey", "juara", "racepack", "timeline", "rules", "faq"];
+      const sections = ["hero", "about", "categories", "jersey", "hadiah", "racepack", "timeline", "rules", "faq"];
       for (const s of sections.reverse()) {
         const el = document.getElementById(s);
         if (el && window.scrollY >= el.offsetTop - 120) {

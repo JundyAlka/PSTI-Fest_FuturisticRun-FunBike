@@ -35,14 +35,14 @@ import { CONTACT_EMAIL, FEST_FULL_NAME, FEST_NAME, FEST_YEAR, ORGANIZER_NAME } f
 import { EVENTS } from "@/content/events";
 import { getPublicEventOps } from "@/lib/eventOps";
 import { EVENT_SEO, eventJsonLd, eventMetadata, withOperationalEventSeo } from "@/lib/seo";
-import { eventStartIso, formatEventDate } from "@/lib/eventDate";
+import { formatEventDate, formatWibTime } from "@/lib/eventDate";
 
 const seo = EVENT_SEO["fun-bike"];
 const event = EVENTS["fun-bike"];
 export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const ops = await getPublicEventOps("fun-bike");
-  return eventMetadata(withOperationalEventSeo(seo, ops.eventDate, event.startTime, ops.location));
+  return eventMetadata(withOperationalEventSeo(seo, ops.eventDate, ops.location));
 }
 
 const navLinks = [
@@ -107,7 +107,7 @@ export default async function FunBikePage() {
   const priceLabel = formatCurrency(ops.price);
   const contact = ops.contactPerson ?? ops.settings.contact_person;
   const routeStatus = ops.settings.route_status || "Rute sedang disurvei / diukur ulang";
-  const operationalSeo = withOperationalEventSeo(seo, ops.eventDate, event.startTime, ops.location);
+  const operationalSeo = withOperationalEventSeo(seo, ops.eventDate, ops.location);
 
   return (
     <EventThemeProvider eventType="fun-bike">
@@ -146,7 +146,7 @@ export default async function FunBikePage() {
 
             <div className="fade-in-up-delay-2 mb-8 flex flex-wrap justify-center gap-4 text-sm text-gray-500">
               <span className="flex items-center gap-1.5"><MapPin size={14} className="text-[#FF6B2C]" />{ops.location ?? <TbdBadge className="border-[#FF6B2C]/20 bg-[#FF6B2C]/10 text-gray-700" />}</span>
-              <span className="flex items-center gap-1.5"><Calendar size={14} className="text-[#FF6B2C]" />{ops.eventDate ?? <TbdBadge className="border-[#FF6B2C]/20 bg-[#FF6B2C]/10 text-gray-700" />}</span>
+              <span className="flex items-center gap-1.5"><Calendar size={14} className="text-[#FF6B2C]" />{formatEventDate(ops.eventDate)} • Mulai {formatWibTime(ops.eventDate)} WIB</span>
               <span className="flex items-center gap-1.5"><Bike size={14} className="text-[#FF6B2C]" />Fun Ride</span>
             </div>
 
@@ -162,7 +162,7 @@ export default async function FunBikePage() {
 
             <div className="fade-in-up-delay-4">
               <p className="mb-3 text-xs tracking-widest text-gray-500" style={{ fontFamily: "Orbitron, sans-serif" }}>HITUNG MUNDUR START PAGI</p>
-              <Suspense fallback={null}><FunBikeCountdown targetDate={eventStartIso(ops.eventDate, event.startTime)} /></Suspense>
+              <Suspense fallback={null}><FunBikeCountdown targetIso={ops.eventDate} /></Suspense>
             </div>
           </div>
         </section>
@@ -265,7 +265,7 @@ export default async function FunBikePage() {
               <div className="mx-auto mb-5 flex max-w-2xl flex-wrap justify-center gap-2 text-sm">
                 <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 font-semibold text-gray-700">
                   <Calendar size={15} className="text-[#C2410C]" />
-                  {formatEventDate(ops.eventDate) ?? <TbdBadge className="border-orange-200 bg-white text-gray-700" />}
+                  {formatEventDate(ops.eventDate)}
                 </span>
                 <span className="inline-flex min-h-9 items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 font-semibold text-gray-700">
                   <Clock size={15} className="text-[#0369A1]" /> {event.eventTime}

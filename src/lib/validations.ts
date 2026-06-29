@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PRIZE_SETTING_KEYS } from "@/data/prizes";
 
 export const Step1Schema = z.object({
   fullName: z.string().min(3, "Minimal 3 karakter"),
@@ -81,6 +82,7 @@ export const ALLOWED_SETTING_KEYS = [
   "prize_pelajar_1",
   "prize_pelajar_2",
   "prize_pelajar_3",
+  ...PRIZE_SETTING_KEYS,
 ] as const;
 
 export const AdminSettingsSchema = z.object({

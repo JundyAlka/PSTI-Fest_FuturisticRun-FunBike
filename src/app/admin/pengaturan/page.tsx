@@ -3,8 +3,11 @@
 import { useEffect, useState } from "react";
 import { Settings, Save, ToggleLeft, ToggleRight, CreditCard, Building2, QrCode, Upload, Loader2 } from "lucide-react";
 import LoadingPanel from "@/components/LoadingPanel";
+import { DEFAULT_EVENT_DATES, normalizeEventDate } from "@/lib/eventDate";
+import { DEFAULT_PRIZE_SETTINGS, PRIZES, PRIZE_FIELDS, prizeSettingKey } from "@/data/prizes";
 
 interface SettingsState {
+  [key: string]: string;
   registration_open: string;
   quota_5k: string;
   quota_funbike: string;
@@ -26,12 +29,6 @@ interface SettingsState {
   location_lat: string;
   location_lng: string;
   location_plus_code: string;
-  prize_umum_1: string;
-  prize_umum_2: string;
-  prize_umum_3: string;
-  prize_pelajar_1: string;
-  prize_pelajar_2: string;
-  prize_pelajar_3: string;
 }
 
 type EventType = "futuristic-run" | "fun-bike";
@@ -40,7 +37,7 @@ const defaultSettings: SettingsState = {
   registration_open: "true",
   quota_5k: "200",
   quota_funbike: "300",
-  event_date: "",
+  event_date: DEFAULT_EVENT_DATES["futuristic-run"],
   event_location: "",
   early_bird_deadline: "",
   registration_deadline: "",
@@ -57,13 +54,16 @@ const defaultSettings: SettingsState = {
   location_lat: "",
   location_lng: "",
   location_plus_code: "",
-  prize_umum_1: "",
-  prize_umum_2: "",
-  prize_umum_3: "",
-  prize_pelajar_1: "",
-  prize_pelajar_2: "",
-  prize_pelajar_3: "",
+  ...DEFAULT_PRIZE_SETTINGS,
 };
+
+function toDateTimeLocal(value: string): string {
+  return value.slice(0, 16);
+}
+
+function fromDateTimeLocal(value: string): string {
+  return `${value}:00+07:00`;
+}
 
 function SectionCard({ icon: Icon, title, color = "#00E5FF", children }: {
   icon: React.ElementType; title: string; color?: string; children: React.ReactNode;
@@ -147,7 +147,11 @@ export default function PengaturanPage() {
   useEffect(() => {
     fetch(`/api/admin/settings?eventType=${eventType}`)
       .then((r) => r.json())
-      .then((data) => setSettings((prev) => ({ ...prev, ...data })))
+      .then((data) => setSettings((prev) => ({
+        ...prev,
+        ...data,
+        event_date: normalizeEventDate(data.event_date) ?? DEFAULT_EVENT_DATES[eventType],
+      })))
       .finally(() => setLoading(false));
   }, [eventType]);
 
@@ -155,7 +159,11 @@ export default function PengaturanPage() {
     if (nextEventType === eventType) return;
     setLoading(true);
     setSaved(false);
-    setSettings({ ...defaultSettings, registration_fee: nextEventType === "fun-bike" ? "150000" : "200000" });
+    setSettings({
+      ...defaultSettings,
+      event_date: DEFAULT_EVENT_DATES[nextEventType],
+      registration_fee: nextEventType === "fun-bike" ? "150000" : "200000",
+    });
     setEventType(nextEventType);
   };
 
@@ -269,7 +277,7 @@ export default function PengaturanPage() {
               <SectionCard icon={Settings} title="INFO EVENT" color="#FF8C00">
                 <div className="space-y-4">
                   {[
-                    { key: "event_date" as keyof SettingsState, label: "Tanggal Event", type: "date" },
+                    { key: "event_date" as keyof SettingsState, label: "Tanggal dan Jam Mulai (WIB)", type: "datetime-local" },
                     { key: "event_location" as keyof SettingsState, label: "Lokasi Event", type: "text", placeholder: "Nama venue / lokasi" },
                     { key: "early_bird_deadline" as keyof SettingsState, label: "Batas Early Bird", type: "date" },
                     { key: "registration_deadline" as keyof SettingsState, label: "Batas Pendaftaran", type: "date" },
@@ -279,9 +287,13 @@ export default function PengaturanPage() {
                       <input
                         type={type}
                         className={inp}
-                        value={settings[key]}
+                        value={key === "event_date" ? toDateTimeLocal(settings[key]) : settings[key]}
                         placeholder={placeholder}
-                        onChange={(e) => set(key, e.target.value)}
+                        onChange={(e) => set(
+                          key,
+                          key === "event_date" && e.target.value ? fromDateTimeLocal(e.target.value) : e.target.value,
+                        )}
+                        required={key === "event_date"}
                       />
                     </div>
                   ))}
@@ -334,23 +346,34 @@ export default function PengaturanPage() {
               </SectionCard>}
 
               {eventType === "futuristic-run" && <SectionCard icon={Settings} title="HADIAH PER KATEGORI" color="#FFD700">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {[
-                    ["prize_umum_1", "Juara Umum 1"], ["prize_umum_2", "Juara Umum 2"], ["prize_umum_3", "Juara Umum 3"],
-                    ["prize_pelajar_1", "Juara Pelajar 1"], ["prize_pelajar_2", "Juara Pelajar 2"], ["prize_pelajar_3", "Juara Pelajar 3"],
-                  ].map(([key, label]) => (
-                    <div key={key}>
-                      <label className="mb-1.5 block text-sm text-[#B0C4DE]">{label}</label>
-                      <input
-                        type="text"
-                        className={inp}
-                        value={settings[key as keyof SettingsState]}
-                        placeholder="Kosong = Segera diumumkan"
-                        maxLength={500}
-                        onChange={(e) => set(key as keyof SettingsState, e.target.value)}
-                      />
+                <div className="space-y-6">
+                  {PRIZES.map((prize) => (
+                    <div key={prize.kategori} className="rounded-xl border border-[#1E3A5F] bg-[#0A0E27] p-4">
+                      <h3 className="mb-3 text-sm font-black text-white">{prize.kategori}</h3>
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        {PRIZE_FIELDS.map((field) => {
+                          const key = prizeSettingKey(prize.kategori, field);
+                          const labels = { juara1: "Juara I", juara2: "Juara II", juara3: "Juara III", harapan: "Harapan 1 & 2" };
+                          return (
+                            <div key={key}>
+                              <label className="mb-1.5 block text-xs text-[#B0C4DE]">{labels[field]}</label>
+                              <input
+                                type={field === "harapan" ? "text" : "number"}
+                                className={inp}
+                                value={settings[key] ?? ""}
+                                placeholder={prize.kategori.startsWith("SD") ? "Belum dialokasikan" : field === "harapan" ? "Piagam" : "Nominal rupiah"}
+                                min={field === "harapan" ? undefined : 0}
+                                step={field === "harapan" ? undefined : 1000}
+                                maxLength={field === "harapan" ? 100 : undefined}
+                                onChange={(e) => set(key, e.target.value)}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   ))}
+                  <p className="text-xs leading-5 text-[#B0C4DE]">Kosongkan nominal kategori SD untuk menampilkan “Segera diumumkan”. Nilai kategori lain memakai nominal anggaran sebagai default.</p>
                 </div>
               </SectionCard>}
             </>

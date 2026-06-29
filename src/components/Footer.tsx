@@ -4,8 +4,9 @@ import LogoMark from "@/components/LogoMark";
 import TbdBadge, { TBD_LABEL } from "@/components/ui/TbdBadge";
 import { CONTACT_EMAIL, DEFAULT_WHATSAPP, FEST_NAME, FEST_YEAR, ORGANIZER_NAME } from "@/content/brand";
 import { EVENTS } from "@/content/events";
+import { formatEventDate, formatWibTime } from "@/lib/eventDate";
 
-export default function Footer() {
+export default function Footer({ eventDate, locationLabel }: { eventDate: string; locationLabel: string }) {
   return (
     <footer className="section-reveal relative border-t border-[#1E3A5F] bg-[#080C20]">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/50 to-transparent" />
@@ -29,7 +30,7 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-1 text-sm text-[#B0C4DE]">
               <MapPin size={14} className="text-[#00E5FF]" />
-              <TbdBadge className="border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#D7E8FF]" />
+              {locationLabel || <TbdBadge className="border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#D7E8FF]" />}
             </div>
           </div>
 
@@ -67,15 +68,15 @@ export default function Footer() {
             <ul className="space-y-3 text-sm text-[#B0C4DE]">
               <li className="flex items-start gap-2">
                 <CalendarDays size={14} className="text-[#00E5FF] mt-1 flex-shrink-0" />
-                <TbdBadge className="border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#D7E8FF]" />
+                {formatEventDate(eventDate)}
               </li>
               <li className="flex items-start gap-2">
                 <Clock size={14} className="text-[#00E5FF] mt-1 flex-shrink-0" />
-                Start {TBD_LABEL}
+                Mulai {formatWibTime(eventDate)} WIB
               </li>
               <li className="flex items-start gap-2">
                 <MapPin size={14} className="text-[#00E5FF] mt-1 flex-shrink-0" />
-                <TbdBadge className="border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#D7E8FF]" />
+                {locationLabel || <TbdBadge className="border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#D7E8FF]" />}
               </li>
               <li className="flex items-start gap-2 pt-1">
                 <Ticket size={14} className="text-[#8B00FF] mt-1 flex-shrink-0" />

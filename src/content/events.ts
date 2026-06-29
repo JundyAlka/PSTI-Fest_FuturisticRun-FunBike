@@ -44,9 +44,7 @@ export type EventContent = {
   secondaryColor: string;
   categoryCode: string;
   categoryLabel: string;
-  eventDate: string | null;
   eventTime: string;
-  startTime: string;
   location: EventLocation | null;
   hero: {
     badge: string;
@@ -89,9 +87,7 @@ export const EVENTS: Record<EventSlug, EventContent> = {
     secondaryColor: "#8B00FF",
     categoryCode: "5K",
     categoryLabel: "Run 5K",
-    eventDate: "2026-08-01",
-    eventTime: "19.00-22.00 WIB",
-    startTime: "20:00",
+    eventTime: "18.00 WIB - selesai",
     location: {
       lat: -7.7130878,
       lng: 110.0090583,
@@ -115,7 +111,7 @@ export const EVENTS: Record<EventSlug, EventContent> = {
       ],
     },
     deskripsiPelaksanaan:
-      "Futuristic Run dilaksanakan pada malam hari pukul 19.00-22.00 WIB. Tanggal final mengikuti pengumuman resmi panitia. Peserta mengikuti registrasi, briefing, pemanasan, flag off Run 5K, refreshment, hiburan, pembagian hadiah, dan dokumentasi dalam satu alur yang terkoordinasi.",
+      "Futuristic Run dimulai pukul 18.00 WIB. Peserta mengikuti registrasi, briefing, pemanasan, flag off Run 5K, refreshment, hiburan, pembagian hadiah, dan dokumentasi dalam satu alur yang terkoordinasi.",
     rundown: [
       { time: "19.00-19.30", duration: "30 menit", activity: "Registrasi peserta", pic: "Sekretaris & Sie Acara" },
       { time: "19.30-19.35", duration: "5 menit", activity: "Pembukaan", pic: "MC" },
@@ -250,9 +246,7 @@ export const EVENTS: Record<EventSlug, EventContent> = {
     secondaryColor: "#7BC142",
     categoryCode: "funbike",
     categoryLabel: "Futuristic Bike Ride",
-    eventDate: null,
-    eventTime: "05.00-09.10 WIB",
-    startTime: "06:00",
+    eventTime: "05.00 WIB - selesai",
     location: null,
     hero: {
       badge: `${FEST_FULL_NAME} Presents`,
@@ -271,7 +265,7 @@ export const EVENTS: Record<EventSlug, EventContent> = {
       ],
     },
     deskripsiPelaksanaan:
-      "Futuristic Bike berlangsung pada pagi hari dengan alur registrasi, briefing keselamatan, fun ride hingga finish, istirahat, hiburan band, pembagian doorprize, dan penutup. Tanggal final mengikuti pengumuman resmi panitia.",
+      "Futuristic Bike dimulai pukul 05.00 WIB dengan alur registrasi, briefing keselamatan, fun ride hingga finish, istirahat, hiburan band, pembagian doorprize, dan penutup.",
     rundown: [
       { time: "05.00-05.30", duration: "30 menit", activity: "Registrasi" },
       { time: "05.30-05.45", duration: "15 menit", activity: "Pembukaan & sambutan ICF + ketupat", pic: "Panitia + ICF" },

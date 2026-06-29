@@ -4,12 +4,11 @@ import Link from "next/link";
 import { MapPin, Calendar, ChevronDown, Zap, ArrowRight } from "lucide-react";
 import { ORGANIZER_NAME, FEST_YEAR } from "@/content/brand";
 import { EVENTS } from "@/content/events";
-import TbdBadge from "@/components/ui/TbdBadge";
-import { eventStartIso, formatEventDate } from "@/lib/eventDate";
+import { formatEventDate, formatWibTime } from "@/lib/eventDate";
 
 const event = EVENTS["futuristic-run"];
 
-export default function HeroSection({ eventDate, locationLabel }: { eventDate: string | null; locationLabel: string }) {
+export default function HeroSection({ eventDate, locationLabel }: { eventDate: string; locationLabel: string }) {
   return (
     <section
       id="hero"
@@ -97,7 +96,7 @@ export default function HeroSection({ eventDate, locationLabel }: { eventDate: s
           </p>
 
           <p className="fade-in-up-delay-2 max-w-2xl mx-auto lg:mx-0 text-[#D7E8FF] text-sm sm:text-lg leading-relaxed mb-5 sm:mb-7">
-            {event.name} {FEST_YEAR} adalah lari malam 5K bertema neon/cyberpunk. Rasakan garis start pukul 20.00,
+            {event.name} {FEST_YEAR} adalah lari malam 5K bertema neon/cyberpunk. Rasakan event mulai pukul 18.00,
             lampu kota, musik malam, jersey eksklusif, dan energi komunitas runner.
           </p>
 
@@ -108,7 +107,7 @@ export default function HeroSection({ eventDate, locationLabel }: { eventDate: s
             </span>
             <span className="flex items-center gap-1.5">
               <Calendar size={14} className="text-[#00E5FF]" />
-              {formatEventDate(eventDate) ?? <TbdBadge label="TBA" microcopy="Segera diumumkan" className="border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#D7E8FF]" />}
+              {formatEventDate(eventDate)} • Mulai {formatWibTime(eventDate)} WIB
             </span>
             <span className="flex items-center gap-1.5">
               <Zap size={14} className="text-[#00E5FF]" />
@@ -138,7 +137,7 @@ export default function HeroSection({ eventDate, locationLabel }: { eventDate: s
             <p className="text-[#B0C4DE] text-xs tracking-widest mb-3" style={{ fontFamily: "Orbitron, sans-serif" }}>
               HITUNG MUNDUR MENUJU HARI H
             </p>
-            <CountdownTimer targetDate={eventStartIso(eventDate, event.startTime)} />
+            <CountdownTimer targetIso={eventDate} />
           </div>
         </div>
       </div>

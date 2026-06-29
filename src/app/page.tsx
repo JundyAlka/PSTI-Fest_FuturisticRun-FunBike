@@ -9,7 +9,7 @@ import { FEST_FULL_NAME, FEST_NAME, ORGANIZER_NAME, CONTACT_EMAIL, DEFAULT_WHATS
 import { EVENT_LIST, type EventContent } from "@/content/events";
 import { getPublicEventsOps, type PublicEventOps } from "@/lib/eventOps";
 import { hubMetadata, EVENT_SEO, eventJsonLd, withOperationalEventSeo } from "@/lib/seo";
-import { eventStartIso, formatEventDate, normalizeEventDate } from "@/lib/eventDate";
+import { formatEventDate, normalizeEventDate } from "@/lib/eventDate";
 
 export const metadata: Metadata = hubMetadata;
 export const dynamic = "force-dynamic";
@@ -23,17 +23,22 @@ function formatCurrency(amount: number | null) {
   }).format(amount as number);
 }
 
-function formatDateLabel(date: string | null) {
+function formatDateLabel(date: string) {
   return formatEventDate(date);
 }
 
-function dateBadge(date: string | null) {
+function dateBadge(date: string) {
   const normalized = normalizeEventDate(date);
   if (!normalized) return null;
-  const parsed = new Date(`${normalized}T00:00:00+07:00`);
+  const parsed = new Date(normalized);
+  const parts = new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "Asia/Jakarta",
+  }).formatToParts(parsed);
   return {
-    day: String(parsed.getDate()).padStart(2, "0"),
-    month: parsed.toLocaleDateString("id-ID", { month: "short" }).toUpperCase(),
+    day: parts.find((part) => part.type === "day")?.value ?? "",
+    month: (parts.find((part) => part.type === "month")?.value ?? "").toUpperCase(),
   };
 }
 
@@ -119,15 +124,13 @@ function EventCard({ event, ops }: { event: EventContent; ops: PublicEventOps })
                 : "bg-[#080C20]/80 border border-[#00E5FF]/30"
             }`}
           >
-            {badge ? (
+            {badge && (
               <>
                 <div className={`text-sm sm:text-lg font-black leading-none ${isBike ? "text-[#FF6B2C]" : "text-[#00E5FF]"}`} style={{ fontFamily: "Orbitron, sans-serif" }}>
                   {badge.day}
                 </div>
                 <div className={`${isBike ? "text-gray-500" : "text-[#B0C4DE]"} text-[0.5rem] sm:text-[0.6rem] tracking-wider`}>{badge.month}</div>
               </>
-            ) : (
-              <TbdBadge className={isBike ? "border-[#FF6B2C]/20 bg-white/70 text-gray-600" : ""} />
             )}
           </div>
 
@@ -204,13 +207,11 @@ function EventCard({ event, ops }: { event: EventContent; ops: PublicEventOps })
 export default async function HubPage() {
   const ops = await getPublicEventsOps(EVENT_LIST.map((event) => event.slug));
   const quota = totalQuota(ops);
-  const primaryDate = ops["futuristic-run"].eventDate ?? ops["fun-bike"].eventDate;
-  const primaryStartTime = ops["futuristic-run"].eventDate ? EVENT_LIST[0].startTime : EVENT_LIST[1].startTime;
+  const primaryDate = ops["futuristic-run"].eventDate;
   const primaryLocation = ops["futuristic-run"].location ?? ops["fun-bike"].location;
   const hubJsonLd = EVENT_LIST.map((item) => eventJsonLd(withOperationalEventSeo(
     EVENT_SEO[item.slug],
     ops[item.slug].eventDate,
-    item.startTime,
     ops[item.slug].location
   )));
 
@@ -265,7 +266,7 @@ export default async function HubPage() {
               </span>
               <span className="flex items-center gap-1.5">
                 <Calendar size={14} className="text-[#00E5FF]" />
-                {formatDateLabel(primaryDate) ?? <TbdBadge />}
+                {formatDateLabel(primaryDate)}
               </span>
               <span className="flex items-center gap-1.5">
                 <Users size={14} className="text-[#00E5FF]" />
@@ -277,7 +278,7 @@ export default async function HubPage() {
               <p className="text-[#B0C4DE] text-xs tracking-widest mb-3" style={{ fontFamily: "Orbitron, sans-serif" }}>
                 HITUNG MUNDUR MENUJU HARI H
               </p>
-              <CountdownTimer targetDate={eventStartIso(primaryDate, primaryStartTime)} />
+              <CountdownTimer targetIso={primaryDate} />
             </div>
           </div>
 

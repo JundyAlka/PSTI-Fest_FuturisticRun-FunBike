@@ -26,7 +26,9 @@ import {
   registerMetadata,
   eventJsonLd,
   hubMetadata,
+  withOperationalEventSeo,
 } from "@/lib/seo";
+import { DEFAULT_EVENT_DATES, formatTanggalID } from "@/lib/eventDate";
 
 describe("formatCurrency", () => {
   it("formats IDR correctly", () => {
@@ -148,6 +150,13 @@ describe("SEO", () => {
       expect(organizer.name).toBe("Himatekno UMPWR");
     });
 
+    it("uses the exact WIB start dates from event settings", () => {
+      const run = eventJsonLd(withOperationalEventSeo(EVENT_SEO["futuristic-run"], DEFAULT_EVENT_DATES["futuristic-run"], null));
+      const bike = eventJsonLd(withOperationalEventSeo(EVENT_SEO["fun-bike"], DEFAULT_EVENT_DATES["fun-bike"], null));
+      expect(run.startDate).toBe("2026-08-01T18:00:00+07:00");
+      expect(bike.startDate).toBe("2026-08-02T05:00:00+07:00");
+    });
+
     it("omits pricing when operational data is not available", () => {
       const jsonLd = eventJsonLd(EVENT_SEO["futuristic-run"]);
       expect(jsonLd.offers).toBeUndefined();
@@ -162,5 +171,12 @@ describe("SEO", () => {
     it("has Open Graph images", () => {
       expect(hubMetadata.openGraph?.images).toBeDefined();
     });
+  });
+});
+
+describe("formatTanggalID", () => {
+  it("formats the final dates in Asia/Jakarta", () => {
+    expect(formatTanggalID(DEFAULT_EVENT_DATES["futuristic-run"])).toBe("Sabtu, 1 Agustus 2026");
+    expect(formatTanggalID(DEFAULT_EVENT_DATES["fun-bike"])).toBe("Minggu, 2 Agustus 2026");
   });
 });

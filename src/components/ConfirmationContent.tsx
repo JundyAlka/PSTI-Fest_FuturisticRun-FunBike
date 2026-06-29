@@ -8,6 +8,7 @@ import { trackPaymentProof } from "@/lib/analytics";
 import { DEFAULT_SITE_URL, FEST_FULL_NAME, FEST_NAME } from "@/content/brand";
 import { EVENTS } from "@/content/events";
 import { TBD_LABEL } from "@/components/ui/TbdBadge";
+import { formatTanggalID, formatWibTime } from "@/lib/eventDate";
 
 type PaymentInfo = {
   bankName: string;
@@ -18,6 +19,8 @@ type PaymentInfo = {
   registrationFee: number;
   transferEnabled: boolean;
   qrisEnabled: boolean;
+  eventDate: string;
+  eventLocation: string;
 };
 
 type RegistrationStatus = {
@@ -229,8 +232,8 @@ function Content() {
       <div class="reg-number">${reg}</div>
       <div class="info">
         <div class="info-item"><label>Event</label><span>${eventName}</span></div>
-        <div class="info-item"><label>Tanggal Event</label><span>${TBD_LABEL}</span></div>
-        <div class="info-item"><label>Lokasi</label><span>${TBD_LABEL}</span></div>
+        <div class="info-item"><label>Tanggal Event</label><span>${paymentInfo ? `${formatTanggalID(paymentInfo.eventDate)} • ${formatWibTime(paymentInfo.eventDate)} WIB` : "-"}</span></div>
+        <div class="info-item"><label>Lokasi</label><span>${paymentInfo?.eventLocation ?? "-"}</span></div>
         <div class="info-item"><label>Status</label><span>Menunggu Pembayaran</span></div>
       </div>
       <div class="steps"><h3>Langkah Selanjutnya:</h3><ol>

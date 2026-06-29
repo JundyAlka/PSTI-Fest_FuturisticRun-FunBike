@@ -87,7 +87,7 @@ export default function CategoriesSection({ price, quota, categoryLabel }: Categ
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-8">
                 <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl flex-shrink-0"
                   style={{ background: "linear-gradient(135deg, rgba(139,0,255,0.2), rgba(0,229,255,0.1))", border: "1px solid rgba(139,0,255,0.3)" }}>
-                  âš¡
+                  <Zap size={36} className="text-[#00E5FF]" aria-hidden="true" />
                 </div>
                 <div>
                   <div className="text-[#B0C4DE] text-sm mb-1 tracking-widest" style={{ fontFamily: "Rajdhani, sans-serif" }}>

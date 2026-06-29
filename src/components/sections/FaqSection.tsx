@@ -47,18 +47,19 @@ export default function FaqSection({
         <div className="section-reveal-delay-1 mb-10 text-center">
           <div className="badge-neon mb-4 inline-block">BANTUAN</div>
           <AnimatedSectionTitle text="FAQ" className="mb-4 text-4xl font-black sm:text-5xl" />
-          <p className="text-[#B0C4DE]">Pertanyaan resmi dari admin {FEST_NAME}</p>
+          <p className="text-[#B0C4DE]">Informasi umum seputar {FEST_NAME}</p>
           <div className="mx-auto mt-4 h-1 w-24 rounded-full bg-gradient-to-r from-[#8B00FF] to-[#00E5FF]" />
         </div>
 
         {!faqs?.length ? (
           <div className="card-animated mx-auto max-w-xl rounded-2xl border border-[#1E3A5F] bg-[#0B1030]/80 p-8 text-center">
-            <div className="mb-3 flex justify-center">
-              <TbdBadge />
+            <div className="flex justify-center">
+              <TbdBadge
+                label="Informasi segera hadir"
+                microcopy="Pertanyaan umum dan jawabannya sedang disiapkan oleh panitia."
+                className="max-w-md"
+              />
             </div>
-            <p className="text-sm leading-6 text-[#B0C4DE]">
-              FAQ resmi akan tampil setelah admin mengisi key <span className="font-mono text-[#00E5FF]">faq</span> di settings.
-            </p>
           </div>
         ) : (
           <div className="stagger-list space-y-3">

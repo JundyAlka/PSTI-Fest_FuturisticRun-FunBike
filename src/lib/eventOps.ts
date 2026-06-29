@@ -1,10 +1,10 @@
 import { insforge } from "@/lib/insforge";
 import type { EventSlug } from "@/content/events";
-import { normalizeEventDate } from "@/lib/eventDate";
+import { resolveEventDate } from "@/lib/eventDate";
 
 export type PublicEventOps = {
   slug: EventSlug;
-  eventDate: string | null;
+  eventDate: string;
   location: string | null;
   deadline: string | null;
   price: number | null;
@@ -25,7 +25,7 @@ function settingValue(settings: Array<{ key: string; value: string }> | null | u
 function emptyOps(slug: EventSlug): PublicEventOps {
   return {
     slug,
-    eventDate: null,
+    eventDate: resolveEventDate(slug, null),
     location: null,
     deadline: null,
     price: null,
@@ -68,7 +68,7 @@ export async function getPublicEventOps(slug: EventSlug): Promise<PublicEventOps
 
     return {
       slug,
-      eventDate: normalizeEventDate(settingValue(settings, "event_date")),
+      eventDate: resolveEventDate(slug, settingValue(settings, "event_date")),
       location: settingValue(settings, "event_location") ?? event?.location ?? null,
       deadline: settingValue(settings, "registration_deadline") ?? event?.deadline ?? null,
       price: Number.isFinite(registrationFee) && registrationFee > 0 ? registrationFee : primaryCategory?.price ?? null,

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { DEFAULT_SITE_URL, FEST_FULL_NAME, FEST_NAME, ORGANIZER_NAME } from "@/content/brand";
 import { EVENTS } from "@/content/events";
-import { eventStartIso } from "@/lib/eventDate";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL;
 const SITE_NAME = FEST_FULL_NAME;
@@ -46,10 +45,9 @@ export const EVENT_SEO: Record<string, EventSEO> = {
 export function withOperationalEventSeo(
   base: EventSEO,
   eventDate: string | null,
-  startTime: string,
   location: string | null
 ): EventSEO {
-  return { ...base, eventDate: eventStartIso(eventDate, startTime), location };
+  return { ...base, eventDate, location };
 }
 
 export function eventMetadata(event: EventSEO): Metadata {

@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import bcrypt from "bcryptjs";
 import { FEST_NAME } from "../src/content/brand";
+import { DEFAULT_PRIZE_SETTINGS } from "../src/data/prizes";
 
 const adapter = new PrismaBetterSqlite3({ url: "file:./prisma/dev.db" });
 const prisma = new PrismaClient({ adapter });
@@ -79,7 +80,7 @@ async function main() {
   const settings = [
     { eventType: "futuristic-run", key: "registration_open", value: "true" },
     { eventType: "futuristic-run", key: "registration_fee", value: "200000" },
-    { eventType: "futuristic-run", key: "event_date", value: "" },
+    { eventType: "futuristic-run", key: "event_date", value: "2026-08-01T18:00:00+07:00" },
     { eventType: "futuristic-run", key: "event_location", value: "Alun-Alun Purworejo" },
     { eventType: "futuristic-run", key: "location_lat", value: "-7.7130878" },
     { eventType: "futuristic-run", key: "location_lng", value: "110.0090583" },
@@ -88,12 +89,8 @@ async function main() {
     { eventType: "futuristic-run", key: "registration_deadline", value: "2026-06-14" },
     { eventType: "futuristic-run", key: "benefit_prize_details", value: "" },
     { eventType: "futuristic-run", key: "benefit_race_pack_contents", value: "" },
-    { eventType: "futuristic-run", key: "prize_umum_1", value: "" },
-    { eventType: "futuristic-run", key: "prize_umum_2", value: "" },
-    { eventType: "futuristic-run", key: "prize_umum_3", value: "" },
-    { eventType: "futuristic-run", key: "prize_pelajar_1", value: "" },
-    { eventType: "futuristic-run", key: "prize_pelajar_2", value: "" },
-    { eventType: "futuristic-run", key: "prize_pelajar_3", value: "" },
+    ...Object.entries(DEFAULT_PRIZE_SETTINGS).map(([key, value]) => ({ eventType: "futuristic-run", key, value })),
+    { eventType: "fun-bike", key: "event_date", value: "2026-08-02T05:00:00+07:00" },
   ];
 
   for (const s of settings) {

@@ -34,12 +34,13 @@ export default function RulesSection({ settings = {} }: { settings?: Record<stri
 
         {rules.length === 0 ? (
           <div className="card-animated mx-auto max-w-xl rounded-2xl border border-[#1E3A5F] bg-[#0B1030]/80 p-8 text-center">
-            <div className="mb-3 flex justify-center">
-              <TbdBadge />
+            <div className="flex justify-center">
+              <TbdBadge
+                label="Sedang dipersiapkan"
+                microcopy="Ketentuan resmi akan diumumkan melalui website dan kanal resmi panitia."
+                className="max-w-md"
+              />
             </div>
-            <p className="text-sm leading-6 text-[#B0C4DE]">
-              Rules resmi akan tampil setelah admin mengisi key <span className="font-mono text-[#00E5FF]">rules</span> di settings.
-            </p>
           </div>
         ) : (
         <div className="stagger-list space-y-3">
