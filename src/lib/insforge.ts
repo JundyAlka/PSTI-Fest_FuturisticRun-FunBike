@@ -1,17 +1,19 @@
-"use server";
 import { createClient } from "@insforge/sdk";
 
-function getInsforgeClient() {
+type InsforgeClient = ReturnType<typeof createClient>;
+
+let _client: InsforgeClient | null = null;
+
+function buildClient(): InsforgeClient {
   const insforgeUrl = process.env.INSFORGE_URL;
   const insforgeServerKey = process.env.INSFORGE_API_KEY ?? process.env.API_KEY;
   const insforgeKey = insforgeServerKey ?? process.env.INSFORGE_ANON_KEY;
 
   if (!insforgeUrl || !insforgeKey) {
-    throw new Error("Missing INSFORGE_URL and InsForge server key environment variables");
-  }
-
-  if (!insforgeServerKey && process.env.VERCEL_ENV === "production") {
-    throw new Error("Missing INSFORGE_API_KEY in production deployment");
+    throw new Error(
+      "Missing INSFORGE_URL and InsForge key env variables. " +
+        "Set INSFORGE_URL and INSFORGE_API_KEY in your environment."
+    );
   }
 
   return createClient({
@@ -21,19 +23,22 @@ function getInsforgeClient() {
   });
 }
 
-// Singleton — created lazily at first use (safe for next build)
-let _client: ReturnType<typeof createClient> | null = null;
-
-export function getInsforge() {
-  if (!_client) {
-    _client = getInsforgeClient();
-  }
+/** Returns the InsForge client singleton. Safe to call at request time; throws if env vars are missing. */
+export function getInsforge(): InsforgeClient {
+  if (!_client) _client = buildClient();
   return _client;
 }
 
-/** @deprecated Use getInsforge() instead — kept for backward compat */
-export const insforge = new Proxy({} as ReturnType<typeof createClient>, {
-  get(_target, prop) {
-    return (getInsforge() as Record<string | symbol, unknown>)[prop];
+/**
+ * Direct access shorthand — identical to getInsforge().
+ * Kept for backward compatibility with existing call-sites.
+ * The client is initialised lazily so module-level import is safe during next build.
+ */
+export const insforge: InsforgeClient = new Proxy({} as InsforgeClient, {
+  get(_t, prop: string | symbol) {
+    const client = getInsforge();
+    const val = (client as unknown as Record<string | symbol, unknown>)[prop];
+    return typeof val === "function" ? val.bind(client) : val;
   },
 });
+
