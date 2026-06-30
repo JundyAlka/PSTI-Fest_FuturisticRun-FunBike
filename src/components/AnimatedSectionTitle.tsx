@@ -6,9 +6,10 @@ type AnimatedSectionTitleProps = {
   text: string;
   className?: string;
   level?: 1 | 2 | 3;
+  disableGradient?: boolean;
 };
 
-export default function AnimatedSectionTitle({ text, className = "", level = 2 }: AnimatedSectionTitleProps) {
+export default function AnimatedSectionTitle({ text, className = "", level = 2, disableGradient = false }: AnimatedSectionTitleProps) {
   const ref = useRef<HTMLHeadingElement>(null);
   const [display, setDisplay] = useState("");
   const [typing, setTyping] = useState(false);
@@ -60,7 +61,7 @@ export default function AnimatedSectionTitle({ text, className = "", level = 2 }
   return (
     <Tag
       ref={ref}
-      className={`typing-section-title section-title ${className}`}
+      className={`typing-section-title ${disableGradient ? "" : "section-title"} ${className}`}
       style={{ fontFamily: "Orbitron, sans-serif" }}
       aria-label={text}
     >

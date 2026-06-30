@@ -117,6 +117,7 @@ export default function RulesSection({
           </div>
           <AnimatedSectionTitle
             text="KETENTUAN RESMI"
+            disableGradient={isBike}
             className={`text-4xl sm:text-5xl font-black mb-4 ${
               isBike ? "text-gray-900" : "text-white"
             }`}

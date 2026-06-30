@@ -170,7 +170,9 @@ export default async function FunBikePage() {
               accentColor="#C2410C"
               accentColor2="#0284C7"
               lightSurface
-              titleFontFamily="Rajdhani, sans-serif"
+              titleFontFamily="Orbitron, sans-serif"
+              titleClass="text-5xl sm:text-6xl lg:text-7xl"
+              disableGradient={true}
               className="mb-10 sm:mb-14"
             />
 
@@ -323,19 +325,19 @@ export default async function FunBikePage() {
               <h3 className="mb-5 text-center text-2xl font-black text-gray-950" style={{ fontFamily: "Rajdhani, sans-serif" }}>
                 INFO PELAKSANAAN
               </h3>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-5 sm:grid-cols-2">
                 {[
-                  { icon: Music, label: "Hiburan", value: "Band SUNFLOW & Ollsame", color: "#0369A1" },
-                  { icon: Gift, label: "Doorprize", value: "Doorprize pembelian panitia + dukungan sponsor, diundi saat acara", color: "#C2410C" },
-                  { icon: Trophy, label: "Apresiasi", value: `Uang pembinaan: ${prizeAmount}`, color: "#B45309" },
-                  { icon: ShieldCheck, label: "Koordinasi", value: "Pelaksanaan dikoordinasikan bersama PLF & ICF", color: "#B45309" },
-                ].map(({ icon: Icon, label, value, color }) => (
-                  <article key={label} className="card-animated rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-5 shadow-sm">
-                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border" style={{ borderColor: `${color}33`, background: `${color}0F` }}>
-                      <Icon size={18} style={{ color }} />
+                  { icon: Music, label: "Hiburan", value: "Band SUNFLOW & Ollsame", color: "#0369A1", border: "border-sky-200" },
+                  { icon: Gift, label: "Doorprize", value: "Doorprize pembelian panitia + dukungan sponsor, diundi saat acara", color: "#C2410C", border: "border-orange-200" },
+                  { icon: Trophy, label: "Apresiasi", value: `Uang pembinaan: ${prizeAmount}`, color: "#B45309", border: "border-amber-200" },
+                  { icon: ShieldCheck, label: "Koordinasi", value: "Pelaksanaan dikoordinasikan bersama PLF & ICF", color: "#B45309", border: "border-amber-200" },
+                ].map(({ icon: Icon, label, value, color, border }) => (
+                  <article key={label} className={`card-animated rounded-2xl border-2 ${border} bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all`}>
+                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border" style={{ borderColor: `${color}40`, background: `${color}15` }}>
+                      <Icon size={20} style={{ color }} />
                     </div>
-                    <p className="text-xs font-black uppercase tracking-[0.14em] text-gray-500">{label}</p>
-                    <p className="mt-2 text-sm font-semibold leading-6 text-gray-900">{value}</p>
+                    <p className="text-xs font-black uppercase tracking-[0.15em] text-gray-500">{label}</p>
+                    <p className="mt-2 text-sm font-semibold leading-relaxed text-gray-900">{value}</p>
                   </article>
                 ))}
               </div>
@@ -352,25 +354,28 @@ export default async function FunBikePage() {
                 Paket peserta berisi jersey Fun Bike, racepack/goodie, dan kebutuhan ride pagi sesuai ketentuan panitia.
               </p>
             </div>
-            <div className="grid gap-5 lg:grid-cols-3">
+            <div className="grid gap-6 lg:grid-cols-3">
               {[
                 { icon: Shirt, title: "Jersey Fun Bike", items: ["Desain sudah fiks", "Tema sunrise cerah", "Dipilih ukurannya saat daftar"] },
                 { icon: Package, title: "Racepack / Goodie", items: event.racepack },
                 { icon: Ticket, title: "Benefit", items: event.benefit },
               ].map(({ icon: Icon, title, items }) => (
-                <div key={title} className="card-animated rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
-                  <AnimatedIcon color="#FF6B2C" animate={title.includes("Jersey") ? "sway" : title.includes("Racepack") ? "bounce" : "pulse"} className="mb-4">
-                    <Icon size={24} />
-                  </AnimatedIcon>
-                  <h3 className="mb-4 text-lg font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>{title}</h3>
-                  <ul className="space-y-3">
-                    {items.map((item) => (
-                      <li key={item} className="flex items-start gap-2 text-sm text-gray-600">
-                        <CheckCircle size={15} className="mt-0.5 flex-shrink-0 text-[#7BC142]" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
+                <div key={title} className="card-animated rounded-3xl border-2 border-orange-200 bg-white p-7 shadow-md hover:shadow-lg transition-all relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 -mr-6 -mt-6 w-32 h-32 rounded-full bg-orange-50 opacity-50 group-hover:scale-150 transition-transform duration-500" />
+                  <div className="relative z-10">
+                    <AnimatedIcon color="#FF6B2C" animate={title.includes("Jersey") ? "sway" : title.includes("Racepack") ? "bounce" : "pulse"} className="mb-5">
+                      <Icon size={28} />
+                    </AnimatedIcon>
+                    <h3 className="mb-5 text-xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>{title}</h3>
+                    <ul className="space-y-4">
+                      {items.map((item) => (
+                        <li key={item} className="flex items-start gap-3 text-sm font-medium text-gray-700">
+                          <CheckCircle size={18} className="flex-shrink-0 mt-0.5 text-[#FF6B2C]" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               ))}
             </div>
@@ -380,25 +385,25 @@ export default async function FunBikePage() {
         <section className="overflow-hidden bg-white pb-5 pt-4 sm:py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-3xl border border-gray-100 bg-gradient-to-br from-[#FFF7ED] to-white p-6">
+              <div className="rounded-3xl border-2 border-orange-200 bg-gradient-to-br from-[#FFF7ED] to-white p-6 shadow-md">
                 <AnimatedIcon color="#FF6B2C" animate="bounce" className="mb-4">
                   <Gift size={24} />
                 </AnimatedIcon>
                 <h2 className="mb-4 text-3xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>DOORPRIZE</h2>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {event.doorprize.map((item) => (
-                    <div key={item} className="shimmer-showcase rounded-xl border border-white bg-white/75 p-4 text-sm font-semibold text-gray-700 shadow-sm">{item}</div>
+                    <div key={item} className="shimmer-showcase rounded-xl border border-orange-100 bg-white/75 p-4 text-sm font-semibold text-gray-700 shadow-sm">{item}</div>
                   ))}
                 </div>
               </div>
-              <div className="rounded-3xl border border-gray-100 bg-gradient-to-br from-[#EFF6FF] to-white p-6">
+              <div className="rounded-3xl border-2 border-sky-200 bg-gradient-to-br from-[#EFF6FF] to-white p-6 shadow-md">
                 <AnimatedIcon color="#38BDF8" animate="sway" className="mb-4">
                   <Music size={24} />
                 </AnimatedIcon>
                 <h2 className="mb-4 text-3xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>HIBURAN</h2>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {event.hiburan.map((item) => (
-                    <div key={item} className="rounded-xl border border-white bg-white/75 p-4 text-sm font-semibold text-gray-700 shadow-sm">
+                    <div key={item} className="rounded-xl border border-sky-100 bg-white/75 p-4 text-sm font-semibold text-gray-700 shadow-sm">
                       {item}
                     </div>
                   ))}

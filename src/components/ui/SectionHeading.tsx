@@ -7,6 +7,8 @@ interface SectionHeadingProps {
   lightSurface?: boolean;
   titleFontFamily?: string;
   className?: string;
+  titleClass?: string;
+  disableGradient?: boolean;
 }
 
 export default function SectionHeading({
@@ -18,6 +20,8 @@ export default function SectionHeading({
   lightSurface = false,
   titleFontFamily = "Orbitron, sans-serif",
   className = "",
+  titleClass = "text-4xl sm:text-5xl",
+  disableGradient = false,
 }: SectionHeadingProps) {
   return (
     <div className={`text-center mb-14 ${className}`}>
@@ -33,15 +37,17 @@ export default function SectionHeading({
         {eyebrow}
       </div>
       <h2
-        className={`text-4xl sm:text-5xl font-black mb-4 ${lightSurface ? "italic" : ""}`}
+        className={`${titleClass} font-black mb-4 ${lightSurface ? "italic" : ""}`}
         style={{
           fontFamily: titleFontFamily,
-          background: lightSurface
-            ? `linear-gradient(100deg, ${accentColor} 0%, #F97316 44%, ${accentColor2} 100%)`
-            : `linear-gradient(135deg, ${accentColor}, #ffffff 40%, ${accentColor2})`,
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
+          ...(disableGradient ? { color: accentColor } : {
+            background: lightSurface
+              ? `linear-gradient(100deg, ${accentColor} 0%, #F97316 44%, ${accentColor2} 100%)`
+              : `linear-gradient(135deg, ${accentColor}, #ffffff 40%, ${accentColor2})`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          })
         }}
       >
         {title}
