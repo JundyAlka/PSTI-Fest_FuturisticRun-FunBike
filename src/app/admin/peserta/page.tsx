@@ -1,6 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Search, Filter, CheckCircle, XCircle, Eye, Download, ChevronLeft, ChevronRight, Mail, CheckSquare, Trash2, AlertTriangle, X } from "lucide-react";
 import { getPaymentStatusColor, getPaymentStatusLabel, formatCurrency, CATEGORY_LABELS } from "@/lib/utils";
 import LoadingPanel from "@/components/LoadingPanel";
@@ -345,7 +346,7 @@ export default function PesertaPage() {
       </div>
 
       {/* Detail / Verify Modal */}
-      {selected && (
+      {selected && createPortal(
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-[8vh] pb-6 px-4 sm:px-6 overflow-y-auto" style={{ background: "rgba(5,8,22,0.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }} onClick={(e) => { if (e.target === e.currentTarget) setSelected(null); }}>
           <div className="w-full max-w-lg max-h-[84vh] flex flex-col rounded-2xl border border-[#1E3A5F]/80 shadow-[0_8px_64px_rgba(0,229,255,0.08),0_0_0_1px_rgba(30,58,95,0.5)] overflow-hidden" style={{ background: "linear-gradient(180deg, #0D1330 0%, #0A0E27 100%)", animation: "modalSlideUp .25s cubic-bezier(.22,1,.36,1)" }}>
             {/* Header */}
@@ -453,11 +454,12 @@ export default function PesertaPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
+      {deleteConfirm && createPortal(
         <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[18vh] px-4" style={{ background: "rgba(5,8,22,0.88)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }} onClick={(e) => { if (e.target === e.currentTarget) setDeleteConfirm(null); }}>
           <div className="w-full max-w-md rounded-2xl border border-red-500/20 shadow-[0_8px_64px_rgba(239,68,68,0.12),0_0_0_1px_rgba(30,58,95,0.4)] overflow-hidden" style={{ background: "linear-gradient(180deg, #12101F 0%, #0A0E27 100%)", animation: "modalSlideUp .2s cubic-bezier(.22,1,.36,1)" }}>
             <div className="p-6 text-center">
@@ -476,7 +478,8 @@ export default function PesertaPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

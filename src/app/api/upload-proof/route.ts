@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { insforge } from "@/lib/insforge";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { PAYMENT_PROOF_MAX_SIZE, PAYMENT_PROOF_TYPES } from "@/lib/validations";
-import { checkInsforgeHealth, serviceUnavailable } from "@/lib/insforgeHealth";
+import { serviceUnavailable } from "@/lib/insforgeHealth";
 import { randomUUID } from "node:crypto";
 import { verifyRegistrationAccess } from "@/lib/registrationAccess";
 
@@ -22,9 +22,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Nomor registrasi tidak valid" }, { status: 400 });
     }
 
-    const health = await checkInsforgeHealth();
-    if (!health.ok) return serviceUnavailable("Upload bukti pembayaran sementara tidak tersedia. Coba lagi beberapa saat.");
-
     // Verify participant exists
     const { data: participant, error: pError } = await insforge.database
       .from("participants")
@@ -34,7 +31,11 @@ export async function POST(req: NextRequest) {
 
     const accessToken = req.headers.get("x-registration-token");
     const contact = req.headers.get("x-registration-contact");
-    if (pError || !participant || !verifyRegistrationAccess(participant ?? {}, accessToken, contact)) {
+    if (pError) {
+      console.error("[upload-proof] Participant lookup failed");
+      return serviceUnavailable("Upload bukti pembayaran sementara tidak tersedia. Coba lagi beberapa saat.");
+    }
+    if (!participant || !verifyRegistrationAccess(participant, accessToken, contact)) {
       return NextResponse.json({ error: "Nomor registrasi atau verifikasi kontak tidak valid" }, { status: 404 });
     }
 

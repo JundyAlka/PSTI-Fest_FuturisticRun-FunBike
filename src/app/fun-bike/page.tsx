@@ -24,7 +24,7 @@ import { Suspense } from "react";
 import FunBikeCountdown from "./FunBikeCountdown";
 import FunBikeFaq from "./FunBikeFaq";
 import RulesSection from "@/components/sections/RulesSection";
-import BikeRouteMap from "./BikeRouteMap";
+import RouteMapImage from "@/components/ui/RouteMapImage";
 import ScrollProgressBar from "@/components/ui/ScrollProgressBar";
 import HoverTiltCard from "@/components/ui/HoverTiltCard";
 import RundownTimeline from "@/components/ui/RundownTimeline";
@@ -244,9 +244,9 @@ export default async function FunBikePage() {
                 <p className="text-sm font-semibold text-gray-500">Start & finish Fun Ride</p>
               </div>
 
-              <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="grid gap-6 lg:grid-cols-2">
                 <LocationMap {...location} label={locationLabel} theme="bike" />
-                <BikeRouteMap />
+                <RouteMapImage theme="bike" />
               </div>
 
               <div className="mt-6 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
