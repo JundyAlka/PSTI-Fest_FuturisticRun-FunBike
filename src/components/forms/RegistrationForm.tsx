@@ -1,9 +1,9 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronRight, ChevronLeft, User, Trophy, CreditCard, AlertCircle, QrCode, Copy, CheckCheck, Sparkles } from "lucide-react";
+import { Check, ChevronRight, ChevronLeft, User, Trophy, CreditCard, AlertCircle, Sparkles, X, QrCode, Info, Smartphone } from "lucide-react";
 import { trackFormStart, trackFormStep, trackFormSubmit } from "@/lib/analytics";
+import Image from "next/image";
 
 const provinces = [
   "Aceh","Sumatera Utara","Sumatera Barat","Riau","Kepulauan Riau","Jambi","Bengkulu",
@@ -21,17 +21,6 @@ const steps = [
   { label: "Pembayaran", icon: CreditCard },
 ];
 
-interface PaymentInfo {
-  bankName: string;
-  bankAccount: string;
-  bankHolder: string;
-  qrisNmid: string;
-  qrisImageUrl: string;
-  registrationFee: number;
-  transferEnabled: boolean;
-  qrisEnabled: boolean;
-}
-
 type PaymentMethodOption = {
   value: "transfer" | "qris";
   label: string;
@@ -39,21 +28,14 @@ type PaymentMethodOption = {
   desc: string;
 };
 
-const defaultPayment: PaymentInfo = {
-  bankName: "BRI",
-  bankAccount: "—",
-  bankHolder: "Himatekno UMP",
-  qrisNmid: "—",
-  qrisImageUrl: "",
-  registrationFee: 200000,
-  transferEnabled: true,
-  qrisEnabled: true,
-};
-
 interface RegistrationFormProps {
   eventType?: "futuristic-run" | "fun-bike" | string;
   categoryLabel?: string;
   defaultPrice?: number;
+  currentTierLabel?: string | null;
+  presaleRemaining?: number | null;
+  presaleQuota?: number | null;
+  normalPrice?: number | null;
 }
 
 type FormData = {
@@ -177,7 +159,7 @@ function InputField({ label, id, error, required, theme, children }: {
   );
 }
 
-export default function RegistrationForm({ eventType = "futuristic-run", categoryLabel, defaultPrice }: RegistrationFormProps) {
+export default function RegistrationForm({ eventType = "futuristic-run", categoryLabel, defaultPrice, currentTierLabel, presaleRemaining, presaleQuota, normalPrice }: RegistrationFormProps) {
   const isFunBike = eventType === "fun-bike";
   const catLabel = categoryLabel ?? (isFunBike ? "Futuristic Bike Ride" : "RUN 5K");
   const t = isFunBike ? lightTheme : darkTheme;
@@ -185,54 +167,18 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
   const [form, setForm] = useState<FormData>(makeInitial(eventType));
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [payment, setPayment] = useState<PaymentInfo>(defaultPayment);
-  const [paymentLoading, setPaymentLoading] = useState(true);
-  const [paymentError, setPaymentError] = useState(false);
-  const [paymentRetryKey, setPaymentRetryKey] = useState(0);
-
-  useEffect(() => {
-    let alive = true;
-    const resetTimer = window.setTimeout(() => {
-      if (!alive) return;
-      setPaymentLoading(true);
-      setPaymentError(false);
-    }, 0);
-
-    fetch(`/api/payment-info?eventType=${encodeURIComponent(eventType)}`)
-      .then((r) => {
-        if (!r.ok) throw new Error("Failed to load payment info");
-        return r.json();
-      })
-      .then((data) => {
-        if (!alive) return;
-        if (!data.error) {
-          setPayment(data);
-        } else {
-          setPaymentError(true);
-        }
-      })
-      .catch(() => {
-        if (alive) setPaymentError(true);
-      })
-      .finally(() => {
-        if (alive) setPaymentLoading(false);
-      });
-
-    return () => {
-      alive = false;
-      window.clearTimeout(resetTimer);
-    };
-  }, [eventType, paymentRetryKey]);
-
-  const fee = defaultPrice ?? payment.registrationFee;
+  const submittingRef = useRef(false);
+  const fee = defaultPrice ?? 0;
 
   const feeFormatted = new Intl.NumberFormat("id-ID", {
     style: "currency", currency: "IDR", minimumFractionDigits: 0,
   }).format(fee);
+  const normalPriceFormatted = normalPrice ? new Intl.NumberFormat("id-ID", {
+    style: "currency", currency: "IDR", minimumFractionDigits: 0,
+  }).format(normalPrice) : null;
 
   const [apiError, setApiError] = useState("");
   const router = useRouter();
-  const [copied, setCopied] = useState(false);
   const draftKey = `reg-draft-${eventType}`;
   const formStartTracked = useRef(false);
 
@@ -324,9 +270,13 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
   const back = () => setStep((s) => s - 1);
 
   const submit = async () => {
+    if (submittingRef.current) return;
     if (!validateStep(2)) return;
+    submittingRef.current = true;
     setSubmitting(true);
     setApiError("");
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 15_000);
     try {
       const payload = {
         fullName: form.fullName, nik: form.nik || "", gender: form.gender,
@@ -347,10 +297,18 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setApiError(data.message ?? "Pendaftaran gagal. Coba lagi.");
+        const messages: Record<string, string> = {
+          QUOTA_FULL: "Kuota kategori ini sudah penuh.",
+          DUPLICATE_REGISTRATION: "NIK sudah terdaftar untuk event ini.",
+          REGISTRATION_DEADLINE: "Batas waktu pendaftaran sudah berakhir.",
+          REGISTRATION_CLOSED: "Pendaftaran sedang ditutup.",
+          PAYMENT_METHOD_UNAVAILABLE: "Metode pembayaran yang dipilih sedang tidak tersedia.",
+        };
+        setApiError(messages[data.code] ?? data.message ?? "Pendaftaran gagal. Coba lagi.");
         return;
       }
       if (typeof data.regNumber !== "string" || !/^(FR|FB)2026-\d{4,}$/.test(data.regNumber)) {
@@ -359,15 +317,25 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
       }
       trackFormSubmit(eventType, data.regNumber);
       clearDraft();
-      router.push(`/konfirmasi?reg=${data.regNumber}&event=${eventType}`);
-    } catch {
-      setApiError("Koneksi gagal. Periksa jaringan Anda.");
+      if (typeof data.accessToken === "string" && data.accessToken) {
+        sessionStorage.setItem(`registration-access:${data.regNumber}`, data.accessToken);
+      }
+      router.push(`/konfirmasi?reg=${data.regNumber}&event=${isFunBike ? "bike" : "run"}`);
+    } catch (error) {
+      setApiError(
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Permintaan terlalu lama. Silakan coba submit kembali."
+          : "Koneksi gagal. Periksa jaringan Anda lalu coba lagi.",
+      );
     } finally {
+      window.clearTimeout(timeout);
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
 
   const eventName = isFunBike ? "Futuristic Bike 2026" : "Futuristic Run 2026";
+  const [showQrisModal, setShowQrisModal] = useState(false);
 
   // Section header icon bg/border per theme
   const sectionIconBg1 = isFunBike ? "rgba(255,107,44,0.1)" : "rgba(0,229,255,0.12)";
@@ -513,7 +481,15 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
               </div>
               <div className="min-[430px]:text-right">
                 <div className={`text-[10px] uppercase tracking-widest font-semibold mb-0.5 ${t.textM}`}>Biaya</div>
-                <div className="text-[#FFD700] font-black text-lg" style={{ fontFamily: "Orbitron, sans-serif" }}>{feeFormatted}</div>
+                <div className="text-[#FFD700] font-black text-lg" style={{ fontFamily: "Orbitron, sans-serif" }}>
+                  {currentTierLabel ? `${currentTierLabel} ` : ""}{fee > 0 ? feeFormatted : "—"}
+                </div>
+                {!isFunBike && presaleQuota ? (
+                  <div className="mt-1 text-[10px] text-[#8BA3C4]">
+                    {presaleRemaining && presaleRemaining > 0 ? `Sisa ${presaleRemaining} dari ${presaleQuota}` : "Presale Habis"}
+                    {normalPriceFormatted && normalPrice !== fee ? <span className="ml-2 line-through">Normal {normalPriceFormatted}</span> : null}
+                  </div>
+                ) : null}
               </div>
             </div>
             <div className="stagger-list grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -595,7 +571,7 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
                 ...(!isFunBike ? [{ label: "Nama BIB", value: form.bibName || "-" }] : []),
                 ...(isFunBike && form.bikeType ? [{ label: "Jenis Sepeda", value: form.bikeType }] : []),
                 { label: "Email", value: form.email },
-                { label: "Total Bayar", value: paymentLoading ? "..." : feeFormatted },
+                { label: "Total Bayar", value: feeFormatted },
               ].map((row) => (
                 <div key={row.label} className={`flex items-start justify-between gap-4 text-sm py-1.5 border-b last:border-0 ${isFunBike ? "border-gray-100" : "border-white/[0.04]"}`}>
                   <span className={`${t.textS} flex-shrink-0`}>{row.label}</span>
@@ -604,44 +580,26 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
               ))}
             </div>
 
-            {paymentLoading ? (
-              <div className="space-y-4">
-                <div className="skeleton-shimmer h-4 w-32 rounded" />
-                <div className="grid grid-cols-1 min-[430px]:grid-cols-2 gap-3">
-                  <div className="skeleton-shimmer h-24 rounded-xl" />
-                  <div className="skeleton-shimmer h-24 rounded-xl" />
-                </div>
-                <div className="skeleton-shimmer h-32 rounded-xl" />
-              </div>
-            ) : paymentError ? (
-              <div className={`${t.inner} rounded-2xl p-5 text-sm`}>
-                <div className="mb-2 font-bold" style={{ color: t.accent }}>Info pembayaran belum bisa dimuat.</div>
-                <p className={t.textM}>Coba lagi sebentar. Jika masih gagal, hubungi panitia sebelum melakukan pembayaran.</p>
-                <button
-                  type="button"
-                  onClick={() => setPaymentRetryKey((key) => key + 1)}
-                  className="mt-4 min-h-11 rounded-full px-4 py-2 text-xs font-bold"
-                  style={{ border: `1px solid ${t.accent}`, color: t.accent }}
-                >
-                  Coba lagi
-                </button>
-              </div>
-            ) : (
-            <>
             {/* Payment method */}
             <div>
               <label className={`block text-xs font-semibold uppercase tracking-wider mb-3 ${t.textLabel}`}>
                 Metode Pembayaran <span className="text-[#FF006E]">*</span>
               </label>
+              <p className={`mb-4 text-xs leading-relaxed ${t.textM}`}>
+                Pilih metode pembayaran. Informasi QRIS atau rekening akan ditampilkan sesuai pilihan Anda.
+              </p>
               <div className="stagger-list grid grid-cols-1 min-[430px]:grid-cols-2 gap-3 mb-4">
-                {[
-                  payment.transferEnabled && { value: "transfer", label: "Transfer Bank", icon: "🏦", desc: payment.bankName },
-                  payment.qrisEnabled && { value: "qris", label: "QRIS", icon: "📱", desc: "Scan & bayar langsung" },
-                ].filter((m): m is PaymentMethodOption => Boolean(m)).map((m) => (
+                {([
+                  { value: "transfer", label: "Transfer Bank", icon: "🏦", desc: "Info rekening setelah submit" },
+                  { value: "qris", label: "QRIS", icon: "📱", desc: "Lihat QR Code pembayaran" },
+                ] satisfies PaymentMethodOption[]).map((m) => (
                   <button
                     key={m.value}
                     type="button"
-                    onClick={() => set("paymentMethod", m.value)}
+                    onClick={() => {
+                      set("paymentMethod", m.value);
+                      if (m.value === "qris") setShowQrisModal(true);
+                    }}
                     className={`${t.inner} p-4 sm:p-5 rounded-2xl text-center transition-all duration-300 cursor-pointer group ${
                       form.paymentMethod === m.value
                         ? isFunBike ? "border-[#FF6B2C] shadow-[0_0_20px_rgba(255,107,44,0.12)]" : ""
@@ -655,79 +613,148 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
                   </button>
                 ))}
               </div>
-
-              {/* Transfer Bank details */}
-              {form.paymentMethod === "transfer" && (
-                <div className={`${t.inner} rounded-2xl p-4 sm:p-6 space-y-3`} style={{ borderColor: `${t.accentGlow}0.15)` }}>
-                  <div className="flex flex-col min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between gap-3 mb-2">
-                    <div className="font-bold text-xs tracking-[2px]" style={{ fontFamily: "Orbitron, sans-serif", color: t.accent }}>INFO REKENING</div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const text = `${payment.bankName}\n${payment.bankAccount}\n${payment.bankHolder}\n${feeFormatted} (tepat)`;
-                        navigator.clipboard.writeText(text).then(() => {
-                          setCopied(true);
-                          setTimeout(() => setCopied(false), 2000);
-                        });
-                      }}
-                      className="flex items-center gap-1.5 text-xs font-semibold transition-colors cursor-pointer px-3 py-1.5 rounded-lg"
-                      style={{ color: t.accent, background: `${t.accentGlow}0.08)` }}
-                    >
-                      {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
-                      {copied ? "Tersalin!" : "Salin Semua"}
-                    </button>
-                  </div>
-                  {[
-                    { label: "Bank", value: payment.bankName },
-                    { label: "No. Rekening", value: payment.bankAccount },
-                    { label: "Atas Nama", value: payment.bankHolder },
-                    { label: "Jumlah Transfer", value: `${feeFormatted} (tepat)` },
-                  ].map(row => (
-                    <div key={row.label} className={`flex items-start justify-between gap-4 text-sm py-1.5 border-b last:border-0 ${isFunBike ? "border-gray-100" : "border-white/[0.04]"}`}>
-                      <span className={`${t.textS} flex-shrink-0`}>{row.label}</span>
-                      <span className={`${t.textP} min-w-0 break-words text-right font-semibold`}>{row.value}</span>
-                    </div>
-                  ))}
-                  <div className={`pt-3 border-t text-xs flex items-start gap-2 ${isFunBike ? "border-gray-100 text-gray-400" : "border-white/[0.06] text-[#5A7899]"}`}>
-                    <AlertCircle size={14} className="flex-shrink-0 mt-0.5 text-[#F59E0B]" />
-                    <span>Transfer <strong className={t.textP}>tepat {feeFormatted}</strong>. Upload bukti transfer setelah mendaftar.</span>
-                  </div>
-                </div>
-              )}
-
-              {/* QRIS details */}
+              {/* Quick-view QRIS button if already selected */}
               {form.paymentMethod === "qris" && (
-                <div className={`${t.inner} rounded-2xl p-4 sm:p-6`} style={{ borderColor: isFunBike ? "rgba(123,193,66,0.2)" : "rgba(139,0,255,0.15)" }}>
-                  <div className="font-bold text-xs tracking-[2px] mb-5" style={{ fontFamily: "Orbitron, sans-serif", color: isFunBike ? "#7BC142" : "#8B00FF" }}>PEMBAYARAN QRIS</div>
-                  <div className="flex flex-col items-center gap-4">
-                    <div className={`w-48 h-48 sm:w-52 sm:h-52 rounded-2xl p-3 flex items-center justify-center ${t.qrBg}`}>
-                      {payment.qrisImageUrl ? (
-                        <img src={payment.qrisImageUrl} alt="QRIS" className="w-full h-full object-contain rounded" />
-                      ) : (
-                        <div className="w-full h-full rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 text-center p-2">
-                          <QrCode size={32} className="mb-1" />
-                          <div className="text-xs font-bold">QRIS</div>
-                          <div className="text-[10px]">{payment.bankHolder}</div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-center">
-                      <div className={`${t.textP} font-bold text-sm`}>{payment.bankHolder}</div>
-                      <div className={`text-xs mt-1 ${t.textM}`}>NMID: {payment.qrisNmid}</div>
-                      <div className="text-[#FFD700] font-black text-lg mt-2" style={{ fontFamily: "Orbitron, sans-serif" }}>{feeFormatted}</div>
-                    </div>
-                    <div className={`text-xs text-center rounded-xl p-4 space-y-0.5 ${isFunBike ? "bg-gray-50 text-gray-500" : "text-[#5A7899] glass-inner"}`}>
-                      <span>1. Buka aplikasi m-banking / e-wallet</span><br/>
-                      <span>2. Pilih menu <strong className={t.textP}>Scan QR / QRIS</strong></span><br/>
-                      <span>3. Scan kode di atas & bayar <strong className={t.textP}>{feeFormatted}</strong></span><br/>
-                      <span>4. Screenshot bukti & upload setelah submit</span>
-                    </div>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowQrisModal(true)}
+                  className={`flex items-center gap-2 text-xs font-semibold mb-3 px-3 py-2 rounded-xl transition-all duration-300 ${
+                    isFunBike
+                      ? "text-[#FF6B2C] bg-[#FF6B2C]/10 hover:bg-[#FF6B2C]/20 border border-[#FF6B2C]/20"
+                      : "text-[#00E5FF] bg-[#00E5FF]/10 hover:bg-[#00E5FF]/15 border border-[#00E5FF]/20"
+                  }`}
+                >
+                  <QrCode size={14} /> Lihat QR Code Pembayaran ({feeFormatted})
+                </button>
               )}
-
               {errors.paymentMethod && <p className="text-[#FF006E] text-xs mt-2 flex items-center gap-1"><AlertCircle size={11} />{errors.paymentMethod}</p>}
             </div>
+
+            {/* QRIS Payment Modal */}
+            {showQrisModal && (
+              <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={() => setShowQrisModal(false)}>
+                {/* Backdrop */}
+                <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+                {/* Modal */}
+                <div
+                  className={`relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl ${
+                    isFunBike ? "bg-white border border-gray-200" : "bg-[#0D1233] border border-[#1E3A5F]"
+                  }`}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ animation: "fadeInScale 0.3s ease-out" }}
+                >
+                  {/* Modal top accent */}
+                  <div className="h-[3px]" style={{ background: `linear-gradient(90deg, ${t.accent}, ${t.accent2}, ${t.accent})` }} />
+
+                  {/* Close button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowQrisModal(false)}
+                    className={`absolute top-4 right-4 w-8 h-8 rounded-xl flex items-center justify-center transition-all z-10 ${
+                      isFunBike ? "bg-gray-100 hover:bg-gray-200 text-gray-500" : "bg-white/10 hover:bg-white/20 text-white/70"
+                    }`}
+                  >
+                    <X size={16} />
+                  </button>
+
+                  {/* Header */}
+                  <div className={`px-6 pt-6 pb-4 ${isFunBike ? "" : ""}`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${t.accentGlow}0.12)`, border: `1px solid ${t.accentGlow}0.25)` }}>
+                        <Smartphone size={18} style={{ color: t.accent }} />
+                      </div>
+                      <div>
+                        <h3 className={`font-black text-base ${t.textH}`} style={{ fontFamily: "Orbitron, sans-serif", letterSpacing: "1px" }}>
+                          PEMBAYARAN QRIS
+                        </h3>
+                        <p className={`text-[10px] uppercase tracking-widest font-semibold ${t.textM}`}>Scan & Bayar</p>
+                      </div>
+                    </div>
+
+                    {/* Amount highlight */}
+                    <div className={`rounded-2xl p-4 mb-4 text-center ${
+                      isFunBike ? "bg-gradient-to-r from-[#FFF7ED] to-[#FEF3C7] border border-[#FF6B2C]/15" : "bg-gradient-to-r from-[#0A1628] to-[#0F1A35] border border-[#00E5FF]/15"
+                    }`}>
+                      <div className={`text-[10px] uppercase tracking-widest font-semibold mb-1 ${t.textM}`}>
+                        Total yang harus dibayar
+                      </div>
+                      <div className="text-2xl font-black" style={{ fontFamily: "Orbitron, sans-serif", color: "#FFD700" }}>
+                        {feeFormatted}
+                      </div>
+                      <div className={`text-xs mt-1 ${t.textS}`}>
+                        {eventName} — {catLabel}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* QR Code */}
+                  <div className="px-6 pb-4">
+                    <div className={`rounded-2xl p-4 flex flex-col items-center ${
+                      isFunBike ? "bg-white shadow-lg shadow-black/5 border border-gray-100" : "bg-white rounded-2xl"
+                    }`}>
+                      <Image
+                        src="/qris-payment.png"
+                        alt="QRIS - Scan untuk pembayaran"
+                        width={280}
+                        height={380}
+                        className="rounded-xl"
+                        priority
+                      />
+                    </div>
+                    {/* Merchant info */}
+                    <div className={`mt-3 flex flex-col items-center gap-0.5 ${t.textS}`}>
+                      <span className={`text-xs font-bold ${t.textP}`}>FUTURISTIC VIBES, HIBURAN</span>
+                      <span className="text-[10px]">NMID: ID1026540800533</span>
+                    </div>
+                  </div>
+
+                  {/* Instructions */}
+                  <div className={`mx-6 mb-6 rounded-2xl p-4 ${
+                    isFunBike ? "bg-[#FFF7ED] border border-[#FF6B2C]/10" : "bg-[#0A1628] border border-[#1E3A5F]/60"
+                  }`}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Info size={14} style={{ color: t.accent }} />
+                      <span className="text-xs font-bold" style={{ color: t.accent, fontFamily: "Orbitron, sans-serif", letterSpacing: "1px" }}>
+                        CARA BAYAR
+                      </span>
+                    </div>
+                    <ol className={`text-xs space-y-2 ${t.textS}`}>
+                      <li className="flex gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black" style={{ background: `${t.accentGlow}0.15)`, color: t.accent }}>1</span>
+                        <span>Buka aplikasi e-wallet/m-banking yang mendukung <strong className={t.textP}>QRIS</strong> (GoPay, OVO, DANA, ShopeePay, BCA, BRI, Mandiri, dll)</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black" style={{ background: `${t.accentGlow}0.15)`, color: t.accent }}>2</span>
+                        <span>Pilih menu <strong className={t.textP}>Scan QR</strong> atau <strong className={t.textP}>Bayar dengan QRIS</strong></span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black" style={{ background: `${t.accentGlow}0.15)`, color: t.accent }}>3</span>
+                        <span>Scan QR code di atas, lalu <strong className={t.textP}>masukkan nominal {feeFormatted}</strong></span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black" style={{ background: `${t.accentGlow}0.15)`, color: t.accent }}>4</span>
+                        <span>Pastikan tujuan tertulis <strong className={t.textP}>FUTURISTIC VIBES, HIBURAN</strong>, lalu konfirmasi pembayaran</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="flex-shrink-0 w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black" style={{ background: `${t.accentGlow}0.15)`, color: t.accent }}>5</span>
+                        <span>Setelah berhasil, <strong className={t.textP}>screenshot bukti bayar</strong> dan submit pendaftaran</span>
+                      </li>
+                    </ol>
+                  </div>
+
+                  {/* Close action */}
+                  <div className="px-6 pb-6">
+                    <button
+                      type="button"
+                      onClick={() => setShowQrisModal(false)}
+                      className={`${t.btnPrimary} w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm cursor-pointer`}
+                    >
+                      <Check size={16} /> Saya Mengerti, Lanjutkan Pendaftaran
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Checkboxes */}
             <div className="space-y-3">
@@ -751,8 +778,6 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
                 <p className="text-[#FF006E] text-xs flex items-center gap-1"><AlertCircle size={11} />Semua persetujuan wajib dicentang</p>
               )}
             </div>
-          </>
-          )}
           </div>
         )}
 

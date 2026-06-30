@@ -14,6 +14,7 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  if (pathname === "/admin/login") return null;
 
   return (
     <aside
@@ -21,8 +22,8 @@ export default function AdminSidebar() {
       style={{ background: "#080C20" }}
     >
       {/* Logo */}
-      <div className="border-b border-[#1E3A5F] p-4 md:p-6">
-        <Link href="/admin" className="flex items-center gap-2">
+      <div className="flex items-center justify-between border-b border-[#1E3A5F] bg-[#080C20] p-4 md:p-6">
+        <Link href="/admin" className="flex min-h-11 items-center gap-2">
           <LogoMark size={44} className="pulse-glow md:size-[51px]" />
           <div>
             <span className="text-xs font-black tracking-widest text-[#00E5FF] block" style={{ fontFamily: "Orbitron, sans-serif" }}>
@@ -33,6 +34,15 @@ export default function AdminSidebar() {
             </span>
           </div>
         </Link>
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: "/admin/login" })}
+          className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-[#FF006E] transition-colors duration-200 hover:bg-[#FF006E]/10 md:hidden"
+          aria-label="Logout admin"
+        >
+          <LogOut size={18} />
+          Logout
+        </button>
       </div>
 
       {/* Nav */}
@@ -68,8 +78,10 @@ export default function AdminSidebar() {
       {/* Sign out */}
       <div className="hidden border-t border-[#1E3A5F] p-4 md:block">
         <button
+          type="button"
           onClick={() => signOut({ callbackUrl: "/admin/login" })}
-          className="flex min-h-11 w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[#FF006E] transition-all duration-200 hover:bg-[#FF006E]/10"
+          className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[#FF006E] transition-colors duration-200 hover:bg-[#FF006E]/10"
+          aria-label="Logout admin"
         >
           <LogOut size={16} />
           Logout

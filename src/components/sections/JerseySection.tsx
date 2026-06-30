@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CheckSquare, Palette, ShieldCheck, Sparkles, Sun, Tag, Zap } from "lucide-react";
 import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
-import TbdBadge from "@/components/ui/TbdBadge";
 
 const specs = [
   { label: "Material", value: "100% Polyester Dryfit Premium" },
@@ -14,7 +13,7 @@ const specs = [
 const highlights = [
   { icon: Sparkles, label: "Motif neon eksklusif" },
   { icon: ShieldCheck, label: "Dryfit premium" },
-  { icon: Palette, label: "Logo final memakai placeholder revisi" },
+  { icon: Palette, label: "Desain mengikuti identitas Futuristic Run" },
 ];
 
 export default function JerseySection() {
@@ -75,8 +74,8 @@ export default function JerseySection() {
                 Futuristic Run
               </h3>
               <p className="max-w-xl text-sm leading-6 text-[#B0C4DE] sm:text-base">
-                Jersey memakai placeholder logo sampai revisi final disahkan. Ukuran dipilih saat pendaftaran, jadi
-                pastikan ukuran yang dipilih sudah tepat.
+                Jersey memakai desain Futuristic Run 2026. Ukuran dipilih saat pendaftaran, jadi pastikan ukuran
+                yang dipilih sudah tepat.
               </p>
 
               <div className="stagger-list mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -89,8 +88,8 @@ export default function JerseySection() {
               </div>
 
               <div className="mt-5 rounded-xl border border-[#FFD700]/25 bg-[#FFD700]/8 p-4">
-                <p className="mb-2 text-xs font-black uppercase tracking-[0.18em] text-[#FFD700]">Status logo</p>
-                <TbdBadge label="Placeholder sampai revisi final" className="border-[#FFD700]/30 bg-[#FFD700]/10 text-[#FFD700]" />
+                <p className="mb-2 text-xs font-black uppercase tracking-[0.18em] text-[#FFD700]">Status jersey</p>
+                <p className="text-sm font-semibold leading-6 text-[#F8E7A6]">Desain event disiapkan untuk race pack peserta Run 5K.</p>
               </div>
             </div>
 

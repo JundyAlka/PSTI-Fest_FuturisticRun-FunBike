@@ -17,12 +17,26 @@ export const authConfig: NextAuthConfig = {
   },
   providers: [],
   callbacks: {
+    jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id ?? token.sub ?? "";
+        session.user.role = token.role;
+      }
+      return session;
+    },
     authorized({ auth, request }) {
       const { pathname } = request.nextUrl;
       const isAdminRoute = pathname.startsWith("/admin");
+      const isAdminApi = pathname.startsWith("/api/admin");
       const isLoginPage = pathname === "/admin/login";
-      // Allow login page always; protect all other /admin/* routes
-      if (isAdminRoute && !isLoginPage) return !!auth;
+      if ((isAdminRoute && !isLoginPage) || isAdminApi) return auth?.user?.role === "admin";
       return true;
     },
   },

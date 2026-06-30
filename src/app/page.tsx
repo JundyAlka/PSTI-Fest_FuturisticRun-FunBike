@@ -179,9 +179,19 @@ function EventCard({ event, ops }: { event: EventContent; ops: PublicEventOps })
               <TbdBadge className="hidden min-[430px]:inline-flex" />
             )}
             {price ? (
-              <span className={`inline-flex items-center gap-0.5 min-[430px]:gap-1 rounded-full px-1.5 py-0.5 min-[430px]:px-2 min-[430px]:py-1 sm:px-3 text-[0.5rem] min-[430px]:text-[0.62rem] sm:text-xs font-bold ${isBike ? "bg-[#7BC142]/8 border border-[#7BC142]/20 text-[#5A9A2F]" : "bg-[#FFD700]/10 border border-[#FFD700]/20 text-[#FFD700]"}`} style={{ fontFamily: "Orbitron, sans-serif" }}>
-                {price}
-              </span>
+              <>
+                <span className={`inline-flex items-center gap-0.5 min-[430px]:gap-1 rounded-full px-1.5 py-0.5 min-[430px]:px-2 min-[430px]:py-1 sm:px-3 text-[0.5rem] min-[430px]:text-[0.62rem] sm:text-xs font-bold ${isBike ? "bg-[#7BC142]/8 border border-[#7BC142]/20 text-[#5A9A2F]" : "bg-[#FFD700]/10 border border-[#FFD700]/20 text-[#FFD700]"}`} style={{ fontFamily: "Orbitron, sans-serif" }}>
+                  {!isBike && ops.currentTierLabel ? `${ops.currentTierLabel} ` : ""}{price}
+                </span>
+                {!isBike && ops.presaleQuota ? (
+                  <span className={`inline-flex rounded-full px-2 py-1 text-[0.55rem] font-bold ${ops.presaleRemaining && ops.presaleRemaining > 0 ? "bg-[#00E5FF]/10 text-[#00E5FF]" : "bg-[#FF006E]/10 text-[#FF006E]"}`}>
+                    {ops.presaleRemaining && ops.presaleRemaining > 0 ? `Sisa ${ops.presaleRemaining}/${ops.presaleQuota}` : "Presale Habis"}
+                  </span>
+                ) : null}
+                {!isBike && ops.normalPrice && ops.normalPrice !== ops.price ? (
+                  <span className="text-[0.55rem] text-[#B0C4DE] line-through">Normal {formatCurrency(ops.normalPrice)}</span>
+                ) : null}
+              </>
             ) : (
               <TbdBadge />
             )}

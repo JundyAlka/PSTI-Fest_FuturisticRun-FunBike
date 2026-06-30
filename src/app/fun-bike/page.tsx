@@ -6,8 +6,8 @@ import {
   Bike,
   Calendar,
   CheckCircle,
+  ExternalLink,
   Gift,
-  Map,
   MapPin,
   Music,
   Navigation,
@@ -17,11 +17,14 @@ import {
   Sun,
   Ticket,
   Clock,
+  Trophy,
 } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import FunBikeCountdown from "./FunBikeCountdown";
 import FunBikeFaq from "./FunBikeFaq";
+import RulesSection from "@/components/sections/RulesSection";
+import BikeRouteMap from "./BikeRouteMap";
 import ScrollProgressBar from "@/components/ui/ScrollProgressBar";
 import HoverTiltCard from "@/components/ui/HoverTiltCard";
 import RundownTimeline from "@/components/ui/RundownTimeline";
@@ -29,11 +32,13 @@ import RundownActions from "@/components/ui/RundownActions";
 import MarqueeSponsors from "@/components/ui/MarqueeSponsors";
 import AnimatedIcon from "@/components/ui/AnimatedIcon";
 import SectionHeading from "@/components/ui/SectionHeading";
-import TbdBadge, { hasAnnouncedValue } from "@/components/ui/TbdBadge";
+import LocationMap from "@/components/ui/LocationMap";
+import { hasAnnouncedValue } from "@/components/ui/TbdBadge";
 import QuotaMeter from "@/components/QuotaMeter";
-import { CONTACT_EMAIL, FEST_FULL_NAME, FEST_NAME, FEST_YEAR, ORGANIZER_NAME } from "@/content/brand";
-import { EVENTS } from "@/content/events";
+import { CONTACT_EMAIL, DEFAULT_CONTACT_NAME, DEFAULT_WHATSAPP, FEST_FULL_NAME, FEST_NAME, FEST_YEAR, ORGANIZER_NAME } from "@/content/brand";
+import { EVENTS, type EventLocation } from "@/content/events";
 import { getPublicEventOps } from "@/lib/eventOps";
+import { resolveEventLocation } from "@/lib/eventLocation";
 import { EVENT_SEO, eventJsonLd, eventMetadata, withOperationalEventSeo } from "@/lib/seo";
 import { formatEventDate, formatWibTime } from "@/lib/eventDate";
 
@@ -42,7 +47,8 @@ const event = EVENTS["fun-bike"];
 export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const ops = await getPublicEventOps("fun-bike");
-  return eventMetadata(withOperationalEventSeo(seo, ops.eventDate, ops.location));
+  const location = resolveEventLocation(event.location as EventLocation, ops.settings);
+  return eventMetadata(withOperationalEventSeo(seo, ops.eventDate, location.label));
 }
 
 const navLinks = [
@@ -64,50 +70,39 @@ function formatCurrency(amount: number | null) {
   }).format(amount as number);
 }
 
-function RoutePlaceholder() {
-  return (
-    <div className="overflow-hidden rounded-3xl border border-[#38BDF8]/30 bg-white shadow-xl">
-      <div className="flex items-center justify-between gap-3 border-b border-gray-100 bg-gradient-to-r from-[#FFF7ED] via-[#FFFBEB] to-[#EFF6FF] p-4">
-        <div className="flex items-center gap-2">
-          <Map size={18} className="text-[#38BDF8]" />
-          <span className="text-sm font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>
-            Komponen Rute
-          </span>
-        </div>
-        <TbdBadge label="Rute sedang disurvei / diukur ulang" className="border-[#38BDF8]/30 bg-[#38BDF8]/10 text-gray-700" />
-      </div>
-      <div className="relative min-h-[320px] bg-[linear-gradient(135deg,#EFF6FF_0%,#FFFFFF_45%,#FFF7ED_100%)] p-5">
-        <div
-          className="absolute inset-0 opacity-40"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(56,189,248,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(251,146,60,0.28) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-          }}
-        />
-        <div className="relative z-10 grid h-full min-h-[280px] place-items-center rounded-2xl border border-dashed border-[#38BDF8]/45 bg-white/70 p-6 text-center">
-          <div>
-            <Navigation size={42} className="mx-auto mb-4 text-[#38BDF8]" />
-            <h3 className="mb-2 text-xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>
-              Siap Diisi Maps / Gambar / GPX
-            </h3>
-            <p className="mx-auto max-w-md text-sm leading-6 text-gray-500">
-              Slot ini sengaja tidak menampilkan jarak atau lintasan palsu. Nanti bisa diisi Google Maps embed, gambar rute statis,
-              atau hasil GPX setelah survei selesai.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+function formatPrizeAmount(value: string | undefined) {
+  const trimmed = value?.trim();
+  if (!trimmed) return "Diumumkan saat technical meeting";
+  const numeric = Number(trimmed.replace(/[^\d]/g, ""));
+  if (!Number.isFinite(numeric) || numeric <= 0) return trimmed;
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(numeric);
+}
+
+function googleMapsUrl(location: EventLocation) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${location.lat},${location.lng}`)}`;
+}
+
+function whatsappUrl(phone: string) {
+  const number = phone.replace(/\D/g, "");
+  return number ? `https://wa.me/${number}` : null;
 }
 
 export default async function FunBikePage() {
   const ops = await getPublicEventOps("fun-bike");
   const priceLabel = formatCurrency(ops.price);
-  const contact = ops.contactPerson ?? ops.settings.contact_person;
-  const routeStatus = ops.settings.route_status || "Rute sedang disurvei / diukur ulang";
-  const operationalSeo = withOperationalEventSeo(seo, ops.eventDate, ops.location);
+  const location = resolveEventLocation(event.location as EventLocation, ops.settings);
+  const locationLabel = location.label || "Alun-Alun Purworejo";
+  const locationAddress = ops.settings.event_location_address?.trim() || "Alun-Alun Purworejo, Purworejo, Jawa Tengah";
+  const routeNote = ops.settings.bike_route_note?.trim() || "Rute final menyusul technical meeting.";
+  const contactName = ops.settings.contact_person_name?.trim() || DEFAULT_CONTACT_NAME;
+  const contactPhone = ops.settings.contact_person_whatsapp?.trim() || ops.contactPerson || ops.settings.contact_person || DEFAULT_WHATSAPP;
+  const contactHref = contactPhone ? whatsappUrl(contactPhone) : null;
+  const prizeAmount = formatPrizeAmount(ops.settings.bike_prize_amount);
+  const operationalSeo = withOperationalEventSeo(seo, ops.eventDate, locationLabel);
 
   return (
     <EventThemeProvider eventType="fun-bike">
@@ -140,14 +135,13 @@ export default async function FunBikePage() {
               RIDE PAGI . SUNRISE CERAH . FUN RIDE
             </p>
             <p className="mx-auto mb-6 max-w-2xl text-base leading-relaxed text-gray-600 sm:text-lg">
-              Ride pagi bertema sunrise untuk satu paket Fun Ride. Panitia berkoordinasi dengan PLF dan ICF untuk rute,
-              flow start, dan pengalaman gowes yang rapi.
+              Ride pagi bertema sunrise, satu paket Fun Ride. Koordinasi bersama PLF & ICF.
             </p>
 
-            <div className="fade-in-up-delay-2 mb-8 flex flex-wrap justify-center gap-4 text-sm text-gray-500">
-              <span className="flex items-center gap-1.5"><MapPin size={14} className="text-[#FF6B2C]" />{ops.location ?? <TbdBadge className="border-[#FF6B2C]/20 bg-[#FF6B2C]/10 text-gray-700" />}</span>
-              <span className="flex items-center gap-1.5"><Calendar size={14} className="text-[#FF6B2C]" />{formatEventDate(ops.eventDate)} • Mulai {formatWibTime(ops.eventDate)} WIB</span>
-              <span className="flex items-center gap-1.5"><Bike size={14} className="text-[#FF6B2C]" />Fun Ride</span>
+            <div className="fade-in-up-delay-2 mb-8 flex flex-wrap justify-center gap-3 text-sm text-gray-700">
+              <span className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-orange-200 bg-white/75 px-3 font-semibold shadow-sm"><MapPin size={14} className="text-[#FF6B2C]" />{locationLabel} (start & finish)</span>
+              <span className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-orange-200 bg-white/75 px-3 font-semibold shadow-sm"><Calendar size={14} className="text-[#FF6B2C]" />{formatEventDate(ops.eventDate)} - Mulai {formatWibTime(ops.eventDate)} WIB</span>
+              <span className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-sky-200 bg-white/75 px-3 font-semibold shadow-sm"><Bike size={14} className="text-[#FF6B2C]" />Fun Ride</span>
             </div>
 
             <div className="fade-in-up-delay-3 mb-10 flex flex-col justify-center gap-3 sm:flex-row">
@@ -155,7 +149,7 @@ export default async function FunBikePage() {
                 <span className="shine-sweep" />
                 <Bike size={16} /> DAFTAR <ArrowRight size={16} />
               </Link>
-              <Link href="/cek" className="btn-outline-sunrise flex cursor-pointer items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-semibold">
+              <Link href="/fun-bike/cek" className="btn-outline-sunrise flex cursor-pointer items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-semibold">
                 Cek Registrasi
               </Link>
             </div>
@@ -202,7 +196,7 @@ export default async function FunBikePage() {
                       {priceLabel ? (
                         <div className="text-4xl font-black text-[#FF6B2C] sm:text-5xl" style={{ fontFamily: "Orbitron, sans-serif" }}>{priceLabel}</div>
                       ) : (
-                        <TbdBadge className="border-[#FF6B2C]/30 bg-[#FF6B2C]/10 px-4 py-2 text-gray-700" />
+                        <div className="text-lg font-black text-[#FF6B2C]" style={{ fontFamily: "Orbitron, sans-serif" }}>Mengikuti pengaturan panitia</div>
                       )}
                     </div>
 
@@ -234,24 +228,63 @@ export default async function FunBikePage() {
         <section id="route" className="overflow-hidden bg-[linear-gradient(180deg,#EFF6FF_0%,#FFF7ED_100%)] py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-12 text-center">
-              <div className="badge-sunrise mb-4 inline-block">RUTE & TITIK KUMPUL</div>
-              <h2 className="mb-4 text-4xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>RUTE SEDANG DIFINALKAN</h2>
-              <TbdBadge label={routeStatus} className="border-[#38BDF8]/30 bg-[#38BDF8]/10 text-gray-700" />
+              <div className="badge-sunrise mb-4 inline-block">LOKASI & RUTE</div>
+              <h2 className="mb-4 text-4xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>START, FINISH, DAN RUTE FUN RIDE</h2>
+              <p className="mx-auto max-w-2xl text-sm leading-6 text-gray-600">
+                Lokasi start dan finish memakai titik Alun-Alun Purworejo. Rute fun ride pagi ditata bersama marshal dan panitia.
+              </p>
             </div>
-            <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-              <RoutePlaceholder />
-              <div className="space-y-4">
-                {[
-                  { icon: MapPin, label: "Titik kumpul", value: ops.location },
-                  { icon: ShieldCheck, label: "Status rute", value: routeStatus },
-                  { icon: Navigation, label: "Format siap isi", value: "Google Maps embed / gambar rute / GPX" },
-                ].map(({ icon: Icon, label, value }) => (
-                  <div key={label} className="card-animated rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                    <Icon size={20} className="mb-3 text-[#FF6B2C]" />
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-gray-400">{label}</p>
-                    <div className="mt-2 text-sm font-semibold text-gray-800">{value || <TbdBadge className="border-[#FF6B2C]/20 bg-[#FF6B2C]/10 text-gray-700" />}</div>
-                  </div>
-                ))}
+
+            <div className="rounded-3xl border border-orange-100 bg-white p-4 shadow-xl sm:p-6">
+              <div className="mb-5 flex flex-col gap-2 border-b border-gray-100 pb-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-[#FF6B2C]">LOKASI & RUTE</p>
+                  <h3 className="mt-1 text-2xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>{locationLabel}</h3>
+                </div>
+                <p className="text-sm font-semibold text-gray-500">Start & finish Fun Ride</p>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+                <LocationMap {...location} label={locationLabel} theme="bike" />
+                <BikeRouteMap />
+              </div>
+
+              <div className="mt-6 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+                <article className="rounded-2xl border border-orange-100 bg-[#FFF7ED] p-5">
+                  <MapPin size={22} className="mb-3 text-[#FF6B2C]" />
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-gray-500">Titik Kumpul</p>
+                  <h4 className="mt-2 text-xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>{locationLabel}</h4>
+                  <p className="mt-2 text-sm leading-6 text-gray-600">{locationAddress}</p>
+                  <a
+                    href={googleMapsUrl(location)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#FF6B2C] px-5 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+                  >
+                    <ExternalLink size={16} /> Buka di Google Maps
+                  </a>
+                </article>
+                <article className="rounded-2xl border border-sky-100 bg-[#EFF6FF] p-5">
+                  <Navigation size={22} className="mb-3 text-[#0284C7]" />
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-gray-500">Catatan Rute</p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-gray-800">
+                    Rute pagi mengelilingi Purworejo dari dan kembali ke Alun-Alun. {routeNote}
+                  </p>
+                  <p className="mt-3 text-xs leading-5 text-gray-500">Checkpoint dan arahan teknis mengikuti briefing marshal saat technical meeting.</p>
+                </article>
+              </div>
+            </div>
+            <div className="mt-6 rounded-3xl border border-amber-100 bg-gradient-to-br from-[#FFFBEB] to-white p-6">
+              <AnimatedIcon color="#B45309" animate="bounce" className="mb-4">
+                <Trophy size={24} />
+              </AnimatedIcon>
+              <h2 className="mb-3 text-3xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>HADIAH & APRESIASI</h2>
+              <p className="text-sm font-semibold leading-6 text-gray-800">
+                Uang pembinaan + piala penghargaan + doorprize utama. Futuristic Bike adalah Fun Ride, bukan lomba waktu.
+              </p>
+              <div className="mt-4 rounded-2xl border border-amber-200 bg-white/80 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-gray-500">Nominal uang pembinaan</p>
+                <p className="mt-1 text-xl font-black text-[#B45309]" style={{ fontFamily: "Orbitron, sans-serif" }}>{prizeAmount}</p>
               </div>
             </div>
           </div>
@@ -293,8 +326,8 @@ export default async function FunBikePage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {[
                   { icon: Music, label: "Hiburan", value: "Band SUNFLOW & Ollsame", color: "#0369A1" },
-                  { icon: Gift, label: "Doorprize", value: "Hadiah pembelian panitia + dukungan sponsor", color: "#C2410C" },
-                  { icon: Navigation, label: "Status rute", value: "Rute sedang disurvei dan diukur ulang", color: "#0284C7" },
+                  { icon: Gift, label: "Doorprize", value: "Doorprize pembelian panitia + dukungan sponsor, diundi saat acara", color: "#C2410C" },
+                  { icon: Trophy, label: "Apresiasi", value: `Uang pembinaan: ${prizeAmount}`, color: "#B45309" },
                   { icon: ShieldCheck, label: "Koordinasi", value: "Pelaksanaan dikoordinasikan bersama PLF & ICF", color: "#B45309" },
                 ].map(({ icon: Icon, label, value, color }) => (
                   <article key={label} className="card-animated rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-5 shadow-sm">
@@ -375,21 +408,25 @@ export default async function FunBikePage() {
           </div>
         </section>
 
+        <RulesSection settings={ops.settings} theme="bike" />
+
         <section id="faq" className="overflow-hidden bg-white pb-12 pt-5 sm:py-20">
           <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
             <div className="mb-14 text-center">
               <div className="badge-sunrise mb-4 inline-block">BANTUAN</div>
               <h2 className="mb-4 text-4xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>FAQ</h2>
             </div>
-            <Suspense fallback={null}><FunBikeFaq settings={ops.settings} /></Suspense>
+            <Suspense fallback={null}><FunBikeFaq settings={ops.settings} fallbackItems={event.faq} /></Suspense>
             <div className="mt-10 text-center">
               <p className="mb-3 text-sm text-gray-500">Contact person</p>
-              {contact ? (
-                <a href={`https://wa.me/${contact.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="btn-outline-sunrise inline-flex cursor-pointer items-center gap-2 rounded-full px-6 py-3 text-sm">
-                  Hubungi Panitia
+              {contactHref ? (
+                <a href={contactHref} target="_blank" rel="noopener noreferrer" className="btn-outline-sunrise inline-flex cursor-pointer items-center gap-2 rounded-full px-6 py-3 text-sm">
+                  Chat WhatsApp {contactName}
                 </a>
               ) : (
-                <TbdBadge className="border-[#FF6B2C]/20 bg-[#FF6B2C]/10 text-gray-700" />
+                <a href={`mailto:${CONTACT_EMAIL}`} className="btn-outline-sunrise inline-flex cursor-pointer items-center gap-2 rounded-full px-6 py-3 text-sm">
+                  Hubungi panitia PSTI Fest
+                </a>
               )}
             </div>
           </div>
@@ -441,7 +478,7 @@ export default async function FunBikePage() {
                 <h3 className="mb-2 text-sm font-bold text-white" style={{ fontFamily: "Orbitron, sans-serif" }}>KONTAK</h3>
                 <ul className="space-y-2 text-sm text-gray-400">
                   <li>{CONTACT_EMAIL}</li>
-                  <li>{contact ?? <TbdBadge />}</li>
+                  <li>{contactPhone ? `${contactName}: ${contactPhone}` : "Hubungi panitia PSTI Fest"}</li>
                 </ul>
               </div>
             </div>

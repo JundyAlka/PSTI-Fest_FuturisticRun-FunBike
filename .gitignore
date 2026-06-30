@@ -30,11 +30,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
-!.env.example
+# env files (protect sensitive credentials)
+.env
 .env.local
 .env.*.local
+.env.development
+.env.production
+!.env.example
+!.env.deploy
 
 # database
 dev.db
@@ -44,10 +47,19 @@ dev.db
 # logs
 codex-*.log
 codex-*.err.log
+dev-*.log
+start-*.log
+*.err.log
 
 # lighthouse reports
 lh*.json
 lighthouse*.json
+.lighthouse-*.json
+
+# temporary & audit
+.tmp/
+tmp/
+audit-screenshots/
 
 # agent config files
 AGENTS.md

@@ -43,8 +43,11 @@ export const RegisterSchema = Step1Schema.merge(Step2Schema).merge(
 export const VerifyPaymentSchema = z.object({
   id: z.number().int().positive(),
   status: z.enum(["verified", "rejected"]),
-  notes: z.string().optional(),
-  bibNumber: z.number().int().optional(),
+  notes: z.string().trim().min(3).max(500).optional(),
+  bibNumber: z.number().int().positive().optional(),
+}).refine((value) => value.status !== "rejected" || Boolean(value.notes), {
+  message: "Alasan penolakan wajib diisi",
+  path: ["notes"],
 });
 
 export const AdminLoginSchema = z.object({
@@ -64,13 +67,27 @@ export const ALLOWED_SETTING_KEYS = [
   "payment_bank_name",
   "payment_bank_account",
   "payment_bank_holder",
+  "payment_dana_enabled",
+  "payment_dana_number",
+  "payment_dana_holder",
   "payment_qris_nmid",
+  "payment_qris_merchant_name",
   "payment_qris_image_url",
   "payment_qris_image_key",
+  "payment_instructions",
+  "payment_deadline_hours",
   "registration_fee",
   "payment_transfer_enabled",
   "payment_qris_enabled",
   "contact_person",
+  "contact_person_name",
+  "contact_person_whatsapp",
+  "event_location_address",
+  "racepack_location",
+  "bike_prize_amount",
+  "bike_route_note",
+  "faq",
+  "rules",
   "benefit_prize_details",
   "benefit_race_pack_contents",
   "location_lat",
@@ -88,7 +105,7 @@ export const ALLOWED_SETTING_KEYS = [
 export const AdminSettingsSchema = z.object({
   settings: z.record(
     z.enum(ALLOWED_SETTING_KEYS),
-    z.string().max(500)
+    z.string().max(5000)
   ),
   eventType: z.string().optional().default("futuristic-run"),
 });

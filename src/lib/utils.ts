@@ -2,7 +2,7 @@ import { insforge } from "./insforge";
 
 // ── Fallback defaults for 'futuristic-run' ──────────────────────────────────
 export const CATEGORY_PRICES: Record<string, number> = {
-  "5K": 200000,
+  "5K": 120000,
 };
 
 export const CATEGORY_QUOTAS: Record<string, number> = {
@@ -44,7 +44,7 @@ export async function getEventCategories(eventType: string): Promise<EventCatego
   if (error || !data || data.length === 0) {
     // Fallback for futuristic-run when DB is unreachable
     if (eventType === "futuristic-run") {
-      return [{ code: "5K", label: "Run 5K", price: 200000, quota: 200, min_age: 13 }];
+      return [{ code: "5K", label: "Run 5K", price: 120000, quota: 200, min_age: 13 }];
     }
     return [];
   }
@@ -99,7 +99,7 @@ export function formatDate(date: Date | string): string {
 
 export function getPaymentStatusLabel(status: string): string {
   const map: Record<string, string> = {
-    pending: "Menunggu Pembayaran",
+    pending: "Menunggu Verifikasi",
     verified: "Terverifikasi",
     rejected: "Ditolak",
   };

@@ -54,5 +54,5 @@ export function formatPrizeValue(value: PrizeValue): string {
   if (typeof value === "number") {
     return `Rp${new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(value)}`;
   }
-  return value ?? "Segera diumumkan";
+  return value ?? "Diumumkan saat technical meeting";
 }

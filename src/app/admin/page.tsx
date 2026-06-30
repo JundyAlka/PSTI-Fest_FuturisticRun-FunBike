@@ -1,230 +1,354 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Users, CheckCircle, Clock, XCircle, TrendingUp, Download } from "lucide-react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import {
+  Users, CheckCircle, Clock, XCircle, DollarSign, TrendingUp,
+  Download, RefreshCw, Activity, AlertTriangle, Zap, Filter,
+} from "lucide-react";
 import Link from "next/link";
-import { getPaymentStatusColor, CATEGORY_LABELS } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import LoadingPanel from "@/components/LoadingPanel";
+import DashboardCharts from "@/components/admin/DashboardCharts";
 
-interface Stats {
-  total: number; verified: number; pending: number; rejected: number;
-  byCat: { category: string; count: number; verified: number }[];
-  daily: { date: string; count: number }[];
+/* ── Types ────────────────────────────────────────────────────────── */
+interface CategoryStats {
+  code: string; label: string; count: number; verified: number;
+  pending: number; rejected: number; quota: number; filled: number;
+  remaining: number; fillPercent: number; price: number;
+}
+interface JerseySize { size: string; count: number }
+interface DailyPoint { date: string; count: number }
+interface EventStats {
+  slug: string; name: string; isOpen: boolean;
+  count: number; verified: number; pending: number; rejected: number;
+  totalQuota: number; totalFilled: number; totalRemaining: number; fillPercent: number;
+  finance: { potential: number; verified: number; outstanding: number };
+  presaleRemaining: number; categories: CategoryStats[];
+  jerseySizes: JerseySize[]; daily: DailyPoint[];
+}
+interface TotalStats {
+  count: number; verified: number; pending: number; rejected: number;
+  totalQuota: number; totalFilled: number; totalRemaining: number; fillPercent: number;
+  finance: { potential: number; verified: number; outstanding: number };
+  daily: DailyPoint[];
+}
+interface StatsResponse { events: EventStats[]; total: TotalStats }
+interface HealthResponse {
+  status: string;
+  services: { insforge: { ok: boolean; latencyMs: number } };
+  checkedAt: string;
 }
 
-interface Participant {
-  id: number; reg_number: string; full_name: string; email: string;
-  category: string; payment_status: string; payment_amount: number; created_at: string;
-}
+/* ── Accent colors per event ──────────────────────────────────────── */
+const EVENT_COLORS: Record<string, string> = {
+  "futuristic-run": "#00E5FF",
+  "fun-bike": "#FF6B2C",
+};
+function eventColor(slug: string) { return EVENT_COLORS[slug] ?? "#00E5FF"; }
 
+/* ── Component ────────────────────────────────────────────────────── */
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [recent, setRecent] = useState<Participant[]>([]);
+  const [data, setData] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeEvent, setActiveEvent] = useState<"futuristic-run" | "fun-bike">("futuristic-run");
+  const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
+  const [filter, setFilter] = useState<string>("all"); // "all" | event slug
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  /* Fetch stats */
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchStats() {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (dateFrom) params.set("dateFrom", new Date(dateFrom).toISOString());
+      if (dateTo) params.set("dateTo", new Date(dateTo + "T23:59:59").toISOString());
+      const res = await fetch(`/api/admin/stats?${params}`);
+      const json: StatsResponse = await res.json();
+      if (!cancelled) { setData(json); setLoading(false); }
+    }
+    void fetchStats();
+    return () => { cancelled = true; };
+  }, [dateFrom, dateTo]);
+
+  /* Fetch health */
+  const fetchHealth = useCallback(async () => {
+    setHealthLoading(true);
+    try {
+      const res = await fetch("/api/health");
+      const json = await res.json();
+      setHealth(json);
+    } catch { setHealth(null); }
+    setHealthLoading(false);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
-    const loadingTimer = setTimeout(() => {
-      if (!cancelled) setLoading(true);
-    }, 0);
+    async function init() {
+      setHealthLoading(true);
+      try {
+        const res = await fetch("/api/health");
+        const json = await res.json();
+        if (!cancelled) setHealth(json);
+      } catch { if (!cancelled) setHealth(null); }
+      if (!cancelled) setHealthLoading(false);
+    }
+    void init();
+    return () => { cancelled = true; };
+  }, []);
 
-    Promise.all([
-      fetch(`/api/admin/stats?eventType=${activeEvent}`).then((r) => r.json()),
-      fetch(`/api/admin/participants?limit=8&eventType=${activeEvent}`).then((r) => r.json()),
-    ]).then(([s, p]) => {
-      if (cancelled) return;
-      setStats(s);
-      setRecent(p.participants ?? []);
-    }).finally(() => {
-      if (!cancelled) setLoading(false);
-    });
+  /* Derived data */
+  const filteredEvents = useMemo(() => {
+    if (!data) return [];
+    return filter === "all" ? data.events : data.events.filter((e) => e.slug === filter);
+  }, [data, filter]);
 
-    return () => {
-      cancelled = true;
-      clearTimeout(loadingTimer);
-    };
-  }, [activeEvent]);
+  const summary = useMemo(() => {
+    if (!data) return null;
+    if (filter === "all") return data.total;
+    const e = data.events.find((ev) => ev.slug === filter);
+    if (!e) return data.total;
+    return {
+      count: e.count, verified: e.verified, pending: e.pending, rejected: e.rejected,
+      totalQuota: e.totalQuota, totalFilled: e.totalFilled, totalRemaining: e.totalRemaining,
+      fillPercent: e.fillPercent, finance: e.finance, daily: e.daily,
+    } as TotalStats;
+  }, [data, filter]);
 
-  const statCards = stats ? [
-    { label: "Total Peserta", value: stats.total, icon: Users, color: "#00E5FF", bg: "rgba(0,229,255,0.1)" },
-    { label: "Terverifikasi", value: stats.verified, icon: CheckCircle, color: "#00E5FF", bg: "rgba(0,229,255,0.1)" },
-    { label: "Menunggu", value: stats.pending, icon: Clock, color: "#FF8C00", bg: "rgba(255,140,0,0.1)" },
-    { label: "Ditolak", value: stats.rejected, icon: XCircle, color: "#FF006E", bg: "rgba(255,0,110,0.1)" },
-  ] : [];
-
-  const maxDaily = stats ? Math.max(...stats.daily.map((d) => d.count), 1) : 1;
+  const OFont = { fontFamily: "Orbitron, sans-serif" };
 
   return (
-    <div className="page-animate p-6 sm:p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="page-animate p-4 sm:p-6 lg:p-8">
+      {/* ── Header ──────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-black text-white" style={{ fontFamily: "Orbitron, sans-serif" }}>
-            DASHBOARD
-          </h1>
-          <p className="text-[#B0C4DE] text-sm mt-1">
-            {activeEvent === "futuristic-run" ? "Futuristic Run 2026" : "Futuristic Bike 2026"} — Overview
-          </p>
+          <h1 className="text-xl sm:text-2xl font-black text-white" style={OFont}>COMMAND CENTER</h1>
+          <p className="text-[#B0C4DE] text-sm mt-1">Dashboard pusat kendali multi-event</p>
         </div>
-        <a
-          href={`/api/admin/export?eventType=${activeEvent}`}
-          className="btn-outline-neon flex items-center gap-2 px-4 py-2 rounded-xl text-xs cursor-pointer"
-        >
-          <Download size={14} /> Export CSV
-        </a>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/admin/peserta?status=pending"
+            className="btn-outline-neon flex items-center gap-2 px-4 py-2 rounded-xl text-xs"
+          >
+            <Clock size={14} /> Verifikasi Pending
+          </Link>
+        </div>
       </div>
 
-      {/* Event Tabs */}
-      <div className="card-animated flex gap-2 mb-6 p-1 glass-card rounded-xl border border-[#1E3A5F]">
-        {([
-          { id: "futuristic-run" as const, label: "Futuristic Run", color: "#00E5FF" },
-          { id: "fun-bike" as const, label: "Futuristic Bike", color: "#FF6B2C" },
-        ]).map((tab) => (
+      {/* ── Filters ─────────────────────────────────────────────── */}
+      <div className="card-animated glass-card rounded-xl p-3 border border-[#1E3A5F] mb-6 flex flex-wrap items-center gap-3">
+        <Filter size={14} className="text-[#B0C4DE]" />
+        {/* Event filter tabs */}
+        <div className="flex gap-1 p-1 rounded-lg border border-[#1E3A5F] bg-[#080C20]">
           <button
-            key={tab.id}
-            onClick={() => setActiveEvent(tab.id)}
-            className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 ${
-              activeEvent === tab.id
-                ? "text-[#0A0E27]"
-                : "text-[#B0C4DE] hover:text-white"
+            onClick={() => setFilter("all")}
+            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+              filter === "all" ? "bg-[#00E5FF] text-[#0A0E27]" : "text-[#B0C4DE] hover:text-white"
             }`}
-            style={{
-              fontFamily: "Orbitron, sans-serif",
-              fontSize: "0.7rem",
-              letterSpacing: "1px",
-              background: activeEvent === tab.id ? tab.color : "transparent",
-            }}
+            style={OFont}
           >
-            {tab.label}
+            SEMUA
           </button>
-        ))}
+          {data?.events.map((ev) => (
+            <button
+              key={ev.slug}
+              onClick={() => setFilter(ev.slug)}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                filter === ev.slug ? "text-[#0A0E27]" : "text-[#B0C4DE] hover:text-white"
+              }`}
+              style={{ ...OFont, background: filter === ev.slug ? eventColor(ev.slug) : "transparent" }}
+            >
+              {ev.name.toUpperCase()}
+            </button>
+          ))}
+        </div>
+        {/* Date range */}
+        <div className="flex items-center gap-2 ml-auto">
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+            className="neon-input rounded-lg px-2 py-1.5 text-xs w-32" />
+          <span className="text-[#B0C4DE] text-xs">—</span>
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+            className="neon-input rounded-lg px-2 py-1.5 text-xs w-32" />
+        </div>
       </div>
 
       {loading ? (
         <LoadingPanel label="Memuat dashboard" />
       ) : (
         <>
-          {/* Stat cards */}
-          <div className="stagger-list grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {statCards.map((card) => (
+          {/* ── Summary stat cards ──────────────────────────────── */}
+          <div className="stagger-list grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {[
+              { label: "Total Pendaftar", value: summary?.count ?? 0, icon: Users, color: "#00E5FF" },
+              { label: "Terverifikasi", value: summary?.verified ?? 0, icon: CheckCircle, color: "#4ADE80" },
+              { label: "Menunggu", value: summary?.pending ?? 0, icon: Clock, color: "#FF8C00" },
+              { label: "Ditolak", value: summary?.rejected ?? 0, icon: XCircle, color: "#FF006E" },
+            ].map((c) => (
               <div
-                key={card.label}
-                className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F] hover:border-[#00E5FF]/30 transition-all duration-300"
-                style={{ background: card.bg }}
+                key={c.label}
+                className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F] hover:border-opacity-60 transition-all duration-300"
+                style={{ borderColor: `${c.color}20` }}
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${card.color}20`, border: `1px solid ${card.color}30` }}>
-                    <card.icon size={16} style={{ color: card.color }} />
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                    style={{ background: `${c.color}15`, border: `1px solid ${c.color}25` }}>
+                    <c.icon size={16} style={{ color: c.color }} />
                   </div>
                 </div>
-                <div className="text-3xl font-black mb-1" style={{ fontFamily: "Orbitron, sans-serif", color: card.color }}>
-                  {card.value}
+                <div className="text-3xl font-black mb-1" style={{ ...OFont, color: c.color }}>
+                  {c.value}
                 </div>
-                <div className="text-[#B0C4DE] text-sm">{card.label}</div>
+                <div className="text-[#B0C4DE] text-sm">{c.label}</div>
               </div>
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* Daily chart */}
-            <div className="card-animated lg:col-span-2 glass-card rounded-2xl p-6 border border-[#1E3A5F]">
-              <div className="flex items-center gap-2 mb-6">
-                <TrendingUp size={16} className="text-[#00E5FF]" />
-                <h3 className="text-white font-bold text-sm" style={{ fontFamily: "Orbitron, sans-serif" }}>
-                  PENDAFTAR 7 HARI TERAKHIR
-                </h3>
-              </div>
-              <div className="flex items-end gap-2 h-32">
-                {stats?.daily.map((d) => (
-                  <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
-                    <span className="text-[#00E5FF] text-xs font-bold">{d.count || ""}</span>
-                    <div className="progress-fill-animated w-full rounded-t-md transition-all duration-500" style={{
-                      height: `${(d.count / maxDaily) * 100}%`,
-                      minHeight: d.count > 0 ? "4px" : "0",
-                      background: "linear-gradient(180deg, #00E5FF, #2A4FFF)",
-                      boxShadow: d.count > 0 ? "0 0 8px rgba(0,229,255,0.4)" : "none",
-                    }} />
-                    <span className="text-[#B0C4DE] text-[9px]">{d.date}</span>
+          {/* ── Per-event cards ──────────────────────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            {filteredEvents.map((ev) => {
+              const accent = eventColor(ev.slug);
+              return (
+                <div key={ev.slug} className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F] space-y-4">
+                  {/* Event header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ background: accent, boxShadow: `0 0 8px ${accent}` }} />
+                      <h3 className="text-white font-bold text-sm" style={OFont}>{ev.name.toUpperCase()}</h3>
+                      {ev.isOpen ? (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#4ADE80]/10 text-[#4ADE80] border border-[#4ADE80]/20">OPEN</span>
+                      ) : (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FF006E]/10 text-[#FF006E] border border-[#FF006E]/20">CLOSED</span>
+                      )}
+                    </div>
+                    <a href={`/api/admin/export?eventType=${ev.slug}`}
+                      className="flex items-center gap-1 text-[10px] text-[#B0C4DE] hover:text-white transition-colors">
+                      <Download size={12} /> CSV
+                    </a>
                   </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Per category */}
-            <div className="card-animated glass-card rounded-2xl p-6 border border-[#1E3A5F]">
-              <h3 className="text-white font-bold text-sm mb-5" style={{ fontFamily: "Orbitron, sans-serif" }}>
-                PER KATEGORI
-              </h3>
-              <div className="space-y-4">
-                {stats?.byCat.map((cat) => {
-                  const colors: Record<string, string> = { "5K": "#8B00FF" };
-                  const color = colors[cat.category] ?? "#00E5FF";
-                  return (
-                    <div key={cat.category}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="font-semibold" style={{ color }}>{CATEGORY_LABELS[cat.category]}</span>
-                        <span className="text-[#B0C4DE]">{cat.count} peserta</span>
+                  {/* Stat row */}
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { l: "Total", v: ev.count },
+                      { l: "Verified", v: ev.verified },
+                      { l: "Pending", v: ev.pending },
+                      { l: "Rejected", v: ev.rejected },
+                    ].map((s) => (
+                      <div key={s.l} className="text-center">
+                        <div className="text-lg font-black" style={{ ...OFont, color: accent }}>{s.v}</div>
+                        <div className="text-[#B0C4DE] text-[10px]">{s.l}</div>
                       </div>
-                      <div className="h-1.5 bg-[#1E3A5F] rounded-full">
-                        <div className="progress-fill-animated h-full rounded-full transition-all duration-700" style={{
-                          width: `${stats.total > 0 ? (cat.count / stats.total) * 100 : 0}%`,
-                          background: `linear-gradient(90deg, ${color}, ${color}88)`,
-                        }} />
+                    ))}
+                  </div>
+
+                  {/* Quota progress */}
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="text-[#B0C4DE]">
+                        Kuota: {ev.totalFilled}/{ev.totalQuota}
+                      </span>
+                      <span style={{ color: accent }} className="font-bold">{ev.fillPercent}%</span>
+                    </div>
+                    <div className="quota-track">
+                      <div className="quota-fill" style={{ width: `${Math.min(ev.fillPercent, 100)}%` }}>
+                        <div className="quota-fill-glint" />
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                    {ev.presaleRemaining > 0 && (
+                      <div className="mt-2 flex items-center gap-1.5">
+                        <Zap size={11} className="text-[#FFD700]" />
+                        <span className="text-[#FFD700] text-[10px] font-semibold">
+                          Presale: sisa {ev.presaleRemaining} slot
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Finance */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { l: "Potensial", v: ev.finance.potential, c: "#B0C4DE" },
+                      { l: "Terverifikasi", v: ev.finance.verified, c: "#4ADE80" },
+                      { l: "Outstanding", v: ev.finance.outstanding, c: "#FF8C00" },
+                    ].map((f) => (
+                      <div key={f.l} className="rounded-xl p-2.5 border border-[#1E3A5F]/60 bg-[#0F1535]/50">
+                        <div className="text-[10px] text-[#B0C4DE] mb-0.5">{f.l}</div>
+                        <div className="text-xs font-bold truncate" style={{ color: f.c }}>
+                          {formatCurrency(f.v)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Recent participants */}
-          <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] overflow-hidden">
-            <div className="flex items-center justify-between p-5 border-b border-[#1E3A5F]">
-              <h3 className="text-white font-bold text-sm" style={{ fontFamily: "Orbitron, sans-serif" }}>
-                PESERTA TERBARU
-              </h3>
-              <Link href="/admin/peserta" className="text-[#00E5FF] text-xs hover:underline">
-                Lihat semua →
-              </Link>
+          {/* ── Finance total cards ─────────────────────────────── */}
+          {filter === "all" && (
+            <div className="stagger-list grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              {[
+                { label: "Total Potensial", value: summary?.finance.potential ?? 0, icon: DollarSign, color: "#B0C4DE" },
+                { label: "Total Terverifikasi", value: summary?.finance.verified ?? 0, icon: CheckCircle, color: "#4ADE80" },
+                { label: "Total Outstanding", value: summary?.finance.outstanding ?? 0, icon: TrendingUp, color: "#FF8C00" },
+              ].map((c) => (
+                <div key={c.label} className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <c.icon size={14} style={{ color: c.color }} />
+                    <span className="text-[#B0C4DE] text-xs">{c.label}</span>
+                  </div>
+                  <div className="text-xl font-black" style={{ ...OFont, color: c.color }}>
+                    {formatCurrency(c.value)}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#1E3A5F]">
-                    {["No. Reg", "Nama", "Kategori", "Status", "Biaya", "Tanggal"].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-[#B0C4DE] text-xs font-semibold" style={{ fontFamily: "Orbitron, sans-serif" }}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {recent.map((p, i) => (
-                    <tr key={p.id} className={`table-row-animated border-b border-[#1E3A5F]/50 hover:bg-white/3 transition-colors ${i % 2 === 0 ? "" : "bg-white/[0.01]"}`}>
-                      <td className="px-4 py-3 font-mono text-[#00E5FF] text-xs">{p.reg_number}</td>
-                      <td className="px-4 py-3 text-white font-medium">{p.full_name}</td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs px-2 py-1 rounded-full" style={{ background: "rgba(0,229,255,0.1)", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.2)" }}>
-                          {p.category}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs font-semibold" style={{ color: getPaymentStatusColor(p.payment_status) }}>
-                          ● {p.payment_status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-[#FFD700] font-semibold text-xs">
-                        Rp {(p.payment_amount ?? 0).toLocaleString("id-ID")}
-                      </td>
-                      <td className="px-4 py-3 text-[#B0C4DE] text-xs">
-                        {new Date(p.created_at).toLocaleDateString("id-ID")}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          )}
+
+          {/* ── Charts ──────────────────────────────────────────── */}
+          <DashboardCharts
+            events={filteredEvents}
+            total={summary!}
+            filter={filter}
+          />
+
+          {/* ── Health panel ────────────────────────────────────── */}
+          <div className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F] mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Activity size={16} className="text-[#00E5FF]" />
+                <h3 className="text-white font-bold text-sm" style={OFont}>STATUS INSFORGE</h3>
+              </div>
+              <button
+                onClick={fetchHealth}
+                disabled={healthLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-[#B0C4DE] border border-[#1E3A5F] hover:border-[#00E5FF]/50 hover:text-white transition-all disabled:opacity-50"
+              >
+                <RefreshCw size={12} className={healthLoading ? "animate-spin" : ""} /> Refresh
+              </button>
             </div>
+            {health ? (
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  {health.services.insforge.ok ? (
+                    <div className="w-3 h-3 rounded-full bg-[#4ADE80]" style={{ boxShadow: "0 0 8px #4ADE80" }} />
+                  ) : (
+                    <AlertTriangle size={14} className="text-[#FF006E]" />
+                  )}
+                  <span className={`text-sm font-semibold ${health.services.insforge.ok ? "text-[#4ADE80]" : "text-[#FF006E]"}`}>
+                    {health.status === "ok" ? "Operational" : "Degraded"}
+                  </span>
+                </div>
+                <span className="text-[#B0C4DE] text-xs">
+                  Latency: {health.services.insforge.latencyMs}ms
+                </span>
+                <span className="text-[#B0C4DE] text-xs ml-auto">
+                  Cek terakhir: {new Date(health.checkedAt).toLocaleString("id-ID")}
+                </span>
+              </div>
+            ) : (
+              <p className="text-[#B0C4DE] text-xs">Memuat status...</p>
+            )}
           </div>
         </>
       )}

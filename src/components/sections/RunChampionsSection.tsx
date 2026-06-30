@@ -1,6 +1,5 @@
 import { Award, Trophy } from "lucide-react";
 import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
-import TbdBadge from "@/components/ui/TbdBadge";
 import {
   formatPrizeValue,
   PRIZES,
@@ -37,7 +36,7 @@ export default function RunChampionsSection({ settings }: { settings: Record<str
           <div className="badge-neon mb-4 inline-block">HADIAH FUTURISTIC RUN</div>
           <AnimatedSectionTitle text="TABEL HADIAH PEMENANG" className="mb-4 text-4xl font-black sm:text-5xl" />
           <p className="mx-auto max-w-2xl text-sm leading-6 text-[#B0C4DE] sm:text-base">
-            Nominal final kategori Umum dan SMP. Alokasi hadiah kategori SD akan diumumkan setelah ditetapkan panitia.
+            Nominal final kategori Umum dan SMP. Kategori SD yang belum memiliki nominal akan dikonfirmasi saat technical meeting.
           </p>
         </div>
 
@@ -73,7 +72,7 @@ export default function RunChampionsSection({ settings }: { settings: Record<str
                     const value = row.values[field];
                     return (
                       <td key={field} className="px-4 py-4 text-center text-sm font-semibold text-[#D7E8FF]">
-                        {value === null ? <TbdBadge className="border-[#FFD700]/20 bg-[#FFD700]/5 text-[#D7E8FF]" /> : formatPrizeValue(value)}
+                        {formatPrizeValue(value)}
                       </td>
                     );
                   })}

@@ -3,6 +3,8 @@ import { insforge } from "@/lib/insforge";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { PAYMENT_PROOF_MAX_SIZE, PAYMENT_PROOF_TYPES } from "@/lib/validations";
 import { checkInsforgeHealth, serviceUnavailable } from "@/lib/insforgeHealth";
+import { randomUUID } from "node:crypto";
+import { verifyRegistrationAccess } from "@/lib/registrationAccess";
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,9 +17,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const regNumber = req.nextUrl.searchParams.get("regNumber");
-    if (!regNumber) {
-      return NextResponse.json({ error: "regNumber required" }, { status: 400 });
+    const regNumber = (req.nextUrl.searchParams.get("reg") ?? req.nextUrl.searchParams.get("regNumber"))?.trim().toUpperCase();
+    if (!regNumber || !/^(FR|FB)2026-\d{4,}$/.test(regNumber)) {
+      return NextResponse.json({ error: "Nomor registrasi tidak valid" }, { status: 400 });
     }
 
     const health = await checkInsforgeHealth();
@@ -26,16 +28,21 @@ export async function POST(req: NextRequest) {
     // Verify participant exists
     const { data: participant, error: pError } = await insforge.database
       .from("participants")
-      .select("id, reg_number, payment_status")
+      .select("id, reg_number, phone, email, payment_status, payment_proof, payment_proof_key, registration_access_token_hash")
       .eq("reg_number", regNumber)
       .maybeSingle();
 
-    if (pError || !participant) {
-      return NextResponse.json({ error: "Nomor registrasi tidak ditemukan" }, { status: 404 });
+    const accessToken = req.headers.get("x-registration-token");
+    const contact = req.headers.get("x-registration-contact");
+    if (pError || !participant || !verifyRegistrationAccess(participant ?? {}, accessToken, contact)) {
+      return NextResponse.json({ error: "Nomor registrasi atau verifikasi kontak tidak valid" }, { status: 404 });
     }
 
     if (participant.payment_status === "verified") {
       return NextResponse.json({ error: "Pembayaran sudah diverifikasi" }, { status: 400 });
+    }
+    if (participant.payment_proof && participant.payment_status !== "rejected") {
+      return NextResponse.json({ error: "Bukti pembayaran sudah tersimpan dan sedang menunggu verifikasi" }, { status: 409 });
     }
 
     // Parse multipart form data
@@ -63,8 +70,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Upload to InsForge storage
-    const ext = file.name.split(".").pop() || "jpg";
-    const fileName = `payment-proofs/${regNumber}-${Date.now()}.${ext}`;
+    const extensionByType: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "application/pdf": "pdf",
+    };
+    const ext = extensionByType[file.type];
+    const fileName = `payment-proofs/${regNumber}/${Date.now()}-${randomUUID()}.${ext}`;
+    const originalName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -87,17 +101,34 @@ export async function POST(req: NextRequest) {
     // Update participant record
     const { error: updateError } = await insforge.database
       .from("participants")
-      .update({ payment_proof: publicUrl, payment_proof_key: objectKey })
+      .update({
+        payment_proof: publicUrl,
+        payment_proof_key: objectKey,
+        payment_proof_mime: file.type,
+        payment_proof_size: file.size,
+        payment_proof_name: originalName,
+        paid_at: new Date().toISOString(),
+        payment_status: "pending",
+        rejection_reason: null,
+        verified_at: null,
+        verified_by: null,
+      })
       .eq("id", participant.id);
 
     if (updateError) {
       console.error("[upload-proof] Database update failed");
+      void insforge.storage.from("payment-proofs").remove(objectKey);
       return NextResponse.json({ error: "File terunggah, tetapi data belum dapat disimpan. Silakan coba lagi." }, { status: 503 });
+    }
+
+    if (participant.payment_proof_key && participant.payment_status === "rejected") {
+      void insforge.storage.from("payment-proofs").remove(participant.payment_proof_key);
     }
 
     return NextResponse.json({
       success: true,
       url: publicUrl,
+      status: "menunggu_verifikasi",
       message: "Bukti pembayaran berhasil diunggah",
     });
   } catch (err) {

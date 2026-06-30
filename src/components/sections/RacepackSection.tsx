@@ -1,12 +1,12 @@
 import { MapPin, RadioTower, ShieldCheck, Waves } from "lucide-react";
 import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
-import TbdBadge, { hasAnnouncedValue } from "@/components/ui/TbdBadge";
+import { hasAnnouncedValue } from "@/components/ui/TbdBadge";
 import { EVENTS } from "@/content/events";
 
 const event = EVENTS["futuristic-run"];
 
 export default function RacepackSection({ racepackLocation }: { racepackLocation?: string | null }) {
-  const location = hasAnnouncedValue(racepackLocation) ? racepackLocation : null;
+  const location = hasAnnouncedValue(racepackLocation) ? racepackLocation : "Kampus Plaosan";
 
   return (
     <section id="racepack" className="section-reveal relative overflow-hidden py-6 sm:py-10">
@@ -39,7 +39,7 @@ export default function RacepackSection({ racepackLocation }: { racepackLocation
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#00E5FF]">Lokasi</p>
                 <div className="mt-2 flex items-center gap-2 text-white">
                   <MapPin size={16} className="text-[#00E5FF]" />
-                  {location ? <span className="font-bold">{location}</span> : <TbdBadge />}
+                  <span className="font-bold">{location}</span>
                 </div>
               </div>
             </div>

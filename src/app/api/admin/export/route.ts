@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/adminAuth";
 import { insforge } from "@/lib/insforge";
 import { EVENTS } from "@/content/events";
 import Papa from "papaparse";
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
+  const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = req.nextUrl;

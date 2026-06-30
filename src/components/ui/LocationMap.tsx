@@ -66,10 +66,11 @@ export default function LocationMap({ lat, lng, label, plusCode, theme }: Locati
         <div className={`pointer-events-none absolute inset-0 ${isRun ? "bg-[radial-gradient(circle_at_center,transparent_20%,rgba(7,11,32,0.18)_58%,rgba(7,11,32,0.72)_100%)]" : "bg-[radial-gradient(circle_at_center,transparent_20%,rgba(255,247,237,0.04)_55%,rgba(124,45,18,0.25)_100%)]"}`} />
         <div className="pointer-events-none absolute inset-0 rounded-[calc(1rem-1px)] ring-1 ring-inset ring-white/10" />
 
-        <div className="location-map-marker pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-full" style={{ color: accent }} aria-hidden="true">
-          <span className="location-map-pulse absolute left-1/2 top-full size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border" style={{ borderColor: accent, boxShadow: `0 0 28px ${accent}` }} />
-          <span className="relative flex size-12 items-center justify-center rounded-full border border-white/40 bg-[#070B20]/90 shadow-2xl backdrop-blur-md" style={{ boxShadow: `0 0 30px ${accent}99` }}>
-            <MapPin size={25} strokeWidth={2.4} />
+        <div className="location-map-marker pointer-events-none absolute left-1/2 top-1/2 z-20 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center" style={{ color: accent }} aria-hidden="true">
+          <span className="location-map-pulse absolute left-1/2 top-1/2 size-12 rounded-full border-2" style={{ borderColor: accent, boxShadow: `0 0 28px ${accent}` }} />
+          <span className="location-map-pulse absolute left-1/2 top-1/2 size-12 rounded-full border" style={{ borderColor: accent, boxShadow: `0 0 20px ${accent}`, animationDelay: "1.2s" }} />
+          <span className="relative flex size-12 items-center justify-center rounded-full border border-white/40 bg-[#070B20]/95 shadow-2xl backdrop-blur-md" style={{ boxShadow: `0 0 30px ${accent}99` }}>
+            <MapPin size={24} strokeWidth={2.4} />
           </span>
         </div>
 

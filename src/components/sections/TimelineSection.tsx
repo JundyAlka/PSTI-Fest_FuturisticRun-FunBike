@@ -1,4 +1,4 @@
-import { CalendarDays, Clock3, RadioTower, ShieldCheck, TicketCheck, Trophy, Waves } from "lucide-react";
+import { CalendarDays, Clock3, Gift, MapPinned, Music, ShieldCheck } from "lucide-react";
 import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
 import RundownTimeline from "@/components/ui/RundownTimeline";
 import RundownActions from "@/components/ui/RundownActions";
@@ -8,11 +8,10 @@ import { formatEventDate } from "@/lib/eventDate";
 const event = EVENTS["futuristic-run"];
 
 const technicalInfo = [
-  { icon: RadioTower, label: "Pacer", value: "Pacer resmi dari PASI", color: "#FFD700" },
-  { icon: ShieldCheck, label: "Marshal", value: "Marshal dan pengamanan dari panitia", color: "#8B00FF" },
-  { icon: Waves, label: "Water station", value: "Titik water station dekat Caramel", color: "#00E5FF" },
-  { icon: TicketCheck, label: "BIB & finish control", value: "BIB dibedakan per kategori dan warna, dengan centang refreshment serta medali", color: "#FF006E" },
-  { icon: Trophy, label: "Kategori juara", value: "Umum, SMP, dan SD — Putra & Putri", color: "#FFD700" },
+  { icon: Music, label: "Hiburan", value: "Band SUNFLOW & Ollsame di area finish.", color: "#00E5FF" },
+  { icon: Gift, label: "Doorprize", value: "Doorprize pembelian panitia + dukungan sponsor, diundi saat acara.", color: "#FFD700" },
+  { icon: MapPinned, label: "Status Rute", value: "Rute 5K start/finish Alun-Alun Purworejo, dengan peta lokasi dan arahan marshal.", color: "#FF006E" },
+  { icon: ShieldCheck, label: "Koordinasi", value: "Pelaksanaan dikoordinasikan bersama PLF & ICF, tim medis, dan marshal panitia.", color: "#8B00FF" },
 ];
 
 export default function TimelineSection({ eventDate }: { eventDate: string }) {
@@ -60,7 +59,7 @@ export default function TimelineSection({ eventDate }: { eventDate: string }) {
           <h3 className="mb-5 text-center text-xl font-black text-white sm:text-2xl" style={{ fontFamily: "Orbitron, sans-serif" }}>
             INFO TEKNIS PELAKSANAAN
           </h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             {technicalInfo.map(({ icon: Icon, label, value, color }) => (
               <article key={label} className="card-animated rounded-2xl border border-[#1E3A5F] bg-[#0B1030]/90 p-5">
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border" style={{ borderColor: `${color}55`, background: `${color}16` }}>

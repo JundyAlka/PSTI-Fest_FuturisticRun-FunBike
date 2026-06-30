@@ -3,10 +3,12 @@ import EventNavbar from "@/components/EventNavbar";
 import EventThemeProvider from "@/components/EventThemeProvider";
 import type { Metadata } from "next";
 import { EVENT_SEO, registerMetadata } from "@/lib/seo";
+import { getPublicEventOps } from "@/lib/eventOps";
 
 export const metadata: Metadata = registerMetadata(EVENT_SEO["fun-bike"]);
 
-export default function FunBikeDaftarPage() {
+export default async function FunBikeDaftarPage() {
+  const eventOps = await getPublicEventOps("fun-bike");
   return (
     <EventThemeProvider eventType="fun-bike">
       <main className="page-animate min-h-screen relative overflow-hidden" style={{ background: "linear-gradient(180deg, #FFF8F0 0%, #FFFFFF 50%, #FFF7ED 100%)" }}>
@@ -33,7 +35,7 @@ export default function FunBikeDaftarPage() {
             <p className="text-gray-500">Isi formulir berikut untuk bergabung di Futuristic Bike 2026</p>
           </div>
           <div className="section-reveal-delay-1">
-            <RegistrationForm eventType="fun-bike" categoryLabel="Futuristic Bike Ride" defaultPrice={150000} />
+            <RegistrationForm eventType="fun-bike" categoryLabel="Futuristic Bike Ride" defaultPrice={eventOps.price ?? undefined} />
           </div>
         </div>
       </main>

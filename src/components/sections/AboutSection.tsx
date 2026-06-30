@@ -3,7 +3,7 @@ import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
 import BenefitGrid from "@/components/ui/BenefitGrid";
 import { FEST_YEAR, ORGANIZER_NAME } from "@/content/brand";
 import { EVENTS, type Benefit } from "@/content/events";
-import TbdBadge, { hasAnnouncedValue } from "@/components/ui/TbdBadge";
+import { hasAnnouncedValue } from "@/components/ui/TbdBadge";
 
 const event = EVENTS["futuristic-run"];
 
@@ -54,7 +54,7 @@ export default function AboutSection({ settings = {}, quota }: { settings?: Reco
           {/* Stats visual */}
           <div className="stagger-list slide-in-right grid grid-cols-2 gap-4">
             {[
-              { value: quota ? String(quota) : null, label: "Kuota Peserta", sub: "Run 5K", color: "#00E5FF" },
+              { value: String(quota ?? 200), label: "Kuota Peserta", sub: "Run 5K", color: "#00E5FF" },
               { value: "5K", label: "Jarak Tempuh", sub: "Satu kategori", color: "#8B00FF" },
               { value: "6+", label: "Checkpoint", sub: "Sepanjang rute", color: "#FF006E" },
               { value: FEST_YEAR, label: "Tahun Event", sub: ORGANIZER_NAME, color: "#FF8C00" },
@@ -64,7 +64,7 @@ export default function AboutSection({ settings = {}, quota }: { settings?: Reco
                 className="card-animated glass-card p-6 rounded-2xl text-center border border-[#1E3A5F] hover:border-opacity-60 transition-all duration-300 group"
                 style={{ borderColor: `${stat.color}22` }}
               >
-                {stat.value ? <AnimatedStatNumber value={stat.value} color={stat.color} /> : <div className="mb-3 flex justify-center"><TbdBadge /></div>}
+                <AnimatedStatNumber value={stat.value} color={stat.color} />
                 <div className="text-white font-semibold text-sm mb-0.5">{stat.label}</div>
                 <div className="text-[#B0C4DE] text-xs">{stat.sub}</div>
               </div>

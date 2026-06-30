@@ -3,6 +3,7 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import bcrypt from "bcryptjs";
 import { FEST_NAME } from "../src/content/brand";
 import { DEFAULT_PRIZE_SETTINGS } from "../src/data/prizes";
+import { EVENTS } from "../src/content/events";
 
 const adapter = new PrismaBetterSqlite3({ url: "file:./prisma/dev.db" });
 const prisma = new PrismaClient({ adapter });
@@ -43,7 +44,7 @@ async function main() {
 
   // ── Event Categories ───────────────────────────────────────────────────────
   const eventCategories = [
-    { eventType: "futuristic-run", code: "5K", label: "Run 5K", price: 200000, quota: 200, minAge: 13 },
+    { eventType: "futuristic-run", code: "5K", label: "Run 5K", price: 120000, quota: 200, minAge: 13 },
     { eventType: "fun-bike", code: "funbike", label: "Futuristic Bike Ride", price: 150000, quota: 300, minAge: 10 },
   ];
 
@@ -79,18 +80,61 @@ async function main() {
   // ── Event settings (scoped per event) ──────────────────────────────────────
   const settings = [
     { eventType: "futuristic-run", key: "registration_open", value: "true" },
-    { eventType: "futuristic-run", key: "registration_fee", value: "200000" },
+    { eventType: "futuristic-run", key: "registration_fee", value: "120000" },
     { eventType: "futuristic-run", key: "event_date", value: "2026-08-01T18:00:00+07:00" },
     { eventType: "futuristic-run", key: "event_location", value: "Alun-Alun Purworejo" },
+    { eventType: "futuristic-run", key: "event_location_address", value: "Alun-Alun Purworejo, Purworejo, Jawa Tengah" },
     { eventType: "futuristic-run", key: "location_lat", value: "-7.7130878" },
     { eventType: "futuristic-run", key: "location_lng", value: "110.0090583" },
     { eventType: "futuristic-run", key: "location_plus_code", value: "72P5+QJ" },
     { eventType: "futuristic-run", key: "early_bird_deadline", value: "2026-05-31" },
     { eventType: "futuristic-run", key: "registration_deadline", value: "2026-06-14" },
+    { eventType: "futuristic-run", key: "payment_bank_name", value: "BRI" },
+    { eventType: "futuristic-run", key: "payment_bank_account", value: "007801112841503" },
+    { eventType: "futuristic-run", key: "payment_bank_holder", value: "SYIFA FITRIYANTI" },
+    { eventType: "futuristic-run", key: "payment_qris_merchant_name", value: "SYIFA FITRIYANTI" },
     { eventType: "futuristic-run", key: "benefit_prize_details", value: "" },
-    { eventType: "futuristic-run", key: "benefit_race_pack_contents", value: "" },
+    { eventType: "futuristic-run", key: "benefit_race_pack_contents", value: "Jersey event, BIB number, medali finisher, e-sertifikat, refreshment, doorprize, hiburan, tim medis." },
+    { eventType: "futuristic-run", key: "racepack_location", value: "Kampus Plaosan" },
+    { eventType: "futuristic-run", key: "contact_person", value: "+62 856-4390-9808" },
+    { eventType: "futuristic-run", key: "contact_person_name", value: "Bimo Putra" },
+    { eventType: "futuristic-run", key: "contact_person_whatsapp", value: "+62 856-4390-9808" },
+    {
+      eventType: "futuristic-run",
+      key: "faq",
+      value: EVENTS["futuristic-run"].faq.map((item) => `${item.q} | ${item.a}`).join("\n"),
+    },
+    {
+      eventType: "futuristic-run",
+      key: "rules",
+      value: EVENTS["futuristic-run"].rules.join("\n"),
+    },
     ...Object.entries(DEFAULT_PRIZE_SETTINGS).map(([key, value]) => ({ eventType: "futuristic-run", key, value })),
     { eventType: "fun-bike", key: "event_date", value: "2026-08-02T05:00:00+07:00" },
+    { eventType: "fun-bike", key: "event_location", value: "Alun-Alun Purworejo" },
+    { eventType: "fun-bike", key: "event_location_address", value: "Alun-Alun Purworejo, Purworejo, Jawa Tengah" },
+    { eventType: "fun-bike", key: "location_lat", value: "-7.7130878" },
+    { eventType: "fun-bike", key: "location_lng", value: "110.0090583" },
+    { eventType: "fun-bike", key: "location_plus_code", value: "72P5+QJ" },
+    { eventType: "fun-bike", key: "payment_bank_name", value: "BRI" },
+    { eventType: "fun-bike", key: "payment_bank_account", value: "007801112841503" },
+    { eventType: "fun-bike", key: "payment_bank_holder", value: "SYIFA FITRIYANTI" },
+    { eventType: "fun-bike", key: "payment_qris_merchant_name", value: "SYIFA FITRIYANTI" },
+    { eventType: "fun-bike", key: "contact_person", value: "+62 856-4390-9808" },
+    { eventType: "fun-bike", key: "contact_person_name", value: "Bimo Putra" },
+    { eventType: "fun-bike", key: "contact_person_whatsapp", value: "+62 856-4390-9808" },
+    { eventType: "fun-bike", key: "bike_prize_amount", value: "" },
+    { eventType: "fun-bike", key: "bike_route_note", value: "Rute final menyusul technical meeting." },
+    {
+      eventType: "fun-bike",
+      key: "faq",
+      value: EVENTS["fun-bike"].faq.map((item) => `${item.q} | ${item.a}`).join("\n"),
+    },
+    {
+      eventType: "fun-bike",
+      key: "rules",
+      value: EVENTS["fun-bike"].rules.join("\n"),
+    },
   ];
 
   for (const s of settings) {
@@ -105,7 +149,7 @@ async function main() {
   // ── Sample participants ────────────────────────────────────────────────────
   const statuses = ["pending", "verified", "rejected"];
   const jerseySizes = ["S", "M", "L", "XL"];
-  const prices: Record<string, number> = { "5K": 200000 };
+  const prices: Record<string, number> = { "5K": 120000 };
 
   const existingCount = await prisma.participant.count();
   if (existingCount === 0) {

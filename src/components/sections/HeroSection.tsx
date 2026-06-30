@@ -5,10 +5,23 @@ import { MapPin, Calendar, ChevronDown, Zap, ArrowRight } from "lucide-react";
 import { ORGANIZER_NAME, FEST_YEAR } from "@/content/brand";
 import { EVENTS } from "@/content/events";
 import { formatEventDate, formatWibTime } from "@/lib/eventDate";
+import { formatPricingCurrency } from "@/lib/pricing";
 
 const event = EVENTS["futuristic-run"];
 
-export default function HeroSection({ eventDate, locationLabel }: { eventDate: string; locationLabel: string }) {
+type HeroSectionProps = {
+  eventDate: string;
+  locationLabel: string;
+  price: number | null;
+  currentTierLabel: string | null;
+  presaleRemaining: number | null;
+  presaleQuota: number | null;
+  normalPrice: number | null;
+};
+
+export default function HeroSection({ eventDate, locationLabel, price, currentTierLabel, presaleRemaining, presaleQuota, normalPrice }: HeroSectionProps) {
+  const priceLabel = price && price > 0 ? formatPricingCurrency(price) : "Mengikuti tier harga aktif";
+
   return (
     <section
       id="hero"
@@ -103,16 +116,26 @@ export default function HeroSection({ eventDate, locationLabel }: { eventDate: s
           <div className="fade-in-up-delay-2 flex flex-wrap justify-center lg:justify-start gap-3 sm:gap-4 text-[#B0C4DE] text-sm mb-5 sm:mb-8">
             <span className="flex items-center gap-1.5">
               <MapPin size={14} className="text-[#00E5FF]" />
-              {locationLabel}
+              {locationLabel} (start & finish)
             </span>
             <span className="flex items-center gap-1.5">
               <Calendar size={14} className="text-[#00E5FF]" />
-              {formatEventDate(eventDate)} • Mulai {formatWibTime(eventDate)} WIB
+              {formatEventDate(eventDate)} - Mulai {formatWibTime(eventDate)} WIB
             </span>
             <span className="flex items-center gap-1.5">
               <Zap size={14} className="text-[#00E5FF]" />
               Run 5K
             </span>
+          </div>
+
+          <div className="fade-in-up-delay-2 mb-5 inline-flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-[#FFD700]/25 bg-[#050816]/75 px-4 py-3 backdrop-blur-lg lg:justify-start">
+            <span className="font-black text-[#FFD700]" style={{ fontFamily: "Orbitron, sans-serif" }}>
+              {currentTierLabel ?? "Harga"} {priceLabel}
+            </span>
+            {presaleQuota ? <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${presaleRemaining && presaleRemaining > 0 ? "bg-[#00E5FF]/15 text-[#00E5FF]" : "bg-[#FF006E]/15 text-[#FF006E]"}`}>
+              {presaleRemaining && presaleRemaining > 0 ? `Sisa ${presaleRemaining} dari ${presaleQuota}` : "Presale Habis"}
+            </span> : null}
+            {normalPrice && normalPrice !== price ? <span className="text-sm text-[#B0C4DE] line-through">Normal {formatPricingCurrency(normalPrice)}</span> : null}
           </div>
 
           <div className="fade-in-up-delay-3 flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-6 sm:mb-10">

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/adminAuth";
 import { insforge } from "@/lib/insforge";
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
+  const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = req.nextUrl;
@@ -15,32 +15,69 @@ export async function GET(req: NextRequest) {
   const eventType = searchParams.get("eventType") ?? "futuristic-run";
 
   const from = (page - 1) * limit;
-  const to = from + limit - 1;
 
-  let query = insforge.database
+  const { data: allRows, error } = await insforge.database
     .from("participants")
-    .select(
-      "id, reg_number, full_name, email, phone, category, jersey_size, bib_name, bib_number, payment_status, payment_method, payment_amount, payment_proof, status, created_at, verified_at, verified_by, rejection_reason, blood_type, city, province, event_type",
-      { count: "exact" }
-    )
-    .eq("event_type", eventType)
-    .order("created_at", { ascending: false })
-    .range(from, to);
-
-  if (category && category !== "all") query = query.eq("category", category);
-  if (status && status !== "all") query = query.eq("payment_status", status);
-  if (search) query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,reg_number.ilike.%${search}%`);
-
-  const { data: participants, count, error } = await query;
+    .select("*");
 
   if (error) {
     console.error("[admin/participants]", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 
-  const total = count ?? 0;
+  let list = (allRows ?? []) as Array<Record<string, any>>;
+
+  if (eventType && eventType !== "all") {
+    list = list.filter((p) => (p.event_type ?? p.eventType ?? "futuristic-run") === eventType);
+  }
+  if (category && category !== "all") {
+    list = list.filter((p) => p.category === category);
+  }
+  if (status && status !== "all") {
+    list = list.filter((p) => p.payment_status === status);
+  }
+  if (search) {
+    const q = search.toLowerCase();
+    list = list.filter((p) =>
+      String(p.full_name ?? "").toLowerCase().includes(q) ||
+      String(p.email ?? "").toLowerCase().includes(q) ||
+      String(p.reg_number ?? "").toLowerCase().includes(q)
+    );
+  }
+
+  list.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+
+  const total = list.length;
+  const participants = list.slice(from, from + limit);
+
   return NextResponse.json({
     participants,
     meta: { total, page, limit, pages: Math.ceil(total / limit) },
   });
+}
+
+export async function DELETE(req: NextRequest) {
+  const session = await requireAdmin();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { searchParams } = req.nextUrl;
+  const idParam = searchParams.get("id");
+  const body = await req.json().catch(() => ({}));
+  const ids: number[] = Array.isArray(body?.ids) ? body.ids : (idParam ? [Number(idParam)] : []);
+
+  if (ids.length === 0) {
+    return NextResponse.json({ error: "ID peserta tidak ditemukan" }, { status: 400 });
+  }
+
+  const { error } = await insforge.database
+    .from("participants")
+    .delete()
+    .in("id", ids);
+
+  if (error) {
+    console.error("[admin/participants DELETE]", error);
+    return NextResponse.json({ error: "Gagal menghapus peserta" }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true, deletedCount: ids.length });
 }

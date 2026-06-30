@@ -1,6 +1,7 @@
 import { insforge } from "@/lib/insforge";
 import type { EventSlug } from "@/content/events";
 import { resolveEventDate } from "@/lib/eventDate";
+import type { PricingSnapshot } from "@/lib/pricing";
 
 export type PublicEventOps = {
   slug: EventSlug;
@@ -16,6 +17,10 @@ export type PublicEventOps = {
   bankName: string | null;
   bankAccount: string | null;
   settings: Record<string, string>;
+  currentTierLabel: string | null;
+  presaleRemaining: number | null;
+  presaleQuota: number | null;
+  normalPrice: number | null;
 };
 
 function settingValue(settings: Array<{ key: string; value: string }> | null | undefined, key: string) {
@@ -37,12 +42,16 @@ function emptyOps(slug: EventSlug): PublicEventOps {
     bankName: null,
     bankAccount: null,
     settings: {},
+    currentTierLabel: null,
+    presaleRemaining: null,
+    presaleQuota: null,
+    normalPrice: null,
   };
 }
 
 export async function getPublicEventOps(slug: EventSlug): Promise<PublicEventOps> {
   try {
-    const [eventResult, categoryResult, settingsResult] = await Promise.all([
+    const [eventResult, categoryResult, settingsResult, pricingResult] = await Promise.all([
       insforge.database
         .from("events")
         .select("location, deadline")
@@ -57,6 +66,7 @@ export async function getPublicEventOps(slug: EventSlug): Promise<PublicEventOps
         .from("event_settings")
         .select("key, value")
         .eq("event_type", slug),
+      insforge.database.rpc("get_current_pricing_v1", { p_event_type: slug }),
     ]);
 
     const settings = settingsResult.data as Array<{ key: string; value: string }> | null;
@@ -65,13 +75,14 @@ export async function getPublicEventOps(slug: EventSlug): Promise<PublicEventOps
     const categories = categoryResult.data as Array<{ code: string; label: string; price: number; quota: number }> | null;
     const primaryCategory = categories?.[0] ?? null;
     const registrationFee = Number(settingValue(settings, "registration_fee"));
+    const pricing = pricingResult.data as PricingSnapshot | null;
 
     return {
       slug,
       eventDate: resolveEventDate(slug, settingValue(settings, "event_date")),
       location: settingValue(settings, "event_location") ?? event?.location ?? null,
       deadline: settingValue(settings, "registration_deadline") ?? event?.deadline ?? null,
-      price: Number.isFinite(registrationFee) && registrationFee > 0 ? registrationFee : primaryCategory?.price ?? null,
+      price: pricing?.currentPrice ?? (Number.isFinite(registrationFee) && registrationFee > 0 ? registrationFee : null) ?? primaryCategory?.price ?? null,
       quota: primaryCategory?.quota ?? null,
       categoryCode: primaryCategory?.code ?? null,
       categoryLabel: primaryCategory?.label ?? null,
@@ -80,6 +91,10 @@ export async function getPublicEventOps(slug: EventSlug): Promise<PublicEventOps
       bankName: settingValue(settings, "payment_bank_name"),
       bankAccount: settingValue(settings, "payment_bank_account"),
       settings: settingMap,
+      currentTierLabel: pricing?.currentTier?.label ?? null,
+      presaleRemaining: pricing?.presaleRemaining ?? null,
+      presaleQuota: pricing?.presaleQuota ?? null,
+      normalPrice: pricing?.normalPrice ?? null,
     };
   } catch (error) {
     console.error(`[eventOps] Failed to load public event data for ${slug}`, error);

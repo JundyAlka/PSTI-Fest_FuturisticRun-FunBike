@@ -44,42 +44,9 @@ export async function POST(req: NextRequest) {
     const publicUrl = uploadData?.url ?? insforge.storage.from("qris-images").getPublicUrl(fileName);
     const objectKey = uploadData?.key ?? fileName;
 
-    // Auto-update the setting
-    const { data: existing } = await insforge.database
-      .from("event_settings")
-      .select("id")
-      .eq("event_type", eventType)
-      .eq("key", "payment_qris_image_url")
-      .maybeSingle();
-
-    if (existing) {
-      const { error: updateError } = await insforge.database
-        .from("event_settings")
-        .update({ value: publicUrl, updated_at: new Date().toISOString() })
-        .eq("id", existing.id);
-      if (updateError) throw updateError;
-    } else {
-      const { error: insertError } = await insforge.database
-        .from("event_settings")
-        .insert([{ event_type: eventType, key: "payment_qris_image_url", value: publicUrl }]);
-      if (insertError) throw insertError;
-    }
-
-    const { data: existingKey } = await insforge.database
-      .from("event_settings")
-      .select("id")
-      .eq("event_type", eventType)
-      .eq("key", "payment_qris_image_key")
-      .maybeSingle();
-
-    const keyResult = existingKey
-      ? await insforge.database.from("event_settings").update({ value: objectKey }).eq("id", existingKey.id)
-      : await insforge.database.from("event_settings").insert([
-          { event_type: eventType, key: "payment_qris_image_key", value: objectKey },
-        ]);
-    if (keyResult.error) throw keyResult.error;
-
-    return NextResponse.json({ success: true, url: publicUrl });
+    // Settings are persisted together by /api/admin/settings. Returning both
+    // values keeps upload and configuration save from becoming a partial update.
+    return NextResponse.json({ success: true, url: publicUrl, key: objectKey });
   } catch (err) {
     console.error("[POST /api/upload-qris]", err);
     return serviceUnavailable("Upload QRIS sementara tidak tersedia. Coba lagi beberapa saat.");

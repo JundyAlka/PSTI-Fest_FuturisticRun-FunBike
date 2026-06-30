@@ -53,14 +53,14 @@ INSERT INTO public.event_settings (event_type, key, value) VALUES
   ('futuristic-run', 'registration_deadline', ''),
   ('futuristic-run', 'quota_5k', '200'),
   ('futuristic-run', 'payment_bank_name', 'BRI'),
-  ('futuristic-run', 'payment_bank_account', ''),
-  ('futuristic-run', 'payment_bank_holder', 'Himatekno UMP'),
+  ('futuristic-run', 'payment_bank_account', '007801112841503'),
+  ('futuristic-run', 'payment_bank_holder', 'SYIFA FITRIYANTI'),
   ('futuristic-run', 'payment_qris_nmid', ''),
   ('futuristic-run', 'payment_qris_image_url', ''),
   ('futuristic-run', 'payment_qris_image_key', ''),
   ('futuristic-run', 'payment_transfer_enabled', 'true'),
   ('futuristic-run', 'payment_qris_enabled', 'true'),
-  ('futuristic-run', 'contact_person', ''),
+  ('futuristic-run', 'contact_person', '+62 856-4390-9808'),
   ('fun-bike', 'registration_open', 'true'),
   ('fun-bike', 'registration_fee', '150000'),
   ('fun-bike', 'event_date', ''),
@@ -68,14 +68,14 @@ INSERT INTO public.event_settings (event_type, key, value) VALUES
   ('fun-bike', 'registration_deadline', ''),
   ('fun-bike', 'quota_funbike', '300'),
   ('fun-bike', 'payment_bank_name', 'BRI'),
-  ('fun-bike', 'payment_bank_account', ''),
-  ('fun-bike', 'payment_bank_holder', 'Himatekno UMP'),
+  ('fun-bike', 'payment_bank_account', '007801112841503'),
+  ('fun-bike', 'payment_bank_holder', 'SYIFA FITRIYANTI'),
   ('fun-bike', 'payment_qris_nmid', ''),
   ('fun-bike', 'payment_qris_image_url', ''),
   ('fun-bike', 'payment_qris_image_key', ''),
   ('fun-bike', 'payment_transfer_enabled', 'true'),
   ('fun-bike', 'payment_qris_enabled', 'true'),
-  ('fun-bike', 'contact_person', '')
+  ('fun-bike', 'contact_person', '+62 856-4390-9808')
 ON CONFLICT (event_type, key) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS public.audit_logs (

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Zap, ArrowRight, Shirt, Medal, Tag, Droplets, Trophy, FileText, Gift, Footprints } from "lucide-react";
 import QuotaMeter from "@/components/QuotaMeter";
 import HoverTiltCard from "@/components/ui/HoverTiltCard";
-import TbdBadge from "@/components/ui/TbdBadge";
 import AnimatedIcon from "@/components/ui/AnimatedIcon";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { FEST_YEAR } from "@/content/brand";
@@ -11,20 +10,24 @@ import { EVENTS } from "@/content/events";
 const event = EVENTS["futuristic-run"];
 
 const facilities = [
-  { icon: Shirt, motion: "sway" as const, label: `Jersey Eksklusif ${event.name} ${FEST_YEAR}` },
-  { icon: Medal, motion: "rotate" as const, label: "Finisher Medal" },
-  { icon: Tag, motion: "pulse" as const, label: "Race BIB (Timing Chip)" },
-  { icon: Footprints, motion: "bounce" as const, label: "Totebag Eksklusif" },
-  { icon: Droplets, motion: "sway" as const, label: "Water Station & Refreshment" },
-  { icon: Trophy, motion: "rotate" as const, label: "Podium 1-2-3 Putra & Putri" },
-  { icon: FileText, motion: "pulse" as const, label: "Race Result & e-Sertifikat" },
-  { icon: Gift, motion: "bounce" as const, label: "Doorprize & Hiburan" },
+  { icon: Shirt, motion: "sway" as const, label: `Jersey event ${event.name} ${FEST_YEAR}` },
+  { icon: Tag, motion: "pulse" as const, label: "BIB number peserta" },
+  { icon: Medal, motion: "rotate" as const, label: "Medali finisher" },
+  { icon: FileText, motion: "pulse" as const, label: "E-sertifikat" },
+  { icon: Droplets, motion: "sway" as const, label: "Refreshment" },
+  { icon: Gift, motion: "bounce" as const, label: "Doorprize" },
+  { icon: Footprints, motion: "bounce" as const, label: "Tim medis & marshal" },
+  { icon: Trophy, motion: "rotate" as const, label: "Hadiah kategori juara" },
 ];
 
 type CategoriesSectionProps = {
   price?: number | null;
   quota?: number | null;
   categoryLabel?: string | null;
+  currentTierLabel?: string | null;
+  presaleRemaining?: number | null;
+  presaleQuota?: number | null;
+  normalPrice?: number | null;
 };
 
 function formatPrice(price: number | null | undefined) {
@@ -36,8 +39,9 @@ function formatPrice(price: number | null | undefined) {
   }).format(price);
 }
 
-export default function CategoriesSection({ price, quota, categoryLabel }: CategoriesSectionProps) {
+export default function CategoriesSection({ price, quota, categoryLabel, currentTierLabel, presaleRemaining, presaleQuota, normalPrice }: CategoriesSectionProps) {
   const priceLabel = formatPrice(price);
+  const normalPriceLabel = formatPrice(normalPrice);
   const category = categoryLabel ?? event.categoryLabel;
 
   return (
@@ -105,14 +109,22 @@ export default function CategoriesSection({ price, quota, categoryLabel }: Categ
                 <div className="text-[#B0C4DE] text-sm mb-1 tracking-widest">BIAYA PENDAFTARAN</div>
                 {priceLabel ? (
                   <div className="text-4xl font-black sm:text-5xl" style={{ fontFamily: "Orbitron, sans-serif", color: "#FFD700", textShadow: "0 0 20px rgba(255,215,0,0.4)" }}>
-                    {priceLabel}
+                    {currentTierLabel ? `${currentTierLabel} ${priceLabel}` : priceLabel}
                   </div>
                 ) : (
-                  <div className="mt-3 flex justify-center">
-                    <TbdBadge className="border-[#FFD700]/30 bg-[#FFD700]/10 px-4 py-2 text-[#FFD700]" />
+                  <div className="text-xl font-black text-[#FFD700]" style={{ fontFamily: "Orbitron, sans-serif" }}>
+                    Mengikuti tier harga aktif
                   </div>
                 )}
                 <div className="text-[#B0C4DE] text-sm mt-1">per peserta</div>
+                {presaleQuota ? (
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${presaleRemaining && presaleRemaining > 0 ? "bg-[#00E5FF]/10 text-[#00E5FF]" : "bg-[#FF006E]/10 text-[#FF006E]"}`}>
+                      {presaleRemaining && presaleRemaining > 0 ? `Sisa ${presaleRemaining} dari ${presaleQuota}` : "Presale Habis"}
+                    </span>
+                    {normalPriceLabel && normalPrice !== price && <span className="text-sm text-[#B0C4DE] line-through">Normal {normalPriceLabel}</span>}
+                  </div>
+                ) : null}
               </div>
 
               {/* Facilities grid */}

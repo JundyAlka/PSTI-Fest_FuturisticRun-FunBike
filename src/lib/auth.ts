@@ -27,32 +27,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .eq("email", email)
           .maybeSingle();
 
-        if (!error && admin) {
-          const valid = await bcrypt.compare(password, admin.password);
-          if (!valid) return null;
-
-          return {
-            id: String(admin.id),
-            email: admin.email,
-            name: admin.name ?? "Admin",
-            role: admin.role,
-          };
-        }
-
-        const envEmail = process.env.ADMIN_EMAIL;
-        const envPasswordHash = process.env.ADMIN_PASSWORD_HASH;
-        if (!envEmail || !envPasswordHash || email.toLowerCase() !== envEmail.toLowerCase()) {
-          return null;
-        }
-
-        const valid = await bcrypt.compare(password, envPasswordHash);
+        if (error || !admin || admin.role !== "admin") return null;
+        const valid = await bcrypt.compare(password, admin.password);
         if (!valid) return null;
 
         return {
-          id: "admin-env",
-          email: envEmail,
-          name: process.env.ADMIN_NAME ?? "Admin",
-          role: "admin",
+          id: String(admin.id),
+          email: admin.email,
+          name: admin.name ?? "Admin",
+          role: admin.role,
         };
       },
     }),
@@ -64,6 +47,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
+        token.role = user.role;
       }
       return token;
     },
@@ -72,6 +56,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
         session.user.email = token.email as string;
         session.user.name = token.name as string;
+        session.user.role = token.role;
       }
       return session;
     },

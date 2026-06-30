@@ -1,12 +1,26 @@
 import Link from "next/link";
 import { CalendarDays, Camera, Clock, Mail, MapPin, Phone, Play, Ticket } from "lucide-react";
 import LogoMark from "@/components/LogoMark";
-import TbdBadge, { TBD_LABEL } from "@/components/ui/TbdBadge";
-import { CONTACT_EMAIL, DEFAULT_WHATSAPP, FEST_NAME, FEST_YEAR, ORGANIZER_NAME } from "@/content/brand";
+import { CONTACT_EMAIL, DEFAULT_CONTACT_NAME, DEFAULT_WHATSAPP, FEST_NAME, FEST_YEAR, ORGANIZER_NAME } from "@/content/brand";
 import { EVENTS } from "@/content/events";
 import { formatEventDate, formatWibTime } from "@/lib/eventDate";
 
-export default function Footer({ eventDate, locationLabel }: { eventDate: string; locationLabel: string }) {
+export default function Footer({
+  eventDate,
+  locationLabel,
+  settings = {},
+  contactPerson,
+}: {
+  eventDate: string;
+  locationLabel: string;
+  settings?: Record<string, string>;
+  contactPerson?: string | null;
+}) {
+  const contactName = settings.contact_person_name?.trim() || DEFAULT_CONTACT_NAME;
+  const contactPhone = settings.contact_person_whatsapp?.trim() || contactPerson || settings.contact_person || DEFAULT_WHATSAPP;
+  const whatsappNumber = contactPhone.replace(/\D/g, "");
+  const whatsappHref = whatsappNumber ? `https://wa.me/${whatsappNumber}` : `mailto:${CONTACT_EMAIL}`;
+
   return (
     <footer className="section-reveal relative border-t border-[#1E3A5F] bg-[#080C20]">
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00E5FF]/50 to-transparent" />
@@ -30,7 +44,7 @@ export default function Footer({ eventDate, locationLabel }: { eventDate: string
             </p>
             <div className="flex items-center gap-1 text-sm text-[#B0C4DE]">
               <MapPin size={14} className="text-[#00E5FF]" />
-              {locationLabel || <TbdBadge className="border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#D7E8FF]" />}
+              {locationLabel || "Alun-Alun Purworejo"}
             </div>
           </div>
 
@@ -76,12 +90,12 @@ export default function Footer({ eventDate, locationLabel }: { eventDate: string
               </li>
               <li className="flex items-start gap-2">
                 <MapPin size={14} className="text-[#00E5FF] mt-1 flex-shrink-0" />
-                {locationLabel || <TbdBadge className="border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#D7E8FF]" />}
+                {locationLabel || "Alun-Alun Purworejo"}
               </li>
               <li className="flex items-start gap-2 pt-1">
                 <Ticket size={14} className="text-[#8B00FF] mt-1 flex-shrink-0" />
                 <span>
-                  <span className="text-[#8B00FF] font-semibold">Run 5K</span><br className="sm:hidden" /> - {TBD_LABEL}
+                  <span className="text-[#8B00FF] font-semibold">Run 5K</span><br className="sm:hidden" /> - satu kategori
                 </span>
               </li>
             </ul>
@@ -96,9 +110,9 @@ export default function Footer({ eventDate, locationLabel }: { eventDate: string
                 <Mail size={14} className="text-[#00E5FF]" />
                 {CONTACT_EMAIL}
               </a>
-              <a href="https://wa.me/6281234567890" className="flex items-center gap-2 text-[#B0C4DE] hover:text-[#00E5FF] text-sm transition-colors">
+              <a href={whatsappHref} className="flex items-center gap-2 text-[#B0C4DE] hover:text-[#00E5FF] text-sm transition-colors">
                 <Phone size={14} className="text-[#00E5FF]" />
-                {DEFAULT_WHATSAPP}
+                {contactPhone ? `${contactName}: ${contactPhone}` : "Hubungi panitia PSTI Fest"}
               </a>
             </div>
 
@@ -109,7 +123,7 @@ export default function Footer({ eventDate, locationLabel }: { eventDate: string
               {[
                 { icon: Camera, href: "https://instagram.com/futuristicvibes", label: "Instagram", color: "#FF006E" },
                 { icon: Play, href: "https://youtube.com/@futuristicvibes", label: "YouTube", color: "#FF8C00" },
-                { icon: Phone, href: "https://wa.me/6281234567890", label: "WhatsApp", color: "#00E5FF" },
+                { icon: Phone, href: whatsappHref, label: "WhatsApp", color: "#00E5FF" },
               ].map((social) => (
                 <a
                   key={social.label}

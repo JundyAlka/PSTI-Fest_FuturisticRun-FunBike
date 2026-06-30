@@ -57,6 +57,11 @@ CREATE TABLE IF NOT EXISTS participants (
   payment_amount INTEGER,
   payment_proof TEXT,
   payment_proof_key TEXT,
+  payment_proof_mime TEXT,
+  payment_proof_size INTEGER,
+  payment_proof_name TEXT,
+  registration_access_token_hash TEXT,
+  paid_at TIMESTAMPTZ,
   status TEXT NOT NULL DEFAULT 'registered',
   bib_number INTEGER,
   verified_at TIMESTAMPTZ,
@@ -95,16 +100,17 @@ ON CONFLICT (slug) DO NOTHING;
 
 -- Seed event categories
 INSERT INTO event_categories (event_type, code, label, price, quota, min_age) VALUES
-  ('futuristic-run', '5K',      'Run 5K',       200000, 200, 13),
+  ('futuristic-run', '5K',      'Run 5K',       120000, 200, 13),
   ('fun-bike',       'funbike', 'Futuristic Bike Ride', 150000, 300, 10)
 ON CONFLICT (event_type, code) DO NOTHING;
 
 -- Seed event settings
 INSERT INTO event_settings (event_type, key, value) VALUES
   ('futuristic-run', 'registration_open', 'true'),
-  ('futuristic-run', 'registration_fee', '200000'),
+  ('futuristic-run', 'registration_fee', '120000'),
   ('futuristic-run', 'event_date', '2026-08-01T18:00:00+07:00'),
   ('futuristic-run', 'event_location', 'Alun-Alun Purworejo'),
+  ('futuristic-run', 'event_location_address', 'Alun-Alun Purworejo, Purworejo, Jawa Tengah'),
   ('futuristic-run', 'location_lat', '-7.7130878'),
   ('futuristic-run', 'location_lng', '110.0090583'),
   ('futuristic-run', 'location_plus_code', '72P5+QJ'),
@@ -112,15 +118,26 @@ INSERT INTO event_settings (event_type, key, value) VALUES
   ('futuristic-run', 'registration_deadline', '2026-06-14'),
   ('futuristic-run', 'quota_5k', '200'),
   ('futuristic-run', 'payment_bank_name', 'BRI'),
-  ('futuristic-run', 'payment_bank_account', ''),
-  ('futuristic-run', 'payment_bank_holder', 'Himatekno UMP'),
+  ('futuristic-run', 'payment_bank_account', '007801112841503'),
+  ('futuristic-run', 'payment_bank_holder', 'SYIFA FITRIYANTI'),
   ('futuristic-run', 'payment_qris_nmid', ''),
+  ('futuristic-run', 'payment_qris_merchant_name', 'SYIFA FITRIYANTI'),
   ('futuristic-run', 'payment_qris_image_url', ''),
   ('futuristic-run', 'payment_qris_image_key', ''),
   ('futuristic-run', 'payment_transfer_enabled', 'true'),
   ('futuristic-run', 'payment_qris_enabled', 'true'),
   ('futuristic-run', 'benefit_prize_details', ''),
-  ('futuristic-run', 'benefit_race_pack_contents', ''),
+  ('futuristic-run', 'benefit_race_pack_contents', 'Jersey event, BIB number, medali finisher, e-sertifikat, refreshment, doorprize, hiburan, tim medis.'),
+  ('futuristic-run', 'racepack_location', 'Kampus Plaosan'),
+  ('futuristic-run', 'contact_person', '+62 856-4390-9808'),
+  ('futuristic-run', 'contact_person_name', 'Bimo Putra'),
+  ('futuristic-run', 'contact_person_whatsapp', '+62 856-4390-9808'),
+  ('futuristic-run', 'faq', 'Kapan & di mana? | Sabtu, 1 Agustus 2026, mulai 18.00 WIB, start/finish Alun-Alun Purworejo.
+Jarak lari berapa? | 5K (satu kategori).
+Berapa biaya & apa yang didapat? | Presale 1 Rp120.000 (100 pertama), Normal Rp135.000; dapat jersey, BIB, medali finisher, e-sertifikat, refreshment, doorprize.
+Bagaimana cara daftar & bayar? | Daftar online, bayar Transfer/DANA/QRIS, upload bukti, tunggu verifikasi.
+Ada hadiah juara? | Ada, per kategori usia & gender (lihat tabel hadiah).
+Pengambilan race pack kapan? | Dijadwalkan sebelum hari H; detail dikonfirmasi panitia via kontak/WhatsApp.'),
   ('futuristic-run', 'prize_umum_putra_juara1', '500000'),
   ('futuristic-run', 'prize_umum_putra_juara2', '400000'),
   ('futuristic-run', 'prize_umum_putra_juara3', '200000'),
@@ -148,18 +165,34 @@ INSERT INTO event_settings (event_type, key, value) VALUES
   ('fun-bike', 'registration_open', 'true'),
   ('fun-bike', 'registration_fee', '150000'),
   ('fun-bike', 'event_date', '2026-08-02T05:00:00+07:00'),
-  ('fun-bike', 'event_location', ''),
+  ('fun-bike', 'event_location', 'Alun-Alun Purworejo'),
+  ('fun-bike', 'event_location_address', 'Alun-Alun Purworejo, Purworejo, Jawa Tengah'),
+  ('fun-bike', 'location_lat', '-7.7130878'),
+  ('fun-bike', 'location_lng', '110.0090583'),
+  ('fun-bike', 'location_plus_code', '72P5+QJ'),
   ('fun-bike', 'early_bird_deadline', ''),
   ('fun-bike', 'registration_deadline', ''),
   ('fun-bike', 'quota_funbike', '300'),
   ('fun-bike', 'payment_bank_name', 'BRI'),
-  ('fun-bike', 'payment_bank_account', ''),
-  ('fun-bike', 'payment_bank_holder', 'Himatekno UMP'),
+  ('fun-bike', 'payment_bank_account', '007801112841503'),
+  ('fun-bike', 'payment_bank_holder', 'SYIFA FITRIYANTI'),
   ('fun-bike', 'payment_qris_nmid', ''),
+  ('fun-bike', 'payment_qris_merchant_name', 'SYIFA FITRIYANTI'),
   ('fun-bike', 'payment_qris_image_url', ''),
   ('fun-bike', 'payment_qris_image_key', ''),
   ('fun-bike', 'payment_transfer_enabled', 'true'),
-  ('fun-bike', 'payment_qris_enabled', 'true')
+  ('fun-bike', 'payment_qris_enabled', 'true'),
+  ('fun-bike', 'contact_person', '+62 856-4390-9808'),
+  ('fun-bike', 'contact_person_name', 'Bimo Putra'),
+  ('fun-bike', 'contact_person_whatsapp', '+62 856-4390-9808'),
+  ('fun-bike', 'bike_prize_amount', ''),
+  ('fun-bike', 'bike_route_note', 'Rute final menyusul technical meeting.'),
+  ('fun-bike', 'faq', 'Kapan & di mana Futuristic Bike? | Minggu, 2 Agustus 2026, mulai 05.00 WIB, start & finish di Alun-Alun Purworejo.
+Apakah ini lomba kecepatan? | Bukan, ini Fun Ride santai bertema sunrise, fokus kebersamaan.
+Apa saja yang didapat peserta? | Jersey, nomor peserta, e-sertifikat, refreshment, doorprize, hiburan, tim medis & marshal.
+Bagaimana cara daftar & bayar? | Daftar online di web, bayar via Transfer/DANA/QRIS, upload bukti, tunggu verifikasi.
+Bagaimana rutenya? | Rute pagi mengelilingi Purworejo dari & kembali ke Alun-Alun; detail checkpoint diumumkan saat technical meeting.
+Boleh ikut keluarga/anak? | Boleh, ini fun ride keluarga; anak harap didampingi.')
 ON CONFLICT (event_type, key) DO NOTHING;
 
 -- Schema sync for existing InsForge databases.

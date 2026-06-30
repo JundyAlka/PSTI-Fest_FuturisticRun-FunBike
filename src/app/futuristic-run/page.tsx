@@ -37,17 +37,21 @@ export default async function FuturisticRunPage() {
     <main className="page-animate relative bg-[#0A0E27] min-h-screen">
       <ScrollProgressBar color="#00E5FF" />
       <Navbar />
-      <HeroSection eventDate={ops.eventDate} locationLabel={locationLabel} />
+      <HeroSection eventDate={ops.eventDate} locationLabel={locationLabel} price={ops.price}
+        currentTierLabel={ops.currentTierLabel} presaleRemaining={ops.presaleRemaining}
+        presaleQuota={ops.presaleQuota} normalPrice={ops.normalPrice} />
       <AboutSection settings={ops.settings} quota={ops.quota} />
-      <CategoriesSection price={ops.price} quota={ops.quota} categoryLabel={ops.categoryLabel} />
+      <CategoriesSection price={ops.price} quota={ops.quota} categoryLabel={ops.categoryLabel}
+        currentTierLabel={ops.currentTierLabel} presaleRemaining={ops.presaleRemaining}
+        presaleQuota={ops.presaleQuota} normalPrice={ops.normalPrice} />
       <JerseySection />
       <RunChampionsSection settings={ops.settings} />
       <RacepackSection racepackLocation={ops.settings.racepack_location ?? "Kampus Plaosan"} />
       <LocationSection settings={ops.settings} />
       <TimelineSection eventDate={ops.eventDate} />
       <RulesSection settings={ops.settings} />
-      <FaqSection settings={ops.settings} contactPerson={ops.contactPerson} />
-      <Footer eventDate={ops.eventDate} locationLabel={locationLabel} />
+      <FaqSection settings={ops.settings} contactPerson={ops.contactPerson} fallbackItems={event.faq} />
+      <Footer eventDate={ops.eventDate} locationLabel={locationLabel} settings={ops.settings} contactPerson={ops.contactPerson} />
     </main>
     <script
       type="application/ld+json"
