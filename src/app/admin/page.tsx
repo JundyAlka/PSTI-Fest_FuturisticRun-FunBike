@@ -136,10 +136,10 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Filters ─────────────────────────────────────────────── */}
-      <div className="card-animated glass-card rounded-xl p-3 border border-[#1E3A5F] mb-6 flex flex-wrap items-center gap-3">
+      <div className="card-animated glass-card mb-6 flex flex-col gap-3 rounded-xl border border-[#1E3A5F] p-3 sm:flex-row sm:flex-wrap sm:items-center">
         <Filter size={14} className="text-[#B0C4DE]" />
         {/* Event filter tabs */}
-        <div className="flex gap-1 p-1 rounded-lg border border-[#1E3A5F] bg-[#080C20]">
+        <div className="grid w-full grid-cols-1 gap-1 rounded-lg border border-[#1E3A5F] bg-[#080C20] p-1 min-[430px]:grid-cols-3 sm:w-auto">
           <button
             onClick={() => setFilter("all")}
             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
@@ -163,12 +163,12 @@ export default function AdminDashboard() {
           ))}
         </div>
         {/* Date range */}
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:ml-auto sm:flex sm:w-auto">
           <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-            className="neon-input rounded-lg px-2 py-1.5 text-xs w-32" />
+            className="neon-input min-w-0 rounded-lg px-2 py-1.5 text-xs sm:w-32" />
           <span className="text-[#B0C4DE] text-xs">—</span>
           <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-            className="neon-input rounded-lg px-2 py-1.5 text-xs w-32" />
+            className="neon-input min-w-0 rounded-lg px-2 py-1.5 text-xs sm:w-32" />
         </div>
       </div>
 
@@ -177,7 +177,7 @@ export default function AdminDashboard() {
       ) : (
         <>
           {/* ── Summary stat cards ──────────────────────────────── */}
-          <div className="stagger-list grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="stagger-list mb-6 grid grid-cols-1 gap-3 min-[430px]:grid-cols-2 lg:grid-cols-4 lg:gap-4">
             {[
               { label: "Total Pendaftar", value: summary?.count ?? 0, icon: Users, color: "#00E5FF" },
               { label: "Terverifikasi", value: summary?.verified ?? 0, icon: CheckCircle, color: "#4ADE80" },
@@ -186,7 +186,7 @@ export default function AdminDashboard() {
             ].map((c) => (
               <div
                 key={c.label}
-                className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F] hover:border-opacity-60 transition-all duration-300"
+                className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-4 transition-all duration-300 hover:border-opacity-60 sm:p-5"
                 style={{ borderColor: `${c.color}20` }}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -210,8 +210,8 @@ export default function AdminDashboard() {
               return (
                 <div key={ev.slug} className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F] space-y-4">
                   {/* Event header */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
                       <div className="w-3 h-3 rounded-full" style={{ background: accent, boxShadow: `0 0 8px ${accent}` }} />
                       <h3 className="text-white font-bold text-sm" style={OFont}>{ev.name.toUpperCase()}</h3>
                       {ev.isOpen ? (
@@ -227,7 +227,7 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Stat row */}
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 gap-3 min-[430px]:grid-cols-4 min-[430px]:gap-2">
                     {[
                       { l: "Total", v: ev.count },
                       { l: "Verified", v: ev.verified },
@@ -265,7 +265,7 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Finance */}
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 gap-2 min-[430px]:grid-cols-3">
                     {[
                       { l: "Potensial", v: ev.finance.potential, c: "#B0C4DE" },
                       { l: "Terverifikasi", v: ev.finance.verified, c: "#4ADE80" },
@@ -314,7 +314,7 @@ export default function AdminDashboard() {
 
           {/* ── Health panel ────────────────────────────────────── */}
           <div className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F] mt-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
               <div className="flex items-center gap-2">
                 <Activity size={16} className="text-[#00E5FF]" />
                 <h3 className="text-white font-bold text-sm" style={OFont}>STATUS INSFORGE</h3>
@@ -342,7 +342,7 @@ export default function AdminDashboard() {
                 <span className="text-[#B0C4DE] text-xs">
                   Latency: {health.services.insforge.latencyMs}ms
                 </span>
-                <span className="text-[#B0C4DE] text-xs ml-auto">
+                <span className="text-[#B0C4DE] text-xs sm:ml-auto">
                   Cek terakhir: {new Date(health.checkedAt).toLocaleString("id-ID")}
                 </span>
               </div>

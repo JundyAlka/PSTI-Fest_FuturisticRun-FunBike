@@ -124,7 +124,7 @@ export default function DashboardCharts({ events, total, filter }: Props) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* ── Daily line chart ──────────────────────────────────── */}
-      <div className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F] lg:col-span-2">
+      <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-3 sm:p-5 lg:col-span-2">
         <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-2" style={OFont}>
           <span className="w-2 h-2 rounded-full bg-[#00E5FF]" style={{ boxShadow: "0 0 6px #00E5FF" }} />
           PENDAFTARAN HARIAN
@@ -158,14 +158,14 @@ export default function DashboardCharts({ events, total, filter }: Props) {
       </div>
 
       {/* ── Category bar chart ────────────────────────────────── */}
-      <div className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F]">
+      <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-3 sm:p-5">
         <h3 className="text-white font-bold text-sm mb-4" style={OFont}>PER KATEGORI</h3>
         <div className="h-48">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={categoryData} layout="vertical">
               <CartesianGrid stroke="#1E3A5F" strokeDasharray="3 3" />
               <XAxis type="number" tick={{ fill: "#B0C4DE", fontSize: 10 }} allowDecimals={false} />
-              <YAxis type="category" dataKey="label" tick={{ fill: "#B0C4DE", fontSize: 10 }} width={100} />
+              <YAxis type="category" dataKey="label" tick={{ fill: "#B0C4DE", fontSize: 10 }} width={72} />
               <Tooltip {...tooltipStyle} />
               <Bar dataKey="count" name="Pendaftar" radius={[0, 6, 6, 0]}>
                 {categoryData.map((_, i) => (
@@ -178,7 +178,7 @@ export default function DashboardCharts({ events, total, filter }: Props) {
       </div>
 
       {/* ── Jersey size bar chart ─────────────────────────────── */}
-      <div className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F]">
+      <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-3 sm:p-5">
         <h3 className="text-white font-bold text-sm mb-4" style={OFont}>UKURAN JERSEY</h3>
         <div className="h-48">
           <ResponsiveContainer width="100%" height="100%">
@@ -198,7 +198,7 @@ export default function DashboardCharts({ events, total, filter }: Props) {
       </div>
 
       {/* ── Status donut ──────────────────────────────────────── */}
-      <div className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F]">
+      <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-3 sm:p-5">
         <h3 className="text-white font-bold text-sm mb-4" style={OFont}>STATUS PEMBAYARAN</h3>
         <div className="h-48 flex items-center justify-center">
           {statusData.length > 0 ? (
@@ -221,14 +221,14 @@ export default function DashboardCharts({ events, total, filter }: Props) {
       </div>
 
       {/* ── Quota per category detail ─────────────────────────── */}
-      <div className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F]">
+      <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-3 sm:p-5">
         <h3 className="text-white font-bold text-sm mb-4" style={OFont}>KUOTA PER KATEGORI</h3>
         <div className="space-y-3">
           {events.flatMap((ev) =>
             ev.categories.map((cat) => (
               <div key={`${ev.slug}-${cat.code}`}>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-[#B0C4DE]">
+                <div className="mb-1 flex flex-col gap-1 text-xs min-[430px]:flex-row min-[430px]:justify-between">
+                  <span className="min-w-0 break-words text-[#B0C4DE]">
                     {ev.name} — {cat.label}
                   </span>
                   <span className="font-bold" style={{ color: cat.fillPercent >= 90 ? "#FF006E" : "#00E5FF" }}>

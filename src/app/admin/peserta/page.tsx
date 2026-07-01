@@ -151,14 +151,14 @@ export default function PesertaPage() {
   };
 
   return (
-    <div className="page-animate p-6 sm:p-8">
+    <div className="page-animate p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
         <div>
           <h1 className="text-2xl font-black text-white" style={{ fontFamily: "Orbitron, sans-serif" }}>PESERTA</h1>
           <p className="text-[#B0C4DE] text-sm mt-1">Total: {meta.total} peserta terdaftar</p>
         </div>
-        <a href={`/api/admin/export?eventType=${activeEvent}`} className="btn-outline-neon flex items-center gap-2 px-4 py-2 rounded-xl text-xs cursor-pointer">
+        <a href={`/api/admin/export?eventType=${activeEvent}`} className="btn-outline-neon flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs cursor-pointer min-[430px]:w-auto">
           <Download size={14} /> Export
         </a>
       </div>
@@ -191,9 +191,9 @@ export default function PesertaPage() {
 
       {/* Bulk action bar */}
       {selectedIds.size > 0 && (
-        <div className="card-animated flex items-center justify-between p-3 mb-4 rounded-xl border border-[#00E5FF]/40 bg-[#00E5FF]/5">
+        <div className="card-animated mb-4 flex flex-col gap-3 rounded-xl border border-[#00E5FF]/40 bg-[#00E5FF]/5 p-3 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-sm text-[#00E5FF] font-semibold">{selectedIds.size} peserta dipilih</span>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               disabled={bulkLoading}
               onClick={() => handleBulkVerify("verified")}
@@ -219,7 +219,7 @@ export default function PesertaPage() {
       )}
 
       {/* Filters */}
-      <div className="card-animated glass-card rounded-xl p-4 border border-[#1E3A5F] mb-5 flex flex-wrap gap-3">
+      <div className="card-animated glass-card mb-5 flex flex-col gap-3 rounded-xl border border-[#1E3A5F] p-4 sm:flex-row sm:flex-wrap">
         <div className="flex-1 min-w-48 relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#B0C4DE]" />
           <input
@@ -229,13 +229,13 @@ export default function PesertaPage() {
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 sm:flex">
           <Filter size={14} className="text-[#B0C4DE]" />
-          <select className="neon-input rounded-lg px-3 py-2 text-sm" value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }}>
+          <select className="neon-input min-w-0 rounded-lg px-3 py-2 text-sm" value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }}>
             <option value="all">Semua Peserta</option>
             <option value={activeEvent === "fun-bike" ? "funbike" : "5K"}>{activeEvent === "fun-bike" ? "Fun Ride" : "Run 5K"}</option>
           </select>
-          <select className="neon-input rounded-lg px-3 py-2 text-sm" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+          <select className="neon-input col-start-2 min-w-0 rounded-lg px-3 py-2 text-sm sm:col-start-auto" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
             <option value="all">Semua Status</option>
             <option value="pending">Pending</option>
             <option value="verified">Verified</option>
@@ -249,7 +249,38 @@ export default function PesertaPage() {
         {loading ? (
           <LoadingPanel label="Memuat peserta" />
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="divide-y divide-[#1E3A5F]/60 lg:hidden">
+            {participants.length === 0 ? (
+              <div className="px-4 py-12 text-center text-sm text-[#B0C4DE]">Tidak ada peserta ditemukan</div>
+            ) : participants.map((p) => (
+              <article key={p.id} className="space-y-4 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-mono text-xs text-[#00E5FF]">{p.reg_number}</div>
+                    <h2 className="mt-1 break-words font-semibold text-white">{p.full_name}</h2>
+                  </div>
+                  <button onClick={() => toggleSelect(p.id)} className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-[#1E3A5F] text-[#B0C4DE]" aria-label={`Pilih ${p.full_name}`}>
+                    <CheckSquare size={16} className={selectedIds.has(p.id) ? "text-[#00E5FF]" : ""} />
+                  </button>
+                </div>
+                <dl className="grid grid-cols-2 gap-3 text-xs">
+                  <div><dt className="text-[#5A7899]">Event</dt><dd className="mt-1 break-words text-[#B0C4DE]">{p.event_type === "fun-bike" ? "Futuristic Bike" : "Futuristic Run"}</dd></div>
+                  <div><dt className="text-[#5A7899]">Kategori</dt><dd className="mt-1 text-[#00E5FF]">{p.category}</dd></div>
+                  <div><dt className="text-[#5A7899]">Jersey / BIB</dt><dd className="mt-1 break-words text-[#B0C4DE]">{p.jersey_size} / {p.bib_name || "—"}</dd></div>
+                  <div><dt className="text-[#5A7899]">Kota</dt><dd className="mt-1 break-words text-[#B0C4DE]">{p.city}</dd></div>
+                  <div><dt className="text-[#5A7899]">Total</dt><dd className="mt-1 font-semibold text-[#FFD700]">{formatCurrency(p.payment_amount ?? 0)}</dd></div>
+                  <div><dt className="text-[#5A7899]">Status</dt><dd className="mt-1 font-semibold" style={{ color: getPaymentStatusColor(p.payment_status) }}>{getPaymentStatusLabel(p.payment_status)}</dd></div>
+                </dl>
+                <div className="flex flex-wrap items-center gap-2 border-t border-[#1E3A5F]/40 pt-3">
+                  {p.payment_proof && <a href={p.payment_proof} target="_blank" rel="noopener noreferrer" className="flex min-h-10 items-center gap-2 rounded-lg border border-[#1E3A5F] px-3 text-xs text-[#00E5FF]"><Eye size={15} /> Bukti</a>}
+                  <button onClick={() => { setSelected(p); setRejectNotes(""); setActionError(""); }} className="flex min-h-10 items-center gap-2 rounded-lg border border-[#00E5FF]/30 bg-[#00E5FF]/5 px-3 text-xs text-[#00E5FF]"><Eye size={15} /> Detail</button>
+                  <button onClick={() => requestDelete(p.id, p.full_name)} className="ml-auto flex min-h-10 items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/5 px-3 text-xs text-red-400"><Trash2 size={15} /> Hapus</button>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto lg:block">
             <table className="w-full min-w-[1280px] text-sm">
               <thead>
                 <tr className="border-b border-[#1E3A5F] bg-[#0F1535]">
@@ -329,6 +360,7 @@ export default function PesertaPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
 
         {/* Pagination */}
@@ -350,9 +382,9 @@ export default function PesertaPage() {
       {/* Detail / Verify Modal */}
       {selected && createPortal(
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-[8vh] pb-6 px-4 sm:px-6 overflow-y-auto" style={{ background: "rgba(5,8,22,0.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }} onClick={(e) => { if (e.target === e.currentTarget) setSelected(null); }}>
-          <div className="w-full max-w-lg max-h-[84vh] flex flex-col rounded-2xl border border-[#1E3A5F]/80 shadow-[0_8px_64px_rgba(0,229,255,0.08),0_0_0_1px_rgba(30,58,95,0.5)] overflow-hidden" style={{ background: "linear-gradient(180deg, #0D1330 0%, #0A0E27 100%)", animation: "modalSlideUp .25s cubic-bezier(.22,1,.36,1)" }}>
+          <div className="flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-[#1E3A5F]/80 shadow-[0_8px_64px_rgba(0,229,255,0.08),0_0_0_1px_rgba(30,58,95,0.5)] sm:max-h-[84vh]" style={{ background: "linear-gradient(180deg, #0D1330 0%, #0A0E27 100%)", animation: "modalSlideUp .25s cubic-bezier(.22,1,.36,1)" }}>
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#1E3A5F]/60 shrink-0">
+            <div className="flex shrink-0 items-center justify-between border-b border-[#1E3A5F]/60 px-4 py-4 sm:px-6">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-[#00E5FF]/10 border border-[#00E5FF]/20 flex items-center justify-center">
                   <Eye size={14} className="text-[#00E5FF]" />
@@ -363,9 +395,9 @@ export default function PesertaPage() {
             </div>
 
             {/* Scrollable Content */}
-            <div className="p-6 overflow-y-auto flex-1 space-y-5">
+            <div className="flex-1 space-y-5 overflow-y-auto p-4 sm:p-6">
               {/* Info grid */}
-              <div className="grid grid-cols-2 gap-x-5 gap-y-4">
+              <div className="grid grid-cols-1 gap-3 min-[430px]:grid-cols-2 min-[430px]:gap-x-5 min-[430px]:gap-y-4">
                 {[
                   { label: "No. Reg", value: selected.reg_number, accent: true },
                   { label: "Nama", value: selected.full_name, accent: false },
@@ -427,9 +459,9 @@ export default function PesertaPage() {
             </div>
 
             {/* Footer Actions */}
-            <div className="px-6 py-4 border-t border-[#1E3A5F]/60 shrink-0 space-y-3" style={{ background: "rgba(10,14,39,0.95)" }}>
+            <div className="shrink-0 space-y-3 border-t border-[#1E3A5F]/60 px-4 py-4 sm:px-6" style={{ background: "rgba(10,14,39,0.95)" }}>
               {selected.payment_status === "pending" && (
-                <div className="flex gap-3">
+                <div className="grid grid-cols-1 gap-3 min-[430px]:grid-cols-2">
                   <button
                     disabled={actionLoading || !selected.payment_proof}
                     onClick={() => handleVerify(selected.id, "verified")}
@@ -446,7 +478,7 @@ export default function PesertaPage() {
                   </button>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 min-[430px]:grid-cols-2">
                 <button onClick={() => handleResendEmail(selected.id)} className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-semibold border border-[#1E3A5F] text-[#B0C4DE] hover:text-white hover:border-[#00E5FF]/40 hover:bg-[#00E5FF]/5 transition-all cursor-pointer">
                   <Mail size={13} /> Kirim Email
                 </button>

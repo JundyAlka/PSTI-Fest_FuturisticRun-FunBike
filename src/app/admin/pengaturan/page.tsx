@@ -103,7 +103,7 @@ function SectionCard({ icon: Icon, title, color = "#00E5FF", children }: {
   icon: React.ElementType; title: string; color?: string; children: React.ReactNode;
 }) {
   return (
-    <div className="card-animated glass-card rounded-2xl p-6 border border-[#1E3A5F]">
+    <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-4 sm:p-6">
       <div className="flex items-center gap-2 mb-5">
         <Icon size={16} style={{ color }} />
         <h2 className="text-white font-bold text-sm" style={{ fontFamily: "Orbitron, sans-serif" }}>
@@ -117,8 +117,8 @@ function SectionCard({ icon: Icon, title, color = "#00E5FF", children }: {
 
 function Toggle({ label, desc, value, onChange }: { label: string; desc: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="card-animated flex items-center justify-between p-4 rounded-xl bg-[#0A0E27] border border-[#1E3A5F]">
-      <div>
+    <div className="card-animated flex items-start justify-between gap-3 rounded-xl border border-[#1E3A5F] bg-[#0A0E27] p-4 sm:items-center">
+      <div className="min-w-0">
         <div className="text-white font-semibold text-sm">{label}</div>
         <div className="text-[#B0C4DE] text-xs mt-0.5">{desc}</div>
       </div>
@@ -349,7 +349,7 @@ export default function PengaturanPage() {
   };
 
   return (
-    <div className="page-animate p-6 sm:p-8 max-w-3xl">
+    <div className="page-animate w-full max-w-3xl p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-black text-white mb-1" style={{ fontFamily: "Orbitron, sans-serif" }}>
@@ -376,7 +376,7 @@ export default function PengaturanPage() {
       </div>
 
       {/* Tabs */}
-      <div className="card-animated flex gap-2 mb-6 p-1 glass-card rounded-xl border border-[#1E3A5F]">
+      <div className="card-animated mb-6 grid grid-cols-1 gap-1 rounded-xl border border-[#1E3A5F] p-1 glass-card min-[430px]:grid-cols-3">
         {tabs.map((tab) => (
           <button
             key={tab.id}
