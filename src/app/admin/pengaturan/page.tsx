@@ -445,7 +445,13 @@ export default function PengaturanPage() {
                       <input
                         type={type}
                         className={inp}
-                        value={key === "event_date" ? toDateTimeLocal(settings[key]) : settings[key]}
+                        value={
+                          key === "event_date" && settings[key]
+                            ? toDateTimeLocal(settings[key])
+                            : type === "date" && settings[key]
+                            ? settings[key].split("T")[0]
+                            : settings[key]
+                        }
                         placeholder={placeholder}
                         onChange={(e) => set(
                           key,
@@ -865,17 +871,137 @@ export default function PengaturanPage() {
 
           {saveError && (
             <div role="alert" className="flex items-start gap-2 rounded-xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[#B0C4DE] text-sm mb-1.5">NMID (Nomor Merchant)</label>
+                    <input
+                      type="text"
+                      className={inp}
+                      value={settings.payment_qris_nmid}
+                      placeholder="Contoh: ID1020304050607"
+                      onChange={(e) => set("payment_qris_nmid", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[#B0C4DE] text-sm mb-1.5">Nama Merchant</label>
+                    <input
+                      type="text"
+                      className={inp}
+                      value={settings.payment_qris_merchant_name}
+                      placeholder="Nama merchant pada QRIS"
+                      onChange={(e) => set("payment_qris_merchant_name", e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[#B0C4DE] text-sm mb-1.5">Gambar QR Code</label>
+                    <label className="flex items-center justify-center gap-2 cursor-pointer rounded-xl border-2 border-dashed border-[#8B00FF]/40 py-3 px-4 text-[#8B00FF] hover:border-[#8B00FF]/70 transition-colors">
+                      {qrisUploading ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          <span className="text-sm">Mengunggah...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={16} />
+                          <span className="text-sm font-semibold">Upload Gambar QRIS (JPG/PNG/WebP, maks 3MB)</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp"
+                        className="hidden"
+                        onChange={handleQrisUpload}
+                        disabled={qrisUploading}
+                      />
+                    </label>
+                    {qrisUploadError && (
+                      <p className="text-red-400 text-xs mt-1.5">{qrisUploadError}</p>
+                    )}
+                    {settings.payment_qris_image_url && (
+                      <p className="text-green-400 text-xs mt-1.5">✓ Gambar berhasil diupload</p>
+                    )}
+                  </div>
+
+                  {/* QRIS Preview */}
+                  <div className="p-4 rounded-xl border border-[#8B00FF]/20 bg-[#8B00FF]/5">
+                    <div className="text-[#8B00FF] text-xs font-bold tracking-widest mb-3" style={{ fontFamily: "Orbitron, sans-serif" }}>
+                      PREVIEW QR CODE
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="w-32 h-32 bg-white rounded-xl p-2 flex items-center justify-center flex-shrink-0">
+                        {settings.payment_qris_image_url ? (
+                          <img
+                            src={settings.payment_qris_image_url}
+                            alt="QRIS"
+                            className="w-full h-full object-contain rounded"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                          />
+                        ) : (
+                          <div className="w-full h-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400">
+                            <QrCode size={28} />
+                            <span className="text-[9px] mt-1 text-center">Belum ada QR</span>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-white font-bold text-sm">{settings.payment_qris_merchant_name || "Nama merchant"}</div>
+                        {settings.payment_qris_nmid && (
+                          <div className="text-[#B0C4DE] text-xs mt-0.5">NMID: {settings.payment_qris_nmid}</div>
+                        )}
+                        <div className="text-[#FFD700] font-black mt-1" style={{ fontFamily: "Orbitron, sans-serif" }}>
+                          {feeFormatted}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </SectionCard>
+
+              <SectionCard icon={CreditCard} title="INSTRUKSI & BATAS PEMBAYARAN" color="#FFD700">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-[#B0C4DE] text-sm mb-1.5">Instruksi Umum</label>
+                    <textarea
+                      className={`${inp} min-h-32 resize-y`}
+                      value={settings.payment_instructions}
+                      onChange={(e) => set("payment_instructions", e.target.value)}
+                      maxLength={2000}
+                      placeholder="Tulis instruksi pembayaran. Baris baru akan dipertahankan."
+                    />
+                    <p className="mt-1 text-xs text-[#B0C4DE]">Mendukung paragraf/baris baru, maksimal 2.000 karakter.</p>
+                  </div>
+                  <div>
+                    <label className="block text-[#B0C4DE] text-sm mb-1.5">Batas Waktu Setelah Daftar (jam)</label>
+                    <input
+                      type="number"
+                      className={inp}
+                      value={settings.payment_deadline_hours}
+                      onChange={(e) => set("payment_deadline_hours", e.target.value)}
+                      min={1}
+                      max={168}
+                    />
+                  </div>
+                </div>
+              </SectionCard>
+            </>
+          )}
+
+          {saveError && (
+            <div role="alert" className="flex items-start gap-2 rounded-xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">
               <AlertCircle size={17} className="mt-0.5 shrink-0" />
               <span>{saveError}</span>
             </div>
           )}
 
           {/* Save button */}
-          {activeTab !== "pricing" && <button
-            onClick={handleSave}
-            disabled={saving}
-            className="btn-neon flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold disabled:opacity-50 cursor-pointer w-full sm:w-auto justify-center"
-          >
+          {activeTab !== "pricing" && (
+            <div className="sticky bottom-6 z-40 mt-8 flex justify-end">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="btn-neon shadow-[0_0_20px_rgba(0,229,255,0.4)] flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold disabled:opacity-50 cursor-pointer w-full sm:w-auto justify-center"
+              >
             {saving ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : saved ? (
@@ -884,7 +1010,9 @@ export default function PengaturanPage() {
               <Save size={16} />
             )}
             {saved ? "✓ TERSIMPAN!" : saving ? "Menyimpan..." : "SIMPAN PENGATURAN"}
-          </button>}
+          </button>
+          </div>
+          )}
         </div>
       )}
     </div>

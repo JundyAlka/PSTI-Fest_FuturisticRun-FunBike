@@ -5,6 +5,42 @@ import { EVENTS } from "@/content/events";
 import * as xlsx from "xlsx";
 import { writeActivityLog } from "@/lib/serverAudit";
 
+type ExportParticipant = {
+  reg_number: string;
+  event_type: string;
+  full_name: string;
+  nik: string | null;
+  gender: string | null;
+  birth_place: string | null;
+  birth_date: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  province: string | null;
+  category: string | null;
+  jersey_size: string | null;
+  bib_name: string | null;
+  bib_number: string | null;
+  blood_type: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  payment_method: string | null;
+  payment_status: string | null;
+  payment_amount: number | null;
+  created_at: string;
+  verified_by: string | null;
+  verified_at: string | null;
+  rejection_reason: string | null;
+};
+
+function formatDate(value: string | null, withTime = false) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return withTime ? date.toLocaleString("id-ID") : date.toLocaleDateString("id-ID");
+}
+
 export async function GET(req: NextRequest) {
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -27,14 +63,15 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: "Server error" }, { status: 500 });
 
-  const mapRow = (p: any) => ({
+  const list = (participants ?? []) as ExportParticipant[];
+  const mapRow = (p: ExportParticipant) => ({
     "No. Registrasi": p.reg_number,
     "Event": p.event_type === "fun-bike" ? EVENTS["fun-bike"].name : EVENTS["futuristic-run"].name,
     "Nama Lengkap": p.full_name,
     NIK: p.nik,
-    "Jenis Kelamin": p.gender === "male" ? "Laki-laki" : "Perempuan",
+    "Jenis Kelamin": p.gender === "male" ? "Laki-laki" : p.gender === "female" ? "Perempuan" : "-",
     "Tempat Lahir": p.birth_place,
-    "Tanggal Lahir": new Date(p.birth_date).toLocaleDateString("id-ID"),
+    "Tanggal Lahir": formatDate(p.birth_date),
     Email: p.email,
     "No. HP": p.phone,
     Alamat: p.address,
@@ -50,15 +87,15 @@ export async function GET(req: NextRequest) {
     "Metode Pembayaran": p.payment_method ?? "-",
     "Status Pembayaran": p.payment_status,
     "Biaya (Rp)": p.payment_amount,
-    "Tanggal Daftar": new Date(p.created_at).toLocaleString("id-ID"),
+    "Tanggal Daftar": formatDate(p.created_at, true),
     "Diverifikasi Oleh": p.verified_by ?? "-",
-    "Tanggal Verifikasi": p.verified_at ? new Date(p.verified_at).toLocaleString("id-ID") : "-",
+    "Tanggal Verifikasi": formatDate(p.verified_at, true),
     Catatan: p.rejection_reason ?? "-",
   });
 
-  const allRows = (participants ?? []).map(mapRow);
-  const funRunRows = (participants ?? []).filter((p) => p.event_type === "futuristic-run").map(mapRow);
-  const funBikeRows = (participants ?? []).filter((p) => p.event_type === "fun-bike").map(mapRow);
+  const allRows = list.map(mapRow);
+  const funRunRows = list.filter((p) => p.event_type === "futuristic-run").map(mapRow);
+  const funBikeRows = list.filter((p) => p.event_type === "fun-bike").map(mapRow);
 
   const wb = xlsx.utils.book_new();
 
