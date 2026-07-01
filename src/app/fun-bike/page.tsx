@@ -359,35 +359,31 @@ export default async function FunBikePage() {
 
         <section id="jersey" className="overflow-hidden bg-[linear-gradient(180deg,#FFF7ED_0%,#FFFFFF_100%)] pb-6 pt-12 sm:py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <SectionHeading
-              eyebrow="JERSEY & RACEPACK"
-              title="JERSEY FUN BIKE SUDAH FIKS"
-              accentColor="#FF6B2C"
-              accentColor2="#F59E0B"
-              lightSurface={true}
-              subtitle="Paket peserta berisi jersey Fun Bike, racepack/goodie, dan kebutuhan ride pagi sesuai ketentuan panitia."
-            />
+            <div className="mb-12 text-center">
+              <div className="badge-sunrise mb-4 inline-block">JERSEY & RACEPACK</div>
+              <h2 className="mb-4 text-4xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>JERSEY FUN BIKE SUDAH FIKS</h2>
+              <p className="mx-auto max-w-2xl text-sm leading-6 text-gray-500">
+                Paket peserta berisi jersey Fun Bike, racepack/goodie, dan kebutuhan ride pagi sesuai ketentuan panitia.
+              </p>
+            </div>
             <div className="grid gap-6 lg:grid-cols-3">
               {[
                 { icon: Shirt, title: "Jersey Fun Bike", items: ["Desain sudah fiks", "Tema sunrise cerah", "Dipilih ukurannya saat daftar"] },
                 { icon: Package, title: "Racepack / Goodie", items: event.racepack },
                 { icon: Ticket, title: "Benefit", items: event.benefit },
               ].map(({ icon: Icon, title, items }) => (
-                <div key={title} className="card-animated rounded-3xl border border-orange-200/50 bg-white/60 backdrop-blur-md p-8 shadow-xl shadow-orange-900/5 hover:shadow-2xl hover:shadow-orange-500/15 hover:-translate-y-1 transition-all duration-500 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 -mr-6 -mt-6 w-40 h-40 rounded-full bg-gradient-to-br from-orange-300 to-rose-300 opacity-20 blur-2xl group-hover:scale-150 group-hover:opacity-30 transition-all duration-700" />
-                  <div className="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 rounded-full bg-gradient-to-tr from-amber-200 to-orange-400 opacity-15 blur-2xl group-hover:scale-125 transition-all duration-700" />
+                <div key={title} className="card-animated rounded-3xl border-2 border-orange-200 bg-white p-7 shadow-md hover:shadow-lg transition-all relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 -mr-6 -mt-6 w-32 h-32 rounded-full bg-orange-50 opacity-50 group-hover:scale-150 transition-transform duration-500" />
                   <div className="relative z-10">
-                    <div className="mb-6 inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-50 to-white shadow-sm border border-orange-100">
-                      <AnimatedIcon color="#FF6B2C" animate={title.includes("Jersey") ? "sway" : title.includes("Racepack") ? "bounce" : "pulse"}>
-                        <Icon size={26} />
-                      </AnimatedIcon>
-                    </div>
-                    <h3 className="mb-6 text-2xl font-black bg-gradient-to-br from-gray-900 to-gray-700 bg-clip-text text-transparent" style={{ fontFamily: "Orbitron, sans-serif" }}>{title}</h3>
+                    <AnimatedIcon color="#FF6B2C" animate={title.includes("Jersey") ? "sway" : title.includes("Racepack") ? "bounce" : "pulse"} className="mb-5">
+                      <Icon size={28} />
+                    </AnimatedIcon>
+                    <h3 className="mb-5 text-xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>{title}</h3>
                     <ul className="space-y-4">
                       {items.map((item) => (
-                        <li key={item} className="flex items-start gap-3 text-sm font-semibold text-gray-600 group/item">
-                          <CheckCircle size={20} className="flex-shrink-0 mt-0.5 text-orange-400 group-hover/item:text-[#FF6B2C] group-hover/item:scale-110 transition-all duration-300" />
-                          <span className="group-hover/item:text-gray-900 transition-colors leading-relaxed">{item}</span>
+                        <li key={item} className="flex items-start gap-3 text-sm font-medium text-gray-700">
+                          <CheckCircle size={18} className="flex-shrink-0 mt-0.5 text-[#FF6B2C]" />
+                          {item}
                         </li>
                       ))}
                     </ul>
@@ -401,38 +397,28 @@ export default async function FunBikePage() {
         <section className="overflow-hidden bg-white pb-5 pt-4 sm:py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-6 lg:grid-cols-2">
-              <div className="relative rounded-3xl bg-gradient-to-br from-[#FF6B2C] to-[#F59E0B] p-8 sm:p-10 shadow-2xl shadow-orange-500/20 overflow-hidden group hover:-translate-y-1 transition-transform duration-500">
-                <div className="absolute top-0 right-0 w-72 h-72 bg-white/20 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-125 transition-transform duration-700" />
-                <div className="absolute bottom-0 left-0 w-52 h-52 bg-white/10 rounded-full blur-2xl -ml-20 -mb-20" />
-                <div className="relative z-10">
-                  <div className="mb-6 inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white shadow-inner">
-                    <Gift size={26} />
-                  </div>
-                  <h2 className="mb-6 text-3xl font-black text-white drop-shadow-sm tracking-wide" style={{ fontFamily: "Orbitron, sans-serif" }}>DOORPRIZE</h2>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {event.doorprize.map((item) => (
-                      <div key={item} className="shimmer-showcase rounded-xl bg-white/15 backdrop-blur-md border border-white/20 p-4 text-sm font-bold text-white shadow-sm hover:bg-white/25 hover:border-white/40 transition-all duration-300">
-                        {item}
-                      </div>
-                    ))}
-                  </div>
+              <div className="rounded-3xl border-2 border-orange-200 bg-gradient-to-br from-[#FFF7ED] to-white p-6 shadow-md">
+                <AnimatedIcon color="#FF6B2C" animate="bounce" className="mb-4">
+                  <Gift size={24} />
+                </AnimatedIcon>
+                <h2 className="mb-4 text-3xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>DOORPRIZE</h2>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {event.doorprize.map((item) => (
+                    <div key={item} className="shimmer-showcase rounded-xl border border-orange-100 bg-white/75 p-4 text-sm font-semibold text-gray-700 shadow-sm">{item}</div>
+                  ))}
                 </div>
               </div>
-              <div className="relative rounded-3xl bg-gradient-to-br from-[#0284C7] to-[#00E5FF] p-8 sm:p-10 shadow-2xl shadow-cyan-500/20 overflow-hidden group hover:-translate-y-1 transition-transform duration-500">
-                <div className="absolute top-0 right-0 w-72 h-72 bg-white/20 rounded-full blur-3xl -mr-20 -mt-20 group-hover:scale-125 transition-transform duration-700" />
-                <div className="absolute bottom-0 left-0 w-52 h-52 bg-white/10 rounded-full blur-2xl -ml-20 -mb-20" />
-                <div className="relative z-10">
-                  <div className="mb-6 inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white shadow-inner">
-                    <Music size={26} />
-                  </div>
-                  <h2 className="mb-6 text-3xl font-black text-white drop-shadow-sm tracking-wide" style={{ fontFamily: "Orbitron, sans-serif" }}>HIBURAN</h2>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {event.hiburan.map((item) => (
-                      <div key={item} className="rounded-xl bg-white/15 backdrop-blur-md border border-white/20 p-4 text-sm font-bold text-white shadow-sm hover:bg-white/25 hover:border-white/40 transition-all duration-300">
-                        {item}
-                      </div>
-                    ))}
-                  </div>
+              <div className="rounded-3xl border-2 border-sky-200 bg-gradient-to-br from-[#EFF6FF] to-white p-6 shadow-md">
+                <AnimatedIcon color="#38BDF8" animate="sway" className="mb-4">
+                  <Music size={24} />
+                </AnimatedIcon>
+                <h2 className="mb-4 text-3xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>HIBURAN</h2>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {event.hiburan.map((item) => (
+                    <div key={item} className="rounded-xl border border-sky-100 bg-white/75 p-4 text-sm font-semibold text-gray-700 shadow-sm">
+                      {item}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
