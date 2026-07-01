@@ -13,7 +13,6 @@ const navLinks = [
   { label: "Racepack", href: "#racepack" },
   { label: "Rundown", href: "#timeline" },
   { label: "FAQ", href: "#faq" },
-  { label: "Pendaftaran", href: "/futuristic-run/daftar", isRoute: true },
 ];
 
 export default function Navbar() {
@@ -78,18 +77,6 @@ export default function Navbar() {
               {navLinks.map((link) => {
                 const sectionId = link.href.replace("#", "");
                 const isActive = activeSection === sectionId;
-                if (link.isRoute) {
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="text-sm font-semibold px-4 py-1.5 rounded-full border border-[#00E5FF]/40 text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-all duration-300"
-                      style={{ fontFamily: "Inter, sans-serif" }}
-                    >
-                      {link.label}
-                    </Link>
-                  );
-                }
                 return (
                   <a
                     key={link.href}
@@ -145,27 +132,16 @@ export default function Navbar() {
           </button>
         </div>
         <div className="stagger-list flex flex-col gap-2 px-6 py-4">
-          {navLinks.map((link) =>
-            link.isRoute ? (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMenuOpen(false)}
-                className="card-animated text-[#00E5FF] border border-[#00E5FF]/30 py-3 px-4 rounded-lg hover:bg-[#00E5FF]/10 transition-all duration-200 font-semibold text-center"
-              >
-                {link.label}
-              </Link>
-            ) : (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setMenuOpen(false)}
-                className="card-animated text-[#B0C4DE] hover:text-[#00E5FF] py-3 px-4 rounded-lg hover:bg-[#00E5FF]/10 transition-all duration-200 font-medium"
-              >
-                {link.label}
-              </a>
-            )
-          )}
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              onClick={() => setMenuOpen(false)}
+              className="card-animated text-[#B0C4DE] hover:text-[#00E5FF] py-3 px-4 rounded-lg hover:bg-[#00E5FF]/10 transition-all duration-200 font-medium"
+            >
+              {link.label}
+            </a>
+          ))}
           <Link
             href="/futuristic-run/daftar"
             onClick={() => setMenuOpen(false)}
