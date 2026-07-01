@@ -1,6 +1,6 @@
 import { HelpCircle } from "lucide-react";
 
-export const TBD_LABEL = "Segera diumumkan";
+export const TBD_LABEL = "Informasi menyusul";
 
 export function hasAnnouncedValue(value: unknown): boolean {
   if (value === null || value === undefined) return false;

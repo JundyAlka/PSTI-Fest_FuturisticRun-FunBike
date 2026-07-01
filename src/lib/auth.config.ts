@@ -10,6 +10,9 @@ import type { NextAuthConfig } from "next-auth";
 const authSecret = process.env.AUTH_SECRET ?? process.env.INSFORGE_API_KEY ?? process.env.API_KEY;
 
 export const authConfig: NextAuthConfig = {
+  // Vercel preview/production hosts can change between deployments. Derive the
+  // callback origin from the active request instead of pinning a deployment URL.
+  trustHost: true,
   session: { strategy: "jwt" },
   secret: authSecret,
   pages: {
@@ -30,6 +33,14 @@ export const authConfig: NextAuthConfig = {
         session.user.role = token.role;
       }
       return session;
+    },
+    redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      try {
+        return new URL(url).origin === baseUrl ? url : `${baseUrl}/admin`;
+      } catch {
+        return `${baseUrl}/admin`;
+      }
     },
     authorized({ auth, request }) {
       const { pathname } = request.nextUrl;

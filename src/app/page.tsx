@@ -218,7 +218,10 @@ export default async function HubPage() {
   const ops = await getPublicEventsOps(EVENT_LIST.map((event) => event.slug));
   const quota = totalQuota(ops);
   const primaryDate = ops["futuristic-run"].eventDate;
-  const primaryLocation = ops["futuristic-run"].location ?? ops["fun-bike"].location;
+  const primaryLocation = ops["futuristic-run"].location
+    ?? ops["fun-bike"].location
+    ?? EVENT_LIST[0].location?.label
+    ?? EVENT_LIST[1].location?.label;
   const hubJsonLd = EVENT_LIST.map((item) => eventJsonLd(withOperationalEventSeo(
     EVENT_SEO[item.slug],
     ops[item.slug].eventDate,

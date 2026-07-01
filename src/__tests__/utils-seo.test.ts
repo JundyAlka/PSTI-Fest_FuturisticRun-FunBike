@@ -50,7 +50,7 @@ describe("formatDate", () => {
 
 describe("getPaymentStatusLabel", () => {
   it("returns correct labels", () => {
-    expect(getPaymentStatusLabel("pending")).toBe("Menunggu Pembayaran");
+    expect(getPaymentStatusLabel("pending")).toBe("Menunggu Verifikasi");
     expect(getPaymentStatusLabel("verified")).toBe("Terverifikasi");
     expect(getPaymentStatusLabel("rejected")).toBe("Ditolak");
   });

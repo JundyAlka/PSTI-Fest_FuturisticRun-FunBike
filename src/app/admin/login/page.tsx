@@ -24,7 +24,8 @@ export default function AdminLoginPage() {
       if (res?.error) {
         setError("Email atau password salah");
       } else {
-        router.push("/admin");
+        router.replace("/admin");
+        router.refresh();
       }
     } catch {
       setError("Terjadi kesalahan. Coba lagi.");

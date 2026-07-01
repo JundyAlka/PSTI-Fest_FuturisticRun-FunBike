@@ -592,7 +592,7 @@ export default function PengaturanPage() {
                       key: "benefit_race_pack_contents" as keyof SettingsState,
                       label: "Isi Final Race Pack + BIB",
                       placeholder: "Contoh: Jersey, BIB warna per kategori, goodie bag, kotak centang refreshment & medali",
-                      help: "Konten ini langsung menggantikan badge Segera diumumkan di halaman Run.",
+                      help: "Konten ini langsung menggantikan badge Informasi menyusul di halaman Run.",
                     },
                   ].map(({ key, label, placeholder, help }) => (
                     <div key={key}>
@@ -638,7 +638,7 @@ export default function PengaturanPage() {
                       </div>
                     </div>
                   ))}
-                  <p className="text-xs leading-5 text-[#B0C4DE]">Kosongkan nominal kategori SD untuk menampilkan “Segera diumumkan”. Nilai kategori lain memakai nominal anggaran sebagai default.</p>
+                  <p className="text-xs leading-5 text-[#B0C4DE]">Kosongkan nominal kategori SD untuk menampilkan “Informasi menyusul”. Nilai kategori lain memakai nominal anggaran sebagai default.</p>
                 </div>
               </SectionCard>}
             </>
