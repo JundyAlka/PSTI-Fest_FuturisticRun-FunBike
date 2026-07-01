@@ -49,9 +49,14 @@ const paymentCache = new Map<EventDateSlug, PaymentInfoResponse>();
 function defaults(eventType: EventDateSlug): PaymentInfoResponse {
   const bank = { enabled: true, name: "BRI", account: "007801112841503", holder: "SYIFA FITRIYANTI" };
   const dana = { enabled: false, number: "", holder: "" };
-  const qris = { enabled: false, nmid: "", imageUrl: "", merchantName: "" };
+  const qris = {
+    enabled: true,
+    nmid: "ID1026540800533",
+    imageUrl: "/qris-payment.png",
+    merchantName: "FUTURISTIC VIBES, HIBURAN",
+  };
   return {
-    methods: ["bank"],
+    methods: ["bank", "qris"],
     bank,
     dana,
     qris,
@@ -130,10 +135,10 @@ function fromSettings(
     holder: map.payment_dana_holder || "",
   };
   const qris = {
-    enabled: map.payment_qris_enabled === "true" && Boolean(map.payment_qris_nmid && map.payment_qris_image_url && (map.payment_qris_merchant_name || map.payment_bank_holder)),
+    enabled: map.payment_qris_enabled === "true" && Boolean((map.payment_qris_nmid || fallback.qris.nmid) && (map.payment_qris_image_url || fallback.qris.imageUrl) && (map.payment_qris_merchant_name || map.payment_bank_holder || fallback.qris.merchantName)),
     nmid: map.payment_qris_nmid || fallback.qris.nmid,
-    imageUrl: map.payment_qris_image_url || "",
-    merchantName: map.payment_qris_merchant_name || map.payment_bank_holder || "",
+    imageUrl: map.payment_qris_image_url || fallback.qris.imageUrl,
+    merchantName: map.payment_qris_merchant_name || map.payment_bank_holder || fallback.qris.merchantName,
   };
   const parsedFee = Number.parseInt(map.registration_fee ?? "", 10);
   const methods: PaymentInfoResponse["methods"] = [];

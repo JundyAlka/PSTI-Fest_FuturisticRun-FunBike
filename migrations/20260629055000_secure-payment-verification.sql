@@ -108,3 +108,6 @@ END;
 $$;
 
 REVOKE ALL ON FUNCTION public.review_participant_payment_v1(INTEGER, TEXT, TEXT, TEXT, INTEGER) FROM PUBLIC;
+
+-- Make newly created RPCs available to the REST gateway immediately.
+NOTIFY pgrst, 'reload schema';

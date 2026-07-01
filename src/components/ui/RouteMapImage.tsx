@@ -7,10 +7,8 @@ import { createPortal } from "react-dom";
 export default function RouteMapImage({ theme = "run" }: { theme?: "run" | "bike" }) {
   const isRun = theme === "run";
   const [isOpen, setIsOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
@@ -68,7 +66,7 @@ export default function RouteMapImage({ theme = "run" }: { theme?: "run" | "bike
         </div>
       </div>
 
-      {mounted && isOpen && createPortal(
+      {isOpen && createPortal(
         <div 
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl transition-all duration-300"
           onClick={() => setIsOpen(false)}
@@ -87,9 +85,11 @@ export default function RouteMapImage({ theme = "run" }: { theme?: "run" | "bike
           {/* Scrollable / Zoomable container */}
           <div className="h-full w-full overflow-auto touch-pan-x touch-pan-y" onClick={(e) => e.stopPropagation()}>
             <div className="flex min-h-full items-center justify-center p-2 sm:p-8">
-              <img 
+              <Image
                 src="/route-map.jpg" 
                 alt="Peta Rute Full" 
+                width={1200}
+                height={800}
                 className="w-full h-auto max-w-none md:max-w-6xl object-contain pointer-events-auto" 
                 style={{ touchAction: "pan-x pan-y pinch-zoom" }}
               />

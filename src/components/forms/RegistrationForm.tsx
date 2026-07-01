@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Check, ChevronRight, ChevronLeft, User, Trophy, CreditCard, AlertCircle, Sparkles, X, QrCode, Info, Smartphone } from "lucide-react";
 import { trackFormStart, trackFormStep, trackFormSubmit } from "@/lib/analytics";
@@ -337,6 +338,20 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
   const eventName = isFunBike ? "Futuristic Bike 2026" : "Futuristic Run 2026";
   const [showQrisModal, setShowQrisModal] = useState(false);
 
+  useEffect(() => {
+    if (!showQrisModal) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowQrisModal(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [showQrisModal]);
+
   // Section header icon bg/border per theme
   const sectionIconBg1 = isFunBike ? "rgba(255,107,44,0.1)" : "rgba(0,229,255,0.12)";
   const sectionIconBorder1 = isFunBike ? "rgba(255,107,44,0.25)" : "rgba(0,229,255,0.25)";
@@ -596,20 +611,34 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
                   <button
                     key={m.value}
                     type="button"
+                    aria-pressed={form.paymentMethod === m.value}
                     onClick={() => {
                       set("paymentMethod", m.value);
                       if (m.value === "qris") setShowQrisModal(true);
                     }}
-                    className={`${t.inner} p-4 sm:p-5 rounded-2xl text-center transition-all duration-300 cursor-pointer group ${
+                    className={`${t.inner} relative min-h-32 overflow-hidden p-4 sm:p-5 rounded-2xl text-center transition-all duration-300 cursor-pointer group ${
                       form.paymentMethod === m.value
-                        ? isFunBike ? "border-[#FF6B2C] shadow-[0_0_20px_rgba(255,107,44,0.12)]" : ""
+                        ? isFunBike
+                          ? "border-2 border-[#FF6B2C] bg-[#FFF4EC] shadow-[0_8px_28px_rgba(255,107,44,0.22)] -translate-y-0.5"
+                          : "border-2 border-[#00E5FF] bg-[#00E5FF]/10 shadow-[0_8px_30px_rgba(0,229,255,0.18)] -translate-y-0.5"
                         : isFunBike ? "hover:border-gray-200" : "hover:border-white/[0.12]"
                     }`}
-                    style={form.paymentMethod === m.value && !isFunBike ? { borderColor: t.accent, boxShadow: `0 0 20px ${t.accentGlow}0.15)` } : {}}
                   >
+                    {form.paymentMethod === m.value && (
+                      <span
+                        className="absolute right-3 top-3 flex size-6 items-center justify-center rounded-full text-white shadow-lg"
+                        style={{ background: t.accent }}
+                        aria-label="Metode dipilih"
+                      >
+                        <Check size={14} strokeWidth={3} />
+                      </span>
+                    )}
                     <div className="text-3xl mb-2">{m.icon}</div>
-                    <div className="text-xs font-bold mb-0.5" style={{ color: form.paymentMethod === m.value ? t.accent : (isFunBike ? "#374151" : "#fff") }}>{m.label}</div>
+                    <div className="text-sm font-black mb-1" style={{ color: form.paymentMethod === m.value ? t.accent : (isFunBike ? "#374151" : "#fff") }}>{m.label}</div>
                     <div className={`text-[10px] ${t.textM}`}>{m.desc}</div>
+                    {form.paymentMethod === m.value && (
+                      <div className="mt-2 text-[10px] font-black uppercase tracking-[0.14em]" style={{ color: t.accent }}>Dipilih</div>
+                    )}
                   </button>
                 ))}
               </div>
@@ -631,13 +660,13 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
             </div>
 
             {/* QRIS Payment Modal */}
-            {showQrisModal && (
-              <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={() => setShowQrisModal(false)}>
+            {showQrisModal && createPortal(
+              <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5" role="dialog" aria-modal="true" aria-labelledby="qris-modal-title" onClick={() => setShowQrisModal(false)}>
                 {/* Backdrop */}
                 <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
                 {/* Modal */}
                 <div
-                  className={`relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl ${
+                  className={`relative max-h-[calc(100dvh-1.5rem)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-2xl shadow-2xl sm:max-h-[calc(100dvh-2.5rem)] ${
                     isFunBike ? "bg-white border border-gray-200" : "bg-[#0D1233] border border-[#1E3A5F]"
                   }`}
                   onClick={(e) => e.stopPropagation()}
@@ -650,21 +679,22 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
                   <button
                     type="button"
                     onClick={() => setShowQrisModal(false)}
-                    className={`absolute top-4 right-4 w-8 h-8 rounded-xl flex items-center justify-center transition-all z-10 ${
+                    className={`absolute top-3 right-3 w-9 h-9 rounded-xl flex items-center justify-center transition-all z-10 ${
                       isFunBike ? "bg-gray-100 hover:bg-gray-200 text-gray-500" : "bg-white/10 hover:bg-white/20 text-white/70"
                     }`}
+                    aria-label="Tutup pembayaran QRIS"
                   >
                     <X size={16} />
                   </button>
 
                   {/* Header */}
-                  <div className={`px-6 pt-6 pb-4 ${isFunBike ? "" : ""}`}>
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${t.accentGlow}0.12)`, border: `1px solid ${t.accentGlow}0.25)` }}>
+                  <div className="px-4 pb-3 pt-4 sm:px-5">
+                    <div className="mb-3 flex items-center gap-3 pr-10">
+                      <div className="flex size-9 items-center justify-center rounded-xl" style={{ background: `${t.accentGlow}0.12)`, border: `1px solid ${t.accentGlow}0.25)` }}>
                         <Smartphone size={18} style={{ color: t.accent }} />
                       </div>
                       <div>
-                        <h3 className={`font-black text-base ${t.textH}`} style={{ fontFamily: "Orbitron, sans-serif", letterSpacing: "1px" }}>
+                        <h3 id="qris-modal-title" className={`font-black text-sm ${t.textH}`} style={{ fontFamily: "Orbitron, sans-serif", letterSpacing: "1px" }}>
                           PEMBAYARAN QRIS
                         </h3>
                         <p className={`text-[10px] uppercase tracking-widest font-semibold ${t.textM}`}>Scan & Bayar</p>
@@ -672,13 +702,13 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
                     </div>
 
                     {/* Amount highlight */}
-                    <div className={`rounded-2xl p-4 mb-4 text-center ${
+                    <div className={`rounded-xl p-3 text-center ${
                       isFunBike ? "bg-gradient-to-r from-[#FFF7ED] to-[#FEF3C7] border border-[#FF6B2C]/15" : "bg-gradient-to-r from-[#0A1628] to-[#0F1A35] border border-[#00E5FF]/15"
                     }`}>
                       <div className={`text-[10px] uppercase tracking-widest font-semibold mb-1 ${t.textM}`}>
                         Total yang harus dibayar
                       </div>
-                      <div className="text-2xl font-black" style={{ fontFamily: "Orbitron, sans-serif", color: "#FFD700" }}>
+                      <div className="text-xl font-black" style={{ fontFamily: "Orbitron, sans-serif", color: "#EAB308" }}>
                         {feeFormatted}
                       </div>
                       <div className={`text-xs mt-1 ${t.textS}`}>
@@ -688,72 +718,65 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
                   </div>
 
                   {/* QR Code */}
-                  <div className="px-6 pb-4">
-                    <div className={`rounded-2xl p-4 flex flex-col items-center ${
+                  <div className="px-4 pb-3 sm:px-5">
+                    <div className={`rounded-xl p-2 flex flex-col items-center ${
                       isFunBike ? "bg-white shadow-lg shadow-black/5 border border-gray-100" : "bg-white rounded-2xl"
                     }`}>
                       <Image
                         src="/qris-payment.png"
                         alt="QRIS - Scan untuk pembayaran"
-                        width={280}
-                        height={380}
-                        className="rounded-xl"
+                        width={180}
+                        height={240}
+                        className="max-h-[240px] w-auto rounded-lg object-contain"
                         priority
                       />
                     </div>
                     {/* Merchant info */}
-                    <div className={`mt-3 flex flex-col items-center gap-0.5 ${t.textS}`}>
-                      <span className={`text-xs font-bold ${t.textP}`}>FUTURISTIC VIBES, HIBURAN</span>
-                      <span className="text-[10px]">NMID: ID1026540800533</span>
+                    <div className={`mt-2 flex flex-col items-center gap-0.5 ${t.textS}`}>
+                      <span className={`text-[10px] font-bold ${t.textP}`}>FUTURISTIC VIBES, HIBURAN</span>
+                      <span className="text-[9px]">NMID: ID1026540800533</span>
                     </div>
                   </div>
 
                   {/* Instructions */}
-                  <div className={`mx-6 mb-6 rounded-2xl p-4 ${
+                  <div className={`mx-4 mb-3 rounded-xl p-3 sm:mx-5 ${
                     isFunBike ? "bg-[#FFF7ED] border border-[#FF6B2C]/10" : "bg-[#0A1628] border border-[#1E3A5F]/60"
                   }`}>
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-2">
                       <Info size={14} style={{ color: t.accent }} />
                       <span className="text-xs font-bold" style={{ color: t.accent, fontFamily: "Orbitron, sans-serif", letterSpacing: "1px" }}>
                         CARA BAYAR
                       </span>
                     </div>
-                    <ol className={`text-xs space-y-2 ${t.textS}`}>
+                    <ol className={`text-[10px] leading-snug space-y-1.5 ${t.textS}`}>
                       <li className="flex gap-2">
                         <span className="flex-shrink-0 w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black" style={{ background: `${t.accentGlow}0.15)`, color: t.accent }}>1</span>
-                        <span>Buka aplikasi e-wallet/m-banking yang mendukung <strong className={t.textP}>QRIS</strong> (GoPay, OVO, DANA, ShopeePay, BCA, BRI, Mandiri, dll)</span>
+                        <span>Buka menu <strong className={t.textP}>Scan QR</strong> di e-wallet atau m-banking.</span>
                       </li>
                       <li className="flex gap-2">
                         <span className="flex-shrink-0 w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black" style={{ background: `${t.accentGlow}0.15)`, color: t.accent }}>2</span>
-                        <span>Pilih menu <strong className={t.textP}>Scan QR</strong> atau <strong className={t.textP}>Bayar dengan QRIS</strong></span>
+                        <span>Scan kode dan masukkan nominal <strong className={t.textP}>{feeFormatted}</strong>.</span>
                       </li>
                       <li className="flex gap-2">
                         <span className="flex-shrink-0 w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black" style={{ background: `${t.accentGlow}0.15)`, color: t.accent }}>3</span>
-                        <span>Scan QR code di atas, lalu <strong className={t.textP}>masukkan nominal {feeFormatted}</strong></span>
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="flex-shrink-0 w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black" style={{ background: `${t.accentGlow}0.15)`, color: t.accent }}>4</span>
-                        <span>Pastikan tujuan tertulis <strong className={t.textP}>FUTURISTIC VIBES, HIBURAN</strong>, lalu konfirmasi pembayaran</span>
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="flex-shrink-0 w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black" style={{ background: `${t.accentGlow}0.15)`, color: t.accent }}>5</span>
-                        <span>Setelah berhasil, <strong className={t.textP}>screenshot bukti bayar</strong> dan submit pendaftaran</span>
+                        <span>Pastikan merchant <strong className={t.textP}>FUTURISTIC VIBES</strong>, lalu simpan bukti bayar.</span>
                       </li>
                     </ol>
                   </div>
 
                   {/* Close action */}
-                  <div className="px-6 pb-6">
+                  <div className="px-4 pb-4 sm:px-5">
                     <button
                       type="button"
                       onClick={() => setShowQrisModal(false)}
-                      className={`${t.btnPrimary} w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm cursor-pointer`}
+                      className={`${t.btnPrimary} w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs cursor-pointer`}
                     >
-                      <Check size={16} /> Saya Mengerti, Lanjutkan Pendaftaran
+                      <Check size={15} /> Gunakan QRIS & Lanjutkan
                     </button>
                   </div>
                 </div>
-              </div>
+              </div>,
+              document.body,
             )}
 
             {/* Checkboxes */}

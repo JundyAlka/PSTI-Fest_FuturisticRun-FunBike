@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { ChevronDown, Shield, CheckCircle2, BookOpen, Layers } from "lucide-react";
+import { ChevronDown, CheckCircle2, BookOpen, Layers } from "lucide-react";
 import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
 import { hasAnnouncedValue } from "@/components/ui/TbdBadge";
 import { EVENTS } from "@/content/events";

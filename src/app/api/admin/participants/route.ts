@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { insforge } from "@/lib/insforge";
 
+type ParticipantRow = Record<string, unknown> & {
+  event_type?: string;
+  eventType?: string;
+  category?: string;
+  payment_status?: string;
+  full_name?: string;
+  email?: string;
+  reg_number?: string;
+  created_at?: string;
+};
+
 export async function GET(req: NextRequest) {
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -25,7 +36,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 
-  let list = (allRows ?? []) as Array<Record<string, any>>;
+  let list = (allRows ?? []) as ParticipantRow[];
 
   if (eventType && eventType !== "all") {
     list = list.filter((p) => (p.event_type ?? p.eventType ?? "futuristic-run") === eventType);
