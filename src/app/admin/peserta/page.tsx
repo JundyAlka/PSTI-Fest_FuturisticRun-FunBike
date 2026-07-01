@@ -250,7 +250,7 @@ export default function PesertaPage() {
           <LoadingPanel label="Memuat peserta" />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[1280px] text-sm">
               <thead>
                 <tr className="border-b border-[#1E3A5F] bg-[#0F1535]">
                   <th className="px-3 py-3 w-8">
@@ -259,7 +259,7 @@ export default function PesertaPage() {
                     </button>
                   </th>
                   {["No. Reg", "Nama", "Event", "Kategori", "Jersey", "BIB Name", "Kota", "Total", "Metode", "Status", "Bukti", "Aksi"].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-[#B0C4DE] text-xs font-semibold whitespace-nowrap" style={{ fontFamily: "Orbitron, sans-serif" }}>
+                    <th key={h} className={`px-4 py-3 text-left text-[#B0C4DE] text-xs font-semibold whitespace-nowrap ${h === "Aksi" ? "min-w-28" : ""}`} style={{ fontFamily: "Orbitron, sans-serif" }}>
                       {h}
                     </th>
                   ))}
@@ -304,21 +304,23 @@ export default function PesertaPage() {
                         </a>
                       ) : <span className="text-xs text-[#5A7899]">Belum ada</span>}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5">
+                    <td className="min-w-28 px-4 py-3">
+                      <div className="flex items-center gap-2 whitespace-nowrap">
                         <button
                           title="Lihat Detail"
+                          aria-label={`Lihat detail ${p.full_name}`}
                           onClick={() => { setSelected(p); setRejectNotes(""); setActionError(""); }}
-                          className="text-[#00E5FF] hover:text-white transition-colors p-1"
+                          className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#00E5FF] transition-colors hover:border-[#00E5FF]/50 hover:bg-[#00E5FF]/15 hover:text-white"
                         >
-                          <Eye size={15} />
+                          <Eye size={16} />
                         </button>
                         <button
                           title="Hapus Peserta"
+                          aria-label={`Hapus peserta ${p.full_name}`}
                           onClick={() => requestDelete(p.id, p.full_name)}
-                          className="text-red-400 hover:text-red-300 transition-colors p-1"
+                          className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/5 text-red-400 transition-colors hover:border-red-500/50 hover:bg-red-500/15 hover:text-red-300"
                         >
-                          <Trash2 size={15} />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
