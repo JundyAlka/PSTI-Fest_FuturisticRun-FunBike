@@ -103,7 +103,7 @@ function SectionCard({ icon: Icon, title, color = "#00E5FF", children }: {
   icon: React.ElementType; title: string; color?: string; children: React.ReactNode;
 }) {
   return (
-    <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-4 sm:p-6">
+    <div className="card-animated glass-card min-w-0 rounded-2xl border border-[#1E3A5F] p-4 sm:p-6">
       <div className="flex items-center gap-2 mb-5">
         <Icon size={16} style={{ color }} />
         <h2 className="text-white font-bold text-sm" style={{ fontFamily: "Orbitron, sans-serif" }}>
@@ -349,7 +349,7 @@ export default function PengaturanPage() {
   };
 
   return (
-    <div className="page-animate w-full max-w-3xl p-4 sm:p-6 lg:p-8">
+    <div className="page-animate w-full min-w-0 max-w-3xl overflow-x-hidden p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-black text-white mb-1" style={{ fontFamily: "Orbitron, sans-serif" }}>

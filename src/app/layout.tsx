@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import ScrollRevealProvider from "@/components/ScrollRevealProvider";
 import { FEST_FULL_NAME } from "@/content/brand";
 import "./globals.css";
@@ -9,6 +9,12 @@ export const metadata: Metadata = {
     icon: "/logo-futuristicrun.png",
     apple: "/logo-futuristicrun.png",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

@@ -58,7 +58,6 @@ const navLinks = [
   { label: "Rundown", href: "#timeline" },
   { label: "Jersey", href: "#jersey" },
   { label: "FAQ", href: "#faq" },
-  { label: "Daftar", href: "/fun-bike/daftar", isRoute: true },
 ];
 
 function formatCurrency(amount: number | null) {

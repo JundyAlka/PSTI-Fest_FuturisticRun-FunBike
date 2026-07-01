@@ -151,7 +151,7 @@ export default function PesertaPage() {
   };
 
   return (
-    <div className="page-animate p-4 sm:p-6 lg:p-8">
+    <div className="page-animate w-full min-w-0 max-w-full overflow-x-hidden p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="mb-6 flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
         <div>
@@ -273,15 +273,15 @@ export default function PesertaPage() {
                   <div><dt className="text-[#5A7899]">Status</dt><dd className="mt-1 font-semibold" style={{ color: getPaymentStatusColor(p.payment_status) }}>{getPaymentStatusLabel(p.payment_status)}</dd></div>
                 </dl>
                 <div className="flex flex-wrap items-center gap-2 border-t border-[#1E3A5F]/40 pt-3">
-                  {p.payment_proof && <a href={p.payment_proof} target="_blank" rel="noopener noreferrer" className="flex min-h-10 items-center gap-2 rounded-lg border border-[#1E3A5F] px-3 text-xs text-[#00E5FF]"><Eye size={15} /> Bukti</a>}
-                  <button onClick={() => { setSelected(p); setRejectNotes(""); setActionError(""); }} className="flex min-h-10 items-center gap-2 rounded-lg border border-[#00E5FF]/30 bg-[#00E5FF]/5 px-3 text-xs text-[#00E5FF]"><Eye size={15} /> Detail</button>
-                  <button onClick={() => requestDelete(p.id, p.full_name)} className="ml-auto flex min-h-10 items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/5 px-3 text-xs text-red-400"><Trash2 size={15} /> Hapus</button>
+                  {p.payment_proof && <a href={p.payment_proof} target="_blank" rel="noopener noreferrer" className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#1E3A5F] px-3 text-xs text-[#00E5FF] min-[430px]:w-auto"><Eye size={15} /> Bukti</a>}
+                  <button onClick={() => { setSelected(p); setRejectNotes(""); setActionError(""); }} className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#00E5FF]/30 bg-[#00E5FF]/5 px-3 text-xs text-[#00E5FF] min-[430px]:w-auto"><Eye size={15} /> Detail</button>
+                  <button onClick={() => requestDelete(p.id, p.full_name)} className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-red-500/30 bg-red-500/5 px-3 text-xs text-red-400 min-[430px]:ml-auto min-[430px]:w-auto"><Trash2 size={15} /> Hapus</button>
                 </div>
               </article>
             ))}
           </div>
-          <div className="hidden overflow-x-auto lg:block">
-            <table className="w-full min-w-[1280px] text-sm">
+          <div className="hidden max-w-full overflow-x-auto overscroll-x-contain lg:block">
+            <table className="w-full min-w-[1320px] text-sm">
               <thead>
                 <tr className="border-b border-[#1E3A5F] bg-[#0F1535]">
                   <th className="px-3 py-3 w-8">
@@ -289,18 +289,25 @@ export default function PesertaPage() {
                       <CheckSquare size={14} className={selectedIds.size === participants.length && participants.length > 0 ? "text-[#00E5FF]" : ""} />
                     </button>
                   </th>
-                  {["No. Reg", "Nama", "Event", "Kategori", "Jersey", "BIB Name", "Kota", "Total", "Metode", "Status", "Bukti", "Aksi"].map((h) => (
-                    <th key={h} className={`px-4 py-3 text-left text-[#B0C4DE] text-xs font-semibold whitespace-nowrap ${h === "Aksi" ? "min-w-28" : ""}`} style={{ fontFamily: "Orbitron, sans-serif" }}>
-                      {h}
-                    </th>
-                  ))}
+                  {["No. Reg", "Nama", "Event", "Kategori", "Jersey", "BIB Name", "Kota", "Total", "Metode", "Status", "Bukti", "Aksi"].map((h) => {
+                    const isAction = h === "Aksi";
+                    return (
+                      <th
+                        key={h}
+                        className={`px-4 py-3 text-left text-xs font-semibold whitespace-nowrap text-[#B0C4DE] ${h === "Bukti" ? "w-[112px] min-w-[112px]" : ""} ${isAction ? "sticky right-0 z-20 w-[124px] min-w-[124px] bg-[#0F1535] text-center shadow-[-14px_0_24px_rgba(10,14,39,0.92)]" : ""}`}
+                        style={{ fontFamily: "Orbitron, sans-serif" }}
+                      >
+                        {h}
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
                 {participants.length === 0 ? (
                   <tr><td colSpan={13} className="px-4 py-12 text-center text-[#B0C4DE]">Tidak ada peserta ditemukan</td></tr>
                 ) : participants.map((p, i) => (
-                  <tr key={p.id} className={`table-row-animated border-b border-[#1E3A5F]/50 hover:bg-white/5 transition-colors ${i % 2 === 1 ? "bg-white/[0.01]" : ""}`}>
+                  <tr key={p.id} className={`group table-row-animated border-b border-[#1E3A5F]/50 transition-colors hover:bg-white/5 ${i % 2 === 1 ? "bg-white/[0.01]" : ""}`}>
                     <td className="px-3 py-3">
                       <button onClick={() => toggleSelect(p.id)} className="text-[#B0C4DE] hover:text-white transition-colors">
                         <CheckSquare size={14} className={selectedIds.has(p.id) ? "text-[#00E5FF]" : ""} />
@@ -335,13 +342,13 @@ export default function PesertaPage() {
                         </a>
                       ) : <span className="text-xs text-[#5A7899]">Belum ada</span>}
                     </td>
-                    <td className="min-w-28 px-4 py-3">
-                      <div className="flex items-center gap-2 whitespace-nowrap">
+                    <td className={`sticky right-0 z-10 w-[124px] min-w-[124px] px-3 py-3 shadow-[-14px_0_24px_rgba(10,14,39,0.86)] transition-colors group-hover:bg-[#11183A] ${i % 2 === 1 ? "bg-[#0B102B]" : "bg-[#0A0E27]"}`}>
+                      <div className="flex items-center justify-center gap-2 whitespace-nowrap">
                         <button
                           title="Lihat Detail"
                           aria-label={`Lihat detail ${p.full_name}`}
                           onClick={() => { setSelected(p); setRejectNotes(""); setActionError(""); }}
-                          className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#00E5FF] transition-colors hover:border-[#00E5FF]/50 hover:bg-[#00E5FF]/15 hover:text-white"
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#00E5FF] transition-colors hover:border-[#00E5FF]/50 hover:bg-[#00E5FF]/15 hover:text-white"
                         >
                           <Eye size={16} />
                         </button>
@@ -349,7 +356,7 @@ export default function PesertaPage() {
                           title="Hapus Peserta"
                           aria-label={`Hapus peserta ${p.full_name}`}
                           onClick={() => requestDelete(p.id, p.full_name)}
-                          className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/5 text-red-400 transition-colors hover:border-red-500/50 hover:bg-red-500/15 hover:text-red-300"
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/5 text-red-400 transition-colors hover:border-red-500/50 hover:bg-red-500/15 hover:text-red-300"
                         >
                           <Trash2 size={16} />
                         </button>

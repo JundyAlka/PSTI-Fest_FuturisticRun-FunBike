@@ -118,17 +118,17 @@ export default function AdminDashboard() {
   const OFont = { fontFamily: "Orbitron, sans-serif" };
 
   return (
-    <div className="page-animate p-4 sm:p-6 lg:p-8">
+    <div className="page-animate w-full min-w-0 max-w-full overflow-x-hidden p-4 sm:p-6 lg:p-8">
       {/* ── Header ──────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-black text-white" style={OFont}>COMMAND CENTER</h1>
           <p className="text-[#B0C4DE] text-sm mt-1">Dashboard pusat kendali multi-event</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <Link
             href="/admin/peserta?status=pending"
-            className="btn-outline-neon flex items-center gap-2 px-4 py-2 rounded-xl text-xs"
+            className="btn-outline-neon flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs sm:w-auto"
           >
             <Clock size={14} /> Verifikasi Pending
           </Link>
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
 
       {/* ── Filters ─────────────────────────────────────────────── */}
       <div className="card-animated glass-card mb-6 flex flex-col gap-3 rounded-xl border border-[#1E3A5F] p-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <Filter size={14} className="text-[#B0C4DE]" />
+        <Filter size={14} className="hidden text-[#B0C4DE] sm:block" />
         {/* Event filter tabs */}
         <div className="grid w-full grid-cols-1 gap-1 rounded-lg border border-[#1E3A5F] bg-[#080C20] p-1 min-[430px]:grid-cols-3 sm:w-auto">
           <button
@@ -186,7 +186,7 @@ export default function AdminDashboard() {
             ].map((c) => (
               <div
                 key={c.label}
-                className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-4 transition-all duration-300 hover:border-opacity-60 sm:p-5"
+            className="card-animated glass-card min-w-0 rounded-2xl border border-[#1E3A5F] p-4 transition-all duration-300 hover:border-opacity-60 sm:p-5"
                 style={{ borderColor: `${c.color}20` }}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -208,7 +208,7 @@ export default function AdminDashboard() {
             {filteredEvents.map((ev) => {
               const accent = eventColor(ev.slug);
               return (
-                <div key={ev.slug} className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F] space-y-4">
+                <div key={ev.slug} className="card-animated glass-card min-w-0 rounded-2xl border border-[#1E3A5F] p-4 sm:p-5 space-y-4">
                   {/* Event header */}
                   <div className="flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -221,7 +221,7 @@ export default function AdminDashboard() {
                       )}
                     </div>
                     <a href={`/api/admin/export?eventType=${ev.slug}`}
-                      className="flex items-center gap-1 text-[10px] text-[#B0C4DE] hover:text-white transition-colors">
+                      className="flex min-h-9 items-center justify-center gap-1 rounded-lg border border-[#1E3A5F] px-3 text-[10px] text-[#B0C4DE] transition-colors hover:border-[#00E5FF]/40 hover:text-white min-[430px]:border-0 min-[430px]:px-0">
                       <Download size={12} /> CSV
                     </a>
                   </div>
@@ -292,12 +292,12 @@ export default function AdminDashboard() {
                 { label: "Total Terverifikasi", value: summary?.finance.verified ?? 0, icon: CheckCircle, color: "#4ADE80" },
                 { label: "Total Outstanding", value: summary?.finance.outstanding ?? 0, icon: TrendingUp, color: "#FF8C00" },
               ].map((c) => (
-                <div key={c.label} className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F]">
+                <div key={c.label} className="card-animated glass-card min-w-0 rounded-2xl border border-[#1E3A5F] p-4 sm:p-5">
                   <div className="flex items-center gap-2 mb-2">
                     <c.icon size={14} style={{ color: c.color }} />
                     <span className="text-[#B0C4DE] text-xs">{c.label}</span>
                   </div>
-                  <div className="text-xl font-black" style={{ ...OFont, color: c.color }}>
+                  <div className="break-words text-lg font-black sm:text-xl" style={{ ...OFont, color: c.color }}>
                     {formatCurrency(c.value)}
                   </div>
                 </div>
@@ -313,7 +313,7 @@ export default function AdminDashboard() {
           />
 
           {/* ── Health panel ────────────────────────────────────── */}
-          <div className="card-animated glass-card rounded-2xl p-5 border border-[#1E3A5F] mt-6">
+          <div className="card-animated glass-card mt-6 min-w-0 rounded-2xl border border-[#1E3A5F] p-4 sm:p-5">
             <div className="mb-4 flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
               <div className="flex items-center gap-2">
                 <Activity size={16} className="text-[#00E5FF]" />

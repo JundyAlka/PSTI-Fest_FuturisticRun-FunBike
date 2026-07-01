@@ -18,7 +18,7 @@ export default function AdminSidebar() {
 
   return (
     <aside
-      className="slide-in-left flex w-full shrink-0 flex-col border-b border-[#1E3A5F] md:min-h-screen md:w-64 md:border-b-0 md:border-r"
+      className="slide-in-left flex w-full max-w-full shrink-0 flex-col border-b border-[#1E3A5F] md:min-h-screen md:w-64 md:border-b-0 md:border-r"
       style={{ background: "#080C20" }}
     >
       {/* Logo */}
@@ -46,14 +46,14 @@ export default function AdminSidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="stagger-list flex gap-2 overflow-x-auto p-3 md:flex-1 md:flex-col md:space-y-1 md:overflow-x-visible md:p-4">
+      <nav className="stagger-list flex max-w-full gap-2 overflow-x-auto p-3 md:flex-1 md:flex-col md:space-y-1 md:overflow-x-visible md:p-4">
         {navItems.map((item) => {
           const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`card-animated flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 md:gap-3 md:px-4 ${
+              className={`card-animated flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 md:gap-3 md:px-4 ${
                 active
                   ? "bg-[#00E5FF]/10 text-[#00E5FF] border border-[#00E5FF]/30"
                   : "text-[#B0C4DE] hover:bg-white/5 hover:text-white"
@@ -68,7 +68,7 @@ export default function AdminSidebar() {
         {/* Export shortcut */}
         <a
           href="/api/admin/export"
-          className="card-animated flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 py-3 text-sm font-medium text-[#B0C4DE] transition-all duration-200 hover:bg-white/5 hover:text-white md:gap-3 md:px-4"
+          className="card-animated flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-3 text-sm font-medium text-[#B0C4DE] transition-all duration-200 hover:bg-white/5 hover:text-white md:gap-3 md:px-4"
         >
           <Download size={16} />
           Export CSV

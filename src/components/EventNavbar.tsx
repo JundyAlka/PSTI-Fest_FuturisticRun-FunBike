@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X, Zap } from "lucide-react";
+import { createPortal } from "react-dom";
 
 type NavLink = {
   label: string;
@@ -228,14 +229,15 @@ export default function EventNavbar({
         </div>
       </nav>
 
-      <AnimatePresence onExitComplete={() => menuButtonRef.current?.focus()}>
-        {menuOpen && (
+      {typeof document !== "undefined" && createPortal(
+        <AnimatePresence onExitComplete={() => menuButtonRef.current?.focus()}>
+          {menuOpen && (
           <>
             <motion.button
               key="mobile-menu-backdrop"
               type="button"
               aria-label="Tutup menu"
-              className="fixed inset-0 z-[90] cursor-pointer bg-black/55 backdrop-blur-sm"
+              className="fixed inset-0 z-[90] h-[100dvh] w-screen cursor-pointer bg-black/55 backdrop-blur-sm"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, pointerEvents: "none" }}
@@ -249,7 +251,7 @@ export default function EventNavbar({
               role="dialog"
               aria-modal="true"
               aria-label="Menu navigasi"
-              className={`fixed inset-y-0 right-0 z-[100] w-72 border-l opacity-100 shadow-2xl backdrop-blur-xl ${
+              className={`fixed inset-y-0 right-0 z-[100] h-[100dvh] w-80 max-w-[calc(100vw-1rem)] overflow-y-auto overscroll-contain border-l opacity-100 shadow-2xl backdrop-blur-xl ${
                 theme === "dark" ? "bg-[#0E1530]" : "bg-[#FFFFFF]"
               }`}
               style={{ borderLeftColor: borderColor }}
@@ -304,8 +306,10 @@ export default function EventNavbar({
               </nav>
             </motion.div>
           </>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
     </>
   );
 }

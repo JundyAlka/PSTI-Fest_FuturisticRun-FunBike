@@ -122,14 +122,15 @@ export default function DashboardCharts({ events, total, filter }: Props) {
   ].filter((d) => d.value > 0);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
       {/* ── Daily line chart ──────────────────────────────────── */}
-      <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-3 sm:p-5 lg:col-span-2">
+      <div className="card-animated glass-card min-w-0 rounded-2xl border border-[#1E3A5F] p-3 sm:p-5 lg:col-span-2">
         <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-2" style={OFont}>
           <span className="w-2 h-2 rounded-full bg-[#00E5FF]" style={{ boxShadow: "0 0 6px #00E5FF" }} />
           PENDAFTARAN HARIAN
         </h3>
-        <div className="h-56">
+        <div className="-mx-1 overflow-x-auto px-1">
+          <div className="h-56 min-w-[520px] sm:min-w-0">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={dailyLineData}>
               <CartesianGrid stroke="#1E3A5F" strokeDasharray="3 3" />
@@ -154,13 +155,15 @@ export default function DashboardCharts({ events, total, filter }: Props) {
               {events.length > 1 && filter === "all" && <Legend />}
             </LineChart>
           </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
       {/* ── Category bar chart ────────────────────────────────── */}
-      <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-3 sm:p-5">
+      <div className="card-animated glass-card min-w-0 rounded-2xl border border-[#1E3A5F] p-3 sm:p-5">
         <h3 className="text-white font-bold text-sm mb-4" style={OFont}>PER KATEGORI</h3>
-        <div className="h-48">
+        <div className="-mx-1 overflow-x-auto px-1">
+          <div className="h-48 min-w-[430px] sm:min-w-0">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={categoryData} layout="vertical">
               <CartesianGrid stroke="#1E3A5F" strokeDasharray="3 3" />
@@ -174,13 +177,15 @@ export default function DashboardCharts({ events, total, filter }: Props) {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
       {/* ── Jersey size bar chart ─────────────────────────────── */}
-      <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-3 sm:p-5">
+      <div className="card-animated glass-card min-w-0 rounded-2xl border border-[#1E3A5F] p-3 sm:p-5">
         <h3 className="text-white font-bold text-sm mb-4" style={OFont}>UKURAN JERSEY</h3>
-        <div className="h-48">
+        <div className="-mx-1 overflow-x-auto px-1">
+          <div className="h-48 min-w-[430px] sm:min-w-0">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={jerseyData}>
               <CartesianGrid stroke="#1E3A5F" strokeDasharray="3 3" />
@@ -194,11 +199,12 @@ export default function DashboardCharts({ events, total, filter }: Props) {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
       {/* ── Status donut ──────────────────────────────────────── */}
-      <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-3 sm:p-5">
+      <div className="card-animated glass-card min-w-0 rounded-2xl border border-[#1E3A5F] p-3 sm:p-5">
         <h3 className="text-white font-bold text-sm mb-4" style={OFont}>STATUS PEMBAYARAN</h3>
         <div className="h-48 flex items-center justify-center">
           {statusData.length > 0 ? (
@@ -221,7 +227,7 @@ export default function DashboardCharts({ events, total, filter }: Props) {
       </div>
 
       {/* ── Quota per category detail ─────────────────────────── */}
-      <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-3 sm:p-5">
+      <div className="card-animated glass-card min-w-0 rounded-2xl border border-[#1E3A5F] p-3 sm:p-5">
         <h3 className="text-white font-bold text-sm mb-4" style={OFont}>KUOTA PER KATEGORI</h3>
         <div className="space-y-3">
           {events.flatMap((ev) =>
