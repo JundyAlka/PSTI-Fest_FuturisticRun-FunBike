@@ -20,7 +20,7 @@ async function main() {
       isOpen: true,
       eventDate: null,
       location: "Alun-Alun Purworejo",
-      deadline: new Date("2026-06-14"),
+      deadline: null,
     },
     {
       slug: "fun-bike",
@@ -88,7 +88,7 @@ async function main() {
     { eventType: "futuristic-run", key: "location_lng", value: "110.0090583" },
     { eventType: "futuristic-run", key: "location_plus_code", value: "72P5+QJ" },
     { eventType: "futuristic-run", key: "early_bird_deadline", value: "2026-05-31" },
-    { eventType: "futuristic-run", key: "registration_deadline", value: "2026-06-14" },
+    { eventType: "futuristic-run", key: "registration_deadline", value: "" },
     { eventType: "futuristic-run", key: "payment_bank_name", value: "BRI" },
     { eventType: "futuristic-run", key: "payment_bank_account", value: "007801112841503" },
     { eventType: "futuristic-run", key: "payment_bank_holder", value: "SYIFA FITRIYANTI" },

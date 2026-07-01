@@ -115,7 +115,7 @@ INSERT INTO event_settings (event_type, key, value) VALUES
   ('futuristic-run', 'location_lng', '110.0090583'),
   ('futuristic-run', 'location_plus_code', '72P5+QJ'),
   ('futuristic-run', 'early_bird_deadline', '2026-05-31'),
-  ('futuristic-run', 'registration_deadline', '2026-06-14'),
+  ('futuristic-run', 'registration_deadline', ''),
   ('futuristic-run', 'quota_5k', '200'),
   ('futuristic-run', 'payment_bank_name', 'BRI'),
   ('futuristic-run', 'payment_bank_account', '007801112841503'),
