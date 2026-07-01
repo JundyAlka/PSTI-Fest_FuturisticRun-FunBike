@@ -10,6 +10,7 @@ export type PublicEventOps = {
   deadline: string | null;
   price: number | null;
   quota: number | null;
+  minAge: number | null;
   categoryCode: string | null;
   categoryLabel: string | null;
   contactPerson: string | null;
@@ -35,6 +36,7 @@ function emptyOps(slug: EventSlug): PublicEventOps {
     deadline: null,
     price: null,
     quota: null,
+    minAge: null,
     categoryCode: null,
     categoryLabel: null,
     contactPerson: null,
@@ -59,7 +61,7 @@ export async function getPublicEventOps(slug: EventSlug): Promise<PublicEventOps
         .maybeSingle(),
       insforge.database
         .from("event_categories")
-        .select("code, label, price, quota")
+        .select("code, label, price, quota, min_age")
         .eq("event_type", slug)
         .order("id", { ascending: true }),
       insforge.database
@@ -72,18 +74,23 @@ export async function getPublicEventOps(slug: EventSlug): Promise<PublicEventOps
     const settings = settingsResult.data as Array<{ key: string; value: string }> | null;
     const settingMap = Object.fromEntries((settings ?? []).map((item) => [item.key, item.value]));
     const event = eventResult.data as { location?: string | null; deadline?: string | null } | null;
-    const categories = categoryResult.data as Array<{ code: string; label: string; price: number; quota: number }> | null;
+    const categories = categoryResult.data as Array<{ code: string; label: string; price: number; quota: number; min_age: number | null }> | null;
     const primaryCategory = categories?.[0] ?? null;
     const registrationFee = Number(settingValue(settings, "registration_fee"));
-    const pricing = pricingResult.data as PricingSnapshot | null;
+    const rawPricing = pricingResult.data as PricingSnapshot | PricingSnapshot[] | null;
+    const pricing = Array.isArray(rawPricing) ? rawPricing[0] ?? null : rawPricing;
+
+    const currentPrice = pricing?.currentPrice && pricing.currentPrice > 0 ? pricing.currentPrice : null;
+    const configuredFee = Number.isFinite(registrationFee) && registrationFee > 0 ? registrationFee : null;
 
     return {
       slug,
       eventDate: resolveEventDate(slug, settingValue(settings, "event_date")),
       location: settingValue(settings, "event_location") ?? event?.location ?? null,
       deadline: settingValue(settings, "registration_deadline") ?? event?.deadline ?? null,
-      price: pricing?.currentPrice ?? (Number.isFinite(registrationFee) && registrationFee > 0 ? registrationFee : null) ?? primaryCategory?.price ?? null,
+      price: currentPrice ?? configuredFee ?? primaryCategory?.price ?? null,
       quota: primaryCategory?.quota ?? null,
+      minAge: primaryCategory?.min_age ?? null,
       categoryCode: primaryCategory?.code ?? null,
       categoryLabel: primaryCategory?.label ?? null,
       contactPerson: settingValue(settings, "contact_person"),

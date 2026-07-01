@@ -5,6 +5,7 @@ import { PAYMENT_PROOF_MAX_SIZE, PAYMENT_PROOF_TYPES } from "@/lib/validations";
 import { serviceUnavailable } from "@/lib/insforgeHealth";
 import { randomUUID } from "node:crypto";
 import { verifyRegistrationAccess } from "@/lib/registrationAccess";
+import { writeActivityLog } from "@/lib/serverAudit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     // Verify participant exists
     const { data: participant, error: pError } = await insforge.database
       .from("participants")
-      .select("id, reg_number, phone, email, payment_status, payment_proof, payment_proof_key, registration_access_token_hash")
+      .select("id, reg_number, event_type, full_name, phone, email, payment_status, payment_proof, payment_proof_key, registration_access_token_hash")
       .eq("reg_number", regNumber)
       .maybeSingle();
 
@@ -125,6 +126,20 @@ export async function POST(req: NextRequest) {
     if (participant.payment_proof_key && participant.payment_status === "rejected") {
       void insforge.storage.from("payment-proofs").remove(participant.payment_proof_key);
     }
+
+    void writeActivityLog({
+      actorType: "participant",
+      actorLabel: participant.full_name ?? regNumber,
+      eventType: participant.event_type,
+      action: "payment_proof_uploaded",
+      entityType: "participant",
+      entityId: regNumber,
+      metadata: {
+        fileName: originalName,
+        fileType: file.type,
+        fileSize: file.size,
+      },
+    }, req);
 
     return NextResponse.json({
       success: true,

@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Users, CheckCircle, Clock, XCircle, DollarSign, TrendingUp,
   Download, RefreshCw, Activity, AlertTriangle, Zap, Filter,
+  Eye, Radio, MousePointerClick, ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
@@ -31,7 +32,34 @@ interface TotalStats {
   finance: { potential: number; verified: number; outstanding: number };
   daily: DailyPoint[];
 }
-interface StatsResponse { events: EventStats[]; total: TotalStats }
+interface VisitorStats {
+  activeNow: number;
+  today: number;
+  unregisteredActive: number;
+  registeredToday: number;
+  byEvent: Array<{ eventType: string; active: number; today: number; unregistered: number }>;
+  recent: Array<{
+    sessionId: string;
+    eventType: string | null;
+    currentPath: string | null;
+    deviceType: string | null;
+    registered: boolean;
+    pageViews: number;
+    lastSeenAt: string;
+  }>;
+}
+interface ActivityLog {
+  id: number;
+  createdAt: string;
+  actorType: string;
+  actorLabel: string | null;
+  eventType: string | null;
+  action: string;
+  entityType: string | null;
+  entityId: string | null;
+  pageUrl: string | null;
+}
+interface StatsResponse { events: EventStats[]; total: TotalStats; visitors: VisitorStats; activity: ActivityLog[] }
 interface HealthResponse {
   status: string;
   services: { insforge: { ok: boolean; latencyMs: number } };
@@ -44,6 +72,34 @@ const EVENT_COLORS: Record<string, string> = {
   "fun-bike": "#FF6B2C",
 };
 function eventColor(slug: string) { return EVENT_COLORS[slug] ?? "#00E5FF"; }
+
+function actionLabel(action: string) {
+  const map: Record<string, string> = {
+    visitor_first_seen: "Visitor baru",
+    analytics_landing_view: "Landing dilihat",
+    analytics_cta_click: "CTA diklik",
+    analytics_form_start: "Form dimulai",
+    analytics_form_step_complete: "Step form selesai",
+    analytics_form_submit: "Submit form",
+    registration_created: "Pendaftaran masuk",
+    payment_proof_uploaded: "Bukti bayar diunggah",
+    payment_verified: "Pembayaran diverifikasi",
+    payment_rejected: "Pembayaran ditolak",
+    payment_verified_bulk: "Bulk verify",
+    settings_updated: "Pengaturan diubah",
+    participants_exported: "Export peserta",
+    audit_exported: "Export audit",
+    participants_deleted: "Peserta dihapus",
+  };
+  return map[action] ?? action.replace(/_/g, " ");
+}
+
+function eventName(value: string | null) {
+  if (value === "fun-bike") return "Fun Bike";
+  if (value === "futuristic-run") return "Futuristic Run";
+  if (value === "hub") return "Landing Hub";
+  return value ?? "-";
+}
 
 /* ── Component ────────────────────────────────────────────────────── */
 export default function AdminDashboard() {
@@ -58,8 +114,8 @@ export default function AdminDashboard() {
   /* Fetch stats */
   useEffect(() => {
     let cancelled = false;
-    async function fetchStats() {
-      setLoading(true);
+    async function fetchStats(showLoading = false) {
+      if (showLoading) setLoading(true);
       const params = new URLSearchParams();
       if (dateFrom) params.set("dateFrom", new Date(dateFrom).toISOString());
       if (dateTo) params.set("dateTo", new Date(dateTo + "T23:59:59").toISOString());
@@ -67,8 +123,12 @@ export default function AdminDashboard() {
       const json: StatsResponse = await res.json();
       if (!cancelled) { setData(json); setLoading(false); }
     }
-    void fetchStats();
-    return () => { cancelled = true; };
+    void fetchStats(true);
+    const timer = window.setInterval(() => void fetchStats(false), 20_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, [dateFrom, dateTo]);
 
   /* Fetch health */
@@ -126,6 +186,12 @@ export default function AdminDashboard() {
           <p className="text-[#B0C4DE] text-sm mt-1">Dashboard pusat kendali multi-event</p>
         </div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+          <a
+            href="/api/admin/audit?format=csv&limit=5000"
+            className="btn-outline-neon flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs sm:w-auto"
+          >
+            <Download size={14} /> Unduh Audit
+          </a>
           <Link
             href="/admin/peserta?status=pending"
             className="btn-outline-neon flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs sm:w-auto"
@@ -176,6 +242,94 @@ export default function AdminDashboard() {
         <LoadingPanel label="Memuat dashboard" />
       ) : (
         <>
+          <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+            <div className="card-animated glass-card relative overflow-hidden rounded-2xl border border-[#1E3A5F] p-4 sm:p-5">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent" />
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Radio size={16} className="text-[#00E5FF]" />
+                    <h2 className="text-sm font-black text-white" style={OFont}>LIVE VISITOR RADAR</h2>
+                  </div>
+                  <p className="mt-1 text-xs text-[#B0C4DE]">Pantau visitor aktif, termasuk yang tertarik tapi belum mendaftar.</p>
+                </div>
+                <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-[#4ADE80]/30 bg-[#4ADE80]/10 px-3 text-xs font-bold text-[#4ADE80]">
+                  <span className="size-2 animate-pulse rounded-full bg-[#4ADE80]" /> LIVE
+                </span>
+              </div>
+
+              <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                {[
+                  { label: "Aktif sekarang", value: data?.visitors.activeNow ?? 0, icon: Eye, color: "#00E5FF" },
+                  { label: "Visitor hari ini", value: data?.visitors.today ?? 0, icon: Users, color: "#8B5CF6" },
+                  { label: "Belum daftar", value: data?.visitors.unregisteredActive ?? 0, icon: MousePointerClick, color: "#FF8C00" },
+                  { label: "Konversi hari ini", value: data?.visitors.registeredToday ?? 0, icon: ShieldCheck, color: "#4ADE80" },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-xl border border-[#1E3A5F] bg-[#0A0E27]/70 p-3">
+                    <div className="mb-2 flex items-center gap-2 text-[10px] text-[#B0C4DE]">
+                      <item.icon size={13} style={{ color: item.color }} />
+                      <span>{item.label}</span>
+                    </div>
+                    <div className="text-2xl font-black" style={{ ...OFont, color: item.color }}>{item.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-3">
+                {(data?.visitors.byEvent.length ? data.visitors.byEvent : [{ eventType: "hub", active: 0, today: 0, unregistered: 0 }]).map((item) => (
+                  <div key={item.eventType} className="rounded-xl border border-[#1E3A5F]/80 bg-[#080C20]/70 p-3">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-white">{eventName(item.eventType)}</span>
+                      <span className="rounded-full bg-[#00E5FF]/10 px-2 py-0.5 text-[10px] text-[#00E5FF]">{item.active} live</span>
+                    </div>
+                    <div className="text-[11px] text-[#B0C4DE]">Hari ini {item.today} visitor - belum daftar {item.unregistered}</div>
+                  </div>
+                ))}
+              </div>
+
+              {!!data?.visitors.recent.length && (
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  {data.visitors.recent.slice(0, 4).map((visitor) => (
+                    <div key={visitor.sessionId} className="rounded-xl border border-[#1E3A5F]/70 bg-[#050817]/50 p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="truncate text-xs font-semibold text-white">{visitor.currentPath ?? "/"}</span>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${visitor.registered ? "bg-[#4ADE80]/10 text-[#4ADE80]" : "bg-[#FF8C00]/10 text-[#FF8C00]"}`}>
+                          {visitor.registered ? "daftar" : "belum"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[11px] text-[#B0C4DE]">{eventName(visitor.eventType)} - {visitor.deviceType ?? "device"} - {visitor.pageViews} views</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-4 sm:p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Activity size={16} className="text-[#FFD700]" />
+                  <h2 className="text-sm font-black text-white" style={OFont}>AKTIVITAS TERBARU</h2>
+                </div>
+                <a href="/api/admin/audit?format=csv&limit=5000" className="text-xs font-semibold text-[#00E5FF] hover:text-white">CSV</a>
+              </div>
+              <div className="space-y-2">
+                {(data?.activity.length ? data.activity : []).slice(0, 8).map((log) => (
+                  <div key={log.id} className="rounded-xl border border-[#1E3A5F]/70 bg-[#0A0E27]/60 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-white">{actionLabel(log.action)}</p>
+                        <p className="mt-1 truncate text-[11px] text-[#B0C4DE]">
+                          {eventName(log.eventType)} - {log.actorLabel ?? log.actorType}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-[10px] text-[#5A7899]">{new Date(log.createdAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span>
+                    </div>
+                  </div>
+                ))}
+                {!data?.activity.length && <p className="rounded-xl border border-[#1E3A5F]/70 p-4 text-xs text-[#B0C4DE]">Belum ada aktivitas terekam.</p>}
+              </div>
+            </div>
+          </div>
           {/* ── Summary stat cards ──────────────────────────────── */}
           <div className="stagger-list mb-6 grid grid-cols-1 gap-3 min-[430px]:grid-cols-2 lg:grid-cols-4 lg:gap-4">
             {[
@@ -222,7 +376,7 @@ export default function AdminDashboard() {
                     </div>
                     <a href={`/api/admin/export?eventType=${ev.slug}`}
                       className="flex min-h-9 items-center justify-center gap-1 rounded-lg border border-[#1E3A5F] px-3 text-[10px] text-[#B0C4DE] transition-colors hover:border-[#00E5FF]/40 hover:text-white min-[430px]:border-0 min-[430px]:px-0">
-                      <Download size={12} /> CSV
+                      <Download size={12} /> Excel
                     </a>
                   </div>
 

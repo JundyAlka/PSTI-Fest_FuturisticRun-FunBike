@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { insforge } from "@/lib/insforge";
+import { writeActivityLog } from "@/lib/serverAudit";
 
 type ParticipantRow = Record<string, unknown> & {
   event_type?: string;
@@ -89,6 +90,15 @@ export async function DELETE(req: NextRequest) {
     console.error("[admin/participants DELETE]", error);
     return NextResponse.json({ error: "Gagal menghapus peserta" }, { status: 500 });
   }
+
+  void writeActivityLog({
+    actorType: "admin",
+    actorLabel: session.user.email ?? "admin",
+    action: "participants_deleted",
+    entityType: "participants",
+    entityId: ids.join(","),
+    metadata: { ids, deletedCount: ids.length },
+  }, req);
 
   return NextResponse.json({ success: true, deletedCount: ids.length });
 }

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { insforge } from "@/lib/insforge";
 import { EVENTS } from "@/content/events";
-import Papa from "papaparse";
+import * as xlsx from "xlsx";
+import { writeActivityLog } from "@/lib/serverAudit";
 
 export async function GET(req: NextRequest) {
   const session = await requireAdmin();
@@ -11,14 +12,14 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const category = searchParams.get("category") ?? "all";
   const status = searchParams.get("status") ?? "all";
-  const eventType = searchParams.get("eventType") ?? "futuristic-run";
+  const requestedEventType = searchParams.get("eventType") ?? "all";
 
   let query = insforge.database
     .from("participants")
     .select("*")
-    .eq("event_type", eventType)
     .order("created_at", { ascending: true });
 
+  if (requestedEventType !== "all") query = query.eq("event_type", requestedEventType);
   if (category !== "all") query = query.eq("category", category);
   if (status !== "all") query = query.eq("payment_status", status);
 
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: "Server error" }, { status: 500 });
 
-  const rows = (participants ?? []).map((p) => ({
+  const mapRow = (p: any) => ({
     "No. Registrasi": p.reg_number,
     "Event": p.event_type === "fun-bike" ? EVENTS["fun-bike"].name : EVENTS["futuristic-run"].name,
     "Nama Lengkap": p.full_name,
@@ -53,15 +54,45 @@ export async function GET(req: NextRequest) {
     "Diverifikasi Oleh": p.verified_by ?? "-",
     "Tanggal Verifikasi": p.verified_at ? new Date(p.verified_at).toLocaleString("id-ID") : "-",
     Catatan: p.rejection_reason ?? "-",
-  }));
+  });
 
-  const csv = Papa.unparse(rows, { quotes: true });
+  const allRows = (participants ?? []).map(mapRow);
+  const funRunRows = (participants ?? []).filter((p) => p.event_type === "futuristic-run").map(mapRow);
+  const funBikeRows = (participants ?? []).filter((p) => p.event_type === "fun-bike").map(mapRow);
 
-  return new NextResponse(csv, {
+  const wb = xlsx.utils.book_new();
+
+  const wsAll = xlsx.utils.json_to_sheet(allRows);
+  xlsx.utils.book_append_sheet(wb, wsAll, "Semua Event");
+
+  const wsFunRun = xlsx.utils.json_to_sheet(funRunRows);
+  xlsx.utils.book_append_sheet(wb, wsFunRun, "Futuristic Run");
+
+  const wsFunBike = xlsx.utils.json_to_sheet(funBikeRows);
+  xlsx.utils.book_append_sheet(wb, wsFunBike, "Fun Bike");
+
+  const buffer = xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
+
+  void writeActivityLog({
+    actorType: "admin",
+    actorLabel: session.user.email ?? "admin",
+    eventType: requestedEventType,
+    action: "participants_exported",
+    entityType: "participants",
+    entityId: requestedEventType,
+    metadata: {
+      category,
+      status,
+      rowCount: allRows.length,
+      format: "xlsx"
+    },
+  }, req);
+
+  return new NextResponse(buffer, {
     status: 200,
     headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${eventType}-peserta-${Date.now()}.csv"`,
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="${requestedEventType === "all" ? "semua" : requestedEventType}-peserta-${Date.now()}.xlsx"`,
     },
   });
 }

@@ -1,18 +1,35 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import { Map, X, ZoomIn } from "lucide-react";
+import { Map, Minus, Plus, X, ZoomIn } from "lucide-react";
 import { createPortal } from "react-dom";
 
 export default function RouteMapImage({ theme = "run" }: { theme?: "run" | "bike" }) {
   const isRun = theme === "run";
   const [isOpen, setIsOpen] = useState(false);
+  const [scale, setScale] = useState(1);
+  const pinchRef = useRef<{ distance: number; scale: number } | null>(null);
+
+  const clampScale = useCallback((next: number) => Math.min(4, Math.max(1, next)), []);
+  const updateScale = useCallback((next: number) => setScale(clampScale(next)), [clampScale]);
+  const openModal = useCallback(() => {
+    setScale(1);
+    pinchRef.current = null;
+    setIsOpen(true);
+  }, []);
+
+  const distance = (touches: React.TouchList) => {
+    const [first, second] = [touches.item(0), touches.item(1)];
+    if (!first || !second) return 0;
+    return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+  };
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
+      pinchRef.current = null;
     }
     return () => {
       document.body.style.overflow = "";
@@ -23,7 +40,7 @@ export default function RouteMapImage({ theme = "run" }: { theme?: "run" | "bike
     <>
       <div 
         className={`group relative overflow-hidden rounded-3xl border shadow-2xl cursor-pointer transition-all hover:shadow-orange-500/10 ${isRun ? "border-[#00E5FF]/20 bg-[#0B1030]/85" : "border-orange-100 bg-white"}`}
-        onClick={() => setIsOpen(true)}
+        onClick={openModal}
       >
         <div className={`absolute inset-0 ${isRun ? "bg-[radial-gradient(circle_at_center,transparent_20%,rgba(7,11,32,0.6)_100%)]" : "bg-[linear-gradient(rgba(251,146,60,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"}`} />
         
@@ -56,10 +73,10 @@ export default function RouteMapImage({ theme = "run" }: { theme?: "run" | "bike
             </div>
             <div>
               <h4 className={`font-black ${isRun ? "text-white" : "text-gray-900"}`} style={{ fontFamily: "Orbitron, sans-serif" }}>
-                PETA RUTE SEMENTARA
+                {isRun ? "PETA RUTE SEMENTARA" : "RUTE MASIH DISURVEI"}
               </h4>
               <p className={`text-xs ${isRun ? "text-[#B0C4DE]" : "text-gray-500"}`}>
-                Detail rute dan check-point final akan diumumkan menyusul.
+                {isRun ? "Detail rute dan check-point final akan diumumkan menyusul." : "Rute Fun Bike belum final dan masih dalam tahap survei panitia."}
               </p>
             </div>
           </div>
@@ -74,24 +91,73 @@ export default function RouteMapImage({ theme = "run" }: { theme?: "run" | "bike
           {/* Header Action */}
           <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 z-[110] bg-gradient-to-b from-black/80 to-transparent">
             <div className="text-white/80 text-xs font-semibold px-4 tracking-widest uppercase">Gunakan dua jari untuk zoom</div>
-            <button 
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md hover:bg-white/25 transition-colors cursor-pointer"
-              onClick={() => setIsOpen(false)}
-            >
-              <X size={20} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/25"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  updateScale(scale - 0.5);
+                }}
+                aria-label="Perkecil peta rute"
+              >
+                <Minus size={18} />
+              </button>
+              <button
+                type="button"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/25"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  updateScale(scale + 0.5);
+                }}
+                aria-label="Perbesar peta rute"
+              >
+                <Plus size={18} />
+              </button>
+              <button 
+                type="button"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md hover:bg-white/25 transition-colors cursor-pointer"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setIsOpen(false);
+                }}
+                aria-label="Tutup peta rute"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
           
           {/* Scrollable / Zoomable container */}
-          <div className="h-full w-full overflow-auto touch-pan-x touch-pan-y" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="h-full w-full overflow-auto overscroll-contain"
+            onClick={(e) => e.stopPropagation()}
+            onTouchStart={(event) => {
+              if (event.touches.length === 2) {
+                pinchRef.current = { distance: distance(event.touches), scale };
+              }
+            }}
+            onTouchMove={(event) => {
+              if (event.touches.length !== 2 || !pinchRef.current) return;
+              event.preventDefault();
+              const nextDistance = distance(event.touches);
+              if (nextDistance <= 0 || pinchRef.current.distance <= 0) return;
+              updateScale(pinchRef.current.scale * (nextDistance / pinchRef.current.distance));
+            }}
+            onTouchEnd={() => {
+              pinchRef.current = null;
+            }}
+            style={{ touchAction: "none" }}
+          >
             <div className="flex min-h-full items-center justify-center p-2 sm:p-8">
               <Image
                 src="/route-map.jpg" 
                 alt="Peta Rute Full" 
                 width={1200}
                 height={800}
-                className="w-full h-auto max-w-none md:max-w-6xl object-contain pointer-events-auto" 
-                style={{ touchAction: "pan-x pan-y pinch-zoom" }}
+                className="h-auto w-full max-w-none select-none object-contain transition-transform duration-100 md:max-w-6xl"
+                draggable={false}
+                style={{ transform: `scale(${scale})`, transformOrigin: "center center", touchAction: "none" }}
               />
             </div>
           </div>

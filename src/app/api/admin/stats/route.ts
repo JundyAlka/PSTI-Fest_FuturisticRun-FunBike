@@ -72,6 +72,146 @@ type TotalStats = {
   daily: DailyPoint[];
 };
 
+type VisitorStats = {
+  activeNow: number;
+  today: number;
+  unregisteredActive: number;
+  registeredToday: number;
+  byEvent: Array<{ eventType: string; active: number; today: number; unregistered: number }>;
+  recent: Array<{
+    sessionId: string;
+    eventType: string | null;
+    currentPath: string | null;
+    deviceType: string | null;
+    registered: boolean;
+    pageViews: number;
+    lastSeenAt: string;
+  }>;
+};
+
+type ActivityLog = {
+  id: number;
+  createdAt: string;
+  actorType: string;
+  actorLabel: string | null;
+  eventType: string | null;
+  action: string;
+  entityType: string | null;
+  entityId: string | null;
+  pageUrl: string | null;
+};
+
+function emptyVisitorStats(): VisitorStats {
+  return {
+    activeNow: 0,
+    today: 0,
+    unregisteredActive: 0,
+    registeredToday: 0,
+    byEvent: [],
+    recent: [],
+  };
+}
+
+async function loadVisitorStats(): Promise<VisitorStats> {
+  try {
+    const now = Date.now();
+    const activeSince = new Date(now - 5 * 60_000).toISOString();
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const { data, error } = await insforge.database
+      .from("visitor_sessions")
+      .select("session_id, event_type, current_path, device_type, registered, page_views, first_seen_at, last_seen_at")
+      .order("last_seen_at", { ascending: false })
+      .limit(500);
+
+    if (error) throw error;
+
+    const rows = (data ?? []) as Array<{
+      session_id: string;
+      event_type: string | null;
+      current_path: string | null;
+      device_type: string | null;
+      registered: boolean;
+      page_views: number;
+      first_seen_at: string;
+      last_seen_at: string;
+    }>;
+
+    const activeRows = rows.filter((row) => row.last_seen_at >= activeSince);
+    const todayRows = rows.filter((row) => row.first_seen_at >= todayStart.toISOString());
+    const eventMap = new Map<string, { eventType: string; active: number; today: number; unregistered: number }>();
+
+    for (const row of rows) {
+      const eventType = row.event_type || "hub";
+      const item = eventMap.get(eventType) ?? { eventType, active: 0, today: 0, unregistered: 0 };
+      if (row.last_seen_at >= activeSince) {
+        item.active += 1;
+        if (!row.registered) item.unregistered += 1;
+      }
+      if (row.first_seen_at >= todayStart.toISOString()) item.today += 1;
+      eventMap.set(eventType, item);
+    }
+
+    return {
+      activeNow: activeRows.length,
+      today: todayRows.length,
+      unregisteredActive: activeRows.filter((row) => !row.registered).length,
+      registeredToday: todayRows.filter((row) => row.registered).length,
+      byEvent: Array.from(eventMap.values()).sort((a, b) => b.active - a.active),
+      recent: activeRows.slice(0, 12).map((row) => ({
+        sessionId: row.session_id,
+        eventType: row.event_type,
+        currentPath: row.current_path,
+        deviceType: row.device_type,
+        registered: row.registered,
+        pageViews: row.page_views,
+        lastSeenAt: row.last_seen_at,
+      })),
+    };
+  } catch (error) {
+    console.error("[admin/stats] visitor stats unavailable", error);
+    return emptyVisitorStats();
+  }
+}
+
+async function loadRecentActivity(): Promise<ActivityLog[]> {
+  try {
+    const { data, error } = await insforge.database
+      .from("activity_logs")
+      .select("id, created_at, actor_type, actor_label, event_type, action, entity_type, entity_id, page_url")
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (error) throw error;
+
+    return ((data ?? []) as Array<{
+      id: number;
+      created_at: string;
+      actor_type: string;
+      actor_label: string | null;
+      event_type: string | null;
+      action: string;
+      entity_type: string | null;
+      entity_id: string | null;
+      page_url: string | null;
+    }>).map((row) => ({
+      id: row.id,
+      createdAt: row.created_at,
+      actorType: row.actor_type,
+      actorLabel: row.actor_label,
+      eventType: row.event_type,
+      action: row.action,
+      entityType: row.entity_type,
+      entityId: row.entity_id,
+      pageUrl: row.page_url,
+    }));
+  } catch (error) {
+    console.error("[admin/stats] activity logs unavailable", error);
+    return [];
+  }
+}
+
 export async function GET(req: NextRequest) {
   const session = await requireAdmin();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -279,5 +419,10 @@ export async function GET(req: NextRequest) {
   };
   total.fillPercent = total.totalQuota > 0 ? Math.round((total.totalFilled / total.totalQuota) * 100) : 0;
 
-  return NextResponse.json({ events: eventStatsArr, total });
+  const [visitors, activity] = await Promise.all([
+    loadVisitorStats(),
+    loadRecentActivity(),
+  ]);
+
+  return NextResponse.json({ events: eventStatsArr, total, visitors, activity });
 }

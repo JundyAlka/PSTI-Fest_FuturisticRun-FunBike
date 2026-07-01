@@ -71,7 +71,7 @@ export default function AdminSidebar() {
           className="card-animated flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-3 text-sm font-medium text-[#B0C4DE] transition-all duration-200 hover:bg-white/5 hover:text-white md:gap-3 md:px-4"
         >
           <Download size={16} />
-          Export CSV
+          Export Excel
         </a>
       </nav>
 

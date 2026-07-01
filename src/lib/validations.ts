@@ -37,6 +37,7 @@ export const RegisterSchema = Step1Schema.merge(Step2Schema).merge(
   z.object({
     paymentMethod: z.enum(["transfer", "qris"]),
     paymentProof: z.string().optional(),
+    visitorSessionId: z.string().max(120).optional(),
   })
 );
 

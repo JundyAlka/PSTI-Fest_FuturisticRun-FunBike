@@ -4,6 +4,7 @@ import { insforge } from "@/lib/insforge";
 import { VerifyPaymentSchema } from "@/lib/validations";
 import { sendVerificationEmail, sendRejectionEmail } from "@/lib/email";
 import { generateBibNumber } from "@/lib/utils";
+import { writeActivityLog } from "@/lib/serverAudit";
 
 export async function POST(req: NextRequest) {
   const session = await requireAdmin();
@@ -67,6 +68,20 @@ export async function POST(req: NextRequest) {
       notes,
     }).catch(console.error);
   }
+
+  void writeActivityLog({
+    actorType: "admin",
+    actorLabel: session.user.email ?? "admin",
+    eventType: participant.event_type,
+    action: status === "verified" ? "payment_verified" : "payment_rejected",
+    entityType: "participant",
+    entityId: participant.reg_number,
+    metadata: {
+      participantId: id,
+      bibNumber: assignedBib ?? null,
+      notes: notes ?? null,
+    },
+  }, req);
 
   return NextResponse.json({ success: true, participant: updated });
 }

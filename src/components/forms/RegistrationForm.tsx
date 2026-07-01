@@ -33,6 +33,7 @@ interface RegistrationFormProps {
   eventType?: "futuristic-run" | "fun-bike" | string;
   categoryLabel?: string;
   defaultPrice?: number;
+  minAge?: number | null;
   currentTierLabel?: string | null;
   presaleRemaining?: number | null;
   presaleQuota?: number | null;
@@ -59,6 +60,16 @@ function makeInitial(eventType: string): FormData {
     bloodType: "", medicalHistory: "", runningClub: "",
     paymentMethod: "", agreeTerms: false, agreeHealth: false,
   };
+}
+
+function calculateAge(birthDate: string) {
+  const parsed = new Date(`${birthDate}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - parsed.getFullYear();
+  const monthDiff = today.getMonth() - parsed.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < parsed.getDate())) age -= 1;
+  return age;
 }
 
 /* ── Theme type ── */
@@ -160,7 +171,7 @@ function InputField({ label, id, error, required, theme, children }: {
   );
 }
 
-export default function RegistrationForm({ eventType = "futuristic-run", categoryLabel, defaultPrice, currentTierLabel, presaleRemaining, presaleQuota, normalPrice }: RegistrationFormProps) {
+export default function RegistrationForm({ eventType = "futuristic-run", categoryLabel, defaultPrice, minAge, currentTierLabel, presaleRemaining, presaleQuota, normalPrice }: RegistrationFormProps) {
   const isFunBike = eventType === "fun-bike";
   const catLabel = categoryLabel ?? (isFunBike ? "Futuristic Bike Ride" : "RUN 5K");
   const t = isFunBike ? lightTheme : darkTheme;
@@ -168,12 +179,14 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
   const [form, setForm] = useState<FormData>(makeInitial(eventType));
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const submittingRef = useRef(false);
   const fee = defaultPrice ?? 0;
 
-  const feeFormatted = new Intl.NumberFormat("id-ID", {
+  const currencyFormatter = new Intl.NumberFormat("id-ID", {
     style: "currency", currency: "IDR", minimumFractionDigits: 0,
-  }).format(fee);
+  });
+  const feeFormatted = fee > 0 ? currencyFormatter.format(fee) : "Harga belum tersedia";
   const normalPriceFormatted = normalPrice ? new Intl.NumberFormat("id-ID", {
     style: "currency", currency: "IDR", minimumFractionDigits: 0,
   }).format(normalPrice) : null;
@@ -223,6 +236,14 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
   };
 
   const set = (k: keyof FormData, v: string | boolean) => {
+    setApiError("");
+    if (k === "paymentMethod") setSubmitAttempted(false);
+    setErrors((current) => {
+      if (!current[k]) return current;
+      const next = { ...current };
+      delete next[k];
+      return next;
+    });
     setForm((f) => {
       const next = { ...f, [k]: v };
       autosave(next);
@@ -240,6 +261,11 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
       if (!form.gender) e.gender = "Wajib dipilih";
       if (!form.birthPlace) e.birthPlace = "Wajib diisi";
       if (!form.birthDate) e.birthDate = "Wajib diisi";
+      if (form.birthDate) {
+        const age = calculateAge(form.birthDate);
+        if (age === null || age < 0) e.birthDate = "Tanggal lahir tidak valid";
+        else if (minAge && age < minAge) e.birthDate = `Usia minimal ${minAge} tahun untuk kategori ini`;
+      }
       if (!/^08[0-9]{8,11}$/.test(form.phone)) e.phone = "Format: 08xxxxxxxxxx";
       if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Format email tidak valid";
       if (!form.address) e.address = "Wajib diisi";
@@ -268,11 +294,27 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
       setStep((s) => s + 1);
     }
   };
-  const back = () => setStep((s) => s - 1);
+  const back = () => {
+    setApiError("");
+    if (step <= 0) {
+      router.push(isFunBike ? "/fun-bike" : "/futuristic-run");
+      return;
+    }
+    setStep((s) => Math.max(0, s - 1));
+  };
 
   const submit = async () => {
     if (submittingRef.current) return;
-    if (!validateStep(2)) return;
+    setSubmitAttempted(true);
+    const valid = validateStep(2);
+    if (!valid) {
+      if (!form.paymentMethod) {
+        setApiError("Pilih metode pembayaran terlebih dahulu sebelum submit pendaftaran.");
+      } else if (!form.agreeTerms || !form.agreeHealth) {
+        setApiError("Centang persetujuan syarat, ketentuan, dan kondisi kesehatan sebelum submit.");
+      }
+      return;
+    }
     submittingRef.current = true;
     setSubmitting(true);
     setApiError("");
@@ -293,6 +335,7 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
         medicalHistory: form.medicalHistory || undefined,
         runningClub: form.runningClub || undefined,
         paymentMethod: form.paymentMethod,
+        visitorSessionId: localStorage.getItem("fv-visitor-session") || undefined,
       };
       const res = await fetch("/api/register", {
         method: "POST",
@@ -308,6 +351,8 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
           REGISTRATION_DEADLINE: "Batas waktu pendaftaran sudah berakhir.",
           REGISTRATION_CLOSED: "Pendaftaran sedang ditutup.",
           PAYMENT_METHOD_UNAVAILABLE: "Metode pembayaran yang dipilih sedang tidak tersedia.",
+          AGE_REQUIREMENT: minAge ? `Usia minimal ${minAge} tahun untuk kategori ini.` : "Usia belum memenuhi syarat kategori.",
+          PRICING_UNAVAILABLE: "Harga pendaftaran belum tersedia. Silakan hubungi panitia.",
         };
         setApiError(messages[data.code] ?? data.message ?? "Pendaftaran gagal. Coba lagi.");
         return;
@@ -321,7 +366,7 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
       if (typeof data.accessToken === "string" && data.accessToken) {
         sessionStorage.setItem(`registration-access:${data.regNumber}`, data.accessToken);
       }
-      router.push(`/konfirmasi?reg=${data.regNumber}&event=${isFunBike ? "bike" : "run"}`);
+      router.replace(`/konfirmasi?reg=${data.regNumber}&event=${isFunBike ? "bike" : "run"}`);
     } catch (error) {
       setApiError(
         error instanceof DOMException && error.name === "AbortError"
@@ -656,7 +701,12 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
                   <QrCode size={14} /> Lihat QR Code Pembayaran ({feeFormatted})
                 </button>
               )}
-              {errors.paymentMethod && <p className="text-[#FF006E] text-xs mt-2 flex items-center gap-1"><AlertCircle size={11} />{errors.paymentMethod}</p>}
+              {submitAttempted && errors.paymentMethod && (
+                <div className={`mt-3 flex items-start gap-2 rounded-xl border p-3 text-xs ${t.errorBg} ${t.errorBorder} text-[#FF006E]`}>
+                  <AlertCircle size={14} className="mt-0.5 shrink-0" />
+                  <span>Pilih metode pembayaran terlebih dahulu sebelum submit pendaftaran.</span>
+                </div>
+              )}
             </div>
 
             {/* QRIS Payment Modal */}
@@ -814,16 +864,14 @@ export default function RegistrationForm({ eventType = "futuristic-run", categor
 
         {/* Navigation buttons */}
         <div className="flex flex-col min-[430px]:flex-row gap-3 mt-8">
-          {step > 0 && (
-            <button
-              onClick={back}
-              disabled={submitting}
-              className={`flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm cursor-pointer flex-1 min-[430px]:flex-none justify-center disabled:opacity-50 transition-all duration-300 font-semibold ${t.btnBack}`}
-              style={{ fontFamily: "Orbitron, sans-serif", letterSpacing: "1px" }}
-            >
-              <ChevronLeft size={16} /> KEMBALI
-            </button>
-          )}
+          <button
+            onClick={back}
+            disabled={submitting}
+            className={`flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm cursor-pointer flex-1 min-[430px]:flex-none justify-center disabled:opacity-50 transition-all duration-300 font-semibold ${t.btnBack}`}
+            style={{ fontFamily: "Orbitron, sans-serif", letterSpacing: "1px" }}
+          >
+            <ChevronLeft size={16} /> KEMBALI
+          </button>
           <button
             onClick={step < 2 ? next : submit}
             disabled={submitting}

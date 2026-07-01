@@ -38,6 +38,7 @@
     "recharts": "^3.9.1",
     "resend": "^6.12.3",
     "tsx": "^4.22.3",
+    "xlsx": "^0.18.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -6,6 +6,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { checkInsforgeHealth, serviceUnavailable } from "@/lib/insforgeHealth";
 import { randomBytes } from "node:crypto";
 import { hashRegistrationAccessToken } from "@/lib/registrationAccess";
+import { writeActivityLog } from "@/lib/serverAudit";
 
 type AtomicRegistrationResult = {
   reg_number: string;
@@ -117,6 +118,36 @@ export async function POST(req: NextRequest) {
       amount: result.price,
       paymentMethod: data.paymentMethod,
     }).catch(console.error);
+
+    if (data.visitorSessionId) {
+      insforge.database
+        .from("visitor_sessions")
+        .update({
+          registered: true,
+          registration_number: result.reg_number,
+          last_seen_at: new Date().toISOString(),
+        })
+        .eq("session_id", data.visitorSessionId)
+        .then(({ error }) => {
+          if (error) console.error("[POST /api/register] visitor session update failed", error);
+        });
+    }
+
+    void writeActivityLog({
+      actorType: "participant",
+      actorLabel: data.fullName,
+      eventType,
+      action: "registration_created",
+      entityType: "participant",
+      entityId: result.reg_number,
+      metadata: {
+        category: data.category,
+        paymentMethod: data.paymentMethod,
+        price: result.price,
+        pricingTier: result.pricing_tier_id,
+        visitorSessionId: data.visitorSessionId ?? null,
+      },
+    }, req);
 
     return NextResponse.json(
       { success: true, regNumber: result.reg_number, accessToken, price: result.price, pricingTier: result.pricing_tier_id, message: "Pendaftaran berhasil!" },

@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/adminAuth";
 import { insforge } from "@/lib/insforge";
 import { generateBibNumber } from "@/lib/utils";
 import { sendVerificationEmail } from "@/lib/email";
+import { writeActivityLog } from "@/lib/serverAudit";
 
 export async function POST(req: NextRequest) {
   const session = await requireAdmin();
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     try {
       const { data: participant } = await insforge.database
         .from("participants")
-        .select("id, email, full_name, reg_number, category, payment_status")
+        .select("id, email, full_name, reg_number, category, event_type, payment_status")
         .eq("id", id)
         .maybeSingle();
 
@@ -60,6 +61,15 @@ export async function POST(req: NextRequest) {
       }
 
       results.push({ id, success: true });
+      void writeActivityLog({
+        actorType: "admin",
+        actorLabel: adminEmail,
+        eventType: participant.event_type,
+        action: "payment_verified_bulk",
+        entityType: "participant",
+        entityId: participant.reg_number,
+        metadata: { participantId: id, bibNumber: bib ?? null },
+      }, req);
     } catch {
       results.push({ id, success: false, error: "Update failed" });
     }

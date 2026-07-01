@@ -35,7 +35,7 @@ export default async function FunBikeDaftarPage() {
             <p className="text-gray-500">Isi formulir berikut untuk bergabung di Futuristic Bike 2026</p>
           </div>
           <div className="section-reveal-delay-1">
-            <RegistrationForm eventType="fun-bike" categoryLabel="Futuristic Bike Ride" defaultPrice={eventOps.price ?? undefined} />
+            <RegistrationForm eventType="fun-bike" categoryLabel="Futuristic Bike Ride" defaultPrice={eventOps.price ?? undefined} minAge={eventOps.minAge} />
           </div>
         </div>
       </main>

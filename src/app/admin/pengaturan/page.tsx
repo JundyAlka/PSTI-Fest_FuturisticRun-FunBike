@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useState } from "react";
-import { Settings, Save, ToggleLeft, ToggleRight, CreditCard, Building2, QrCode, Upload, Loader2, Smartphone, AlertCircle, BadgeDollarSign } from "lucide-react";
+import { Settings, Save, ToggleLeft, ToggleRight, CreditCard, Building2, QrCode, Upload, Loader2, AlertCircle, BadgeDollarSign } from "lucide-react";
 import LoadingPanel from "@/components/LoadingPanel";
 import { DEFAULT_EVENT_DATES, normalizeEventDate } from "@/lib/eventDate";
 import { DEFAULT_PRIZE_SETTINGS, PRIZES, PRIZE_FIELDS, prizeSettingKey } from "@/data/prizes";
@@ -85,7 +85,7 @@ const defaultSettings: SettingsState = {
   contact_person_name: "Bimo Putra",
   contact_person_whatsapp: "+62 856-4390-9808",
   bike_prize_amount: "",
-  bike_route_note: "Rute final menyusul technical meeting.",
+  bike_route_note: "Rute masih dalam tahap survei dan belum final.",
   faq: EVENTS["futuristic-run"].faq.map((item) => `${item.q} | ${item.a}`).join("\n"),
   rules: EVENTS["futuristic-run"].rules.join("\n"),
   ...DEFAULT_PRIZE_SETTINGS,
@@ -202,6 +202,9 @@ export default function PengaturanPage() {
         setSettings((prev) => ({
           ...prev,
           ...data,
+          payment_dana_enabled: "false",
+          payment_dana_number: "",
+          payment_dana_holder: "",
           faq: cleanFaq,
           rules: cleanRules,
           event_date: normalizeEventDate(data.event_date) ?? DEFAULT_EVENT_DATES[eventType],
@@ -244,7 +247,7 @@ export default function PengaturanPage() {
       payment_bank_account: "007801112841503",
       payment_bank_holder: "SYIFA FITRIYANTI",
       payment_qris_merchant_name: "SYIFA FITRIYANTI",
-      bike_route_note: nextEventType === "fun-bike" ? "Rute final menyusul technical meeting." : "",
+      bike_route_note: nextEventType === "fun-bike" ? "Rute masih dalam tahap survei dan belum final." : "",
       faq: EVENTS[nextEventType].faq.map((item) => `${item.q} | ${item.a}`).join("\n"),
       rules: EVENTS[nextEventType].rules.join("\n"),
     });
@@ -255,7 +258,6 @@ export default function PengaturanPage() {
     setSaveError("");
     const required: Array<[boolean, Array<keyof SettingsState>, string]> = [
       [settings.payment_transfer_enabled === "true", ["payment_bank_name", "payment_bank_account", "payment_bank_holder"], "Lengkapi seluruh data rekening bank."],
-      [settings.payment_dana_enabled === "true", ["payment_dana_number", "payment_dana_holder"], "Lengkapi nomor dan nama akun DANA."],
       [settings.payment_qris_enabled === "true", ["payment_qris_image_url", "payment_qris_nmid", "payment_qris_merchant_name"], "QRIS aktif memerlukan gambar, NMID, dan nama merchant."],
     ];
     const invalid = required.find(([enabled, keys]) => enabled && keys.some((key) => !settings[key]?.trim()));
@@ -263,7 +265,7 @@ export default function PengaturanPage() {
       setSaveError(invalid[2]);
       return;
     }
-    if (![settings.payment_transfer_enabled, settings.payment_dana_enabled, settings.payment_qris_enabled].includes("true")) {
+    if (![settings.payment_transfer_enabled, settings.payment_qris_enabled].includes("true")) {
       setSaveError("Aktifkan minimal satu metode pembayaran.");
       return;
     }
@@ -274,7 +276,12 @@ export default function PengaturanPage() {
     }
 
     setSaving(true);
-    const payload = Object.fromEntries(Object.entries(settings).filter(([key]) => {
+    const payload = Object.fromEntries(Object.entries({
+      ...settings,
+      payment_dana_enabled: "false",
+      payment_dana_number: "",
+      payment_dana_holder: "",
+    }).filter(([key]) => {
       if (key === "registration_fee") return false;
       if (eventType === "fun-bike") return key !== "quota_5k" && !key.startsWith("prize_") && !key.startsWith("benefit_");
       return key !== "quota_funbike" && key !== "registration_fee";
@@ -546,7 +553,7 @@ export default function PengaturanPage() {
                       type="text"
                       className={inp}
                       value={settings.bike_route_note}
-                      placeholder="Rute final menyusul technical meeting."
+                      placeholder="Rute masih dalam tahap survei dan belum final."
                       onChange={(e) => set("bike_route_note", e.target.value)}
                     />
                   </div>}
@@ -693,12 +700,6 @@ export default function PengaturanPage() {
                     value={settings.payment_qris_enabled === "true"}
                     onChange={(v) => set("payment_qris_enabled", v ? "true" : "false")}
                   />
-                  <Toggle
-                    label="DANA"
-                    desc="Peserta dapat membayar ke nomor DANA panitia"
-                    value={settings.payment_dana_enabled === "true"}
-                    onChange={(v) => set("payment_dana_enabled", v ? "true" : "false")}
-                  />
                 </div>
               </SectionCard>
 
@@ -739,39 +740,6 @@ export default function PengaturanPage() {
                           <span className="text-white font-semibold">{r.value}</span>
                         </div>
                       ))}
-                    </div>
-                  )}
-                </div>
-              </SectionCard>
-
-              {/* DANA */}
-              <SectionCard icon={Smartphone} title="DANA" color="#118EEA">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-[#B0C4DE] text-sm mb-1.5">Nomor DANA</label>
-                    <input
-                      type="tel"
-                      className={inp}
-                      value={settings.payment_dana_number}
-                      placeholder="Contoh: 081234567890"
-                      onChange={(e) => set("payment_dana_number", e.target.value.replace(/[^0-9+]/g, ""))}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[#B0C4DE] text-sm mb-1.5">Nama Akun DANA</label>
-                    <input
-                      type="text"
-                      className={inp}
-                      value={settings.payment_dana_holder}
-                      placeholder="Nama pemilik akun DANA"
-                      onChange={(e) => set("payment_dana_holder", e.target.value)}
-                    />
-                  </div>
-                  {settings.payment_dana_number && (
-                    <div className="rounded-xl border border-[#118EEA]/25 bg-[#118EEA]/5 p-4">
-                      <p className="text-xs font-bold tracking-widest text-[#118EEA]">PREVIEW DANA</p>
-                      <p className="mt-2 text-lg font-black text-white">{settings.payment_dana_number}</p>
-                      <p className="text-xs text-[#B0C4DE]">a.n. {settings.payment_dana_holder || "-"}</p>
                     </div>
                   )}
                 </div>

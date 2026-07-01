@@ -1,7 +1,7 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle, ArrowRight, CheckCircle, Clock, Copy, CreditCard, Download, FileText, Home, Loader2, MessageCircle, Minus, Plus, QrCode, RefreshCw, Smartphone, Upload, X } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle, Clock, Copy, CreditCard, Download, FileText, Home, Loader2, MessageCircle, Minus, Plus, QrCode, RefreshCw, Upload, X } from "lucide-react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { PAYMENT_PROOF_MAX_SIZE, PAYMENT_PROOF_TYPES } from "@/lib/validations";
 import { trackPaymentProof } from "@/lib/analytics";
@@ -645,23 +645,6 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
                 </div>
               )}
 
-              {paymentInfo.dana.enabled && registrationStatus.paymentMethod === "dana" && (
-                <div className="rounded-2xl border border-[#118EEA]/30 bg-[#118EEA]/10 p-4">
-                  <div className={`mb-3 flex items-center gap-2 text-sm font-bold ${headingClass}`}>
-                    <Smartphone size={17} className="text-[#52B6F8]" /> DANA
-                  </div>
-                  <p className="break-all text-xl font-black text-[#52B6F8]">{paymentInfo.dana.number}</p>
-                  <p className={`mt-1 text-xs ${mutedClass}`}>a.n. {paymentInfo.dana.holder}</p>
-                  <button
-                    type="button"
-                    onClick={() => copyText("dana", paymentInfo.dana.number)}
-                    className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#118EEA]/20 px-4 text-sm font-semibold text-[#8DD2FF]"
-                  >
-                    <Copy size={14} /> {copied === "dana" ? "Tersalin" : "Salin nomor DANA"}
-                  </button>
-                </div>
-              )}
-
               {paymentInfo.qris.enabled && registrationStatus.paymentMethod === "qris" && (
                 <div className={`rounded-2xl border p-4 sm:col-span-2 ${isFunBike ? "border-sky-200 bg-sky-50/80" : "border-[#8B00FF]/30 bg-[#8B00FF]/10"}`}>
                   <div className={`mb-4 flex items-center gap-2 text-sm font-bold ${headingClass}`}>
@@ -757,7 +740,7 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
           <>
             <p className={`${mutedClass} text-xs mb-3`}>
               {canUpload
-                ? "Selesaikan pembayaran terlebih dahulu, lalu upload bukti Transfer Bank/DANA/QRIS di sini."
+                ? "Selesaikan pembayaran terlebih dahulu, lalu upload bukti Transfer Bank/QRIS di sini."
                 : "Bukti pembayaran sudah tersimpan."}
             </p>
             <label
@@ -834,6 +817,7 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
 
       <Link
         href={isFunBike ? "/fun-bike" : "/futuristic-run"}
+        replace
         className={`mt-4 flex items-center justify-center gap-2 text-sm transition-colors ${mutedClass}`}
         style={{ ['--hover-color' as string]: accentColor }}
       >

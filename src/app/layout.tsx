@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import ScrollRevealProvider from "@/components/ScrollRevealProvider";
+import VisitorTracker from "@/components/VisitorTracker";
 import { FEST_FULL_NAME } from "@/content/brand";
 import "./globals.css";
 
@@ -28,6 +29,7 @@ export default function RootLayout({
       </head>
       <body>
         <ScrollRevealProvider />
+        <VisitorTracker />
         {children}
       </body>
     </html>

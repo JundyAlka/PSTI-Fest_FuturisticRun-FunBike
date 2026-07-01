@@ -96,7 +96,7 @@ export default async function FunBikePage() {
   const location = resolveEventLocation(event.location as EventLocation, ops.settings);
   const locationLabel = location.label || "Alun-Alun Purworejo";
   const locationAddress = ops.settings.event_location_address?.trim() || "Alun-Alun Purworejo, Purworejo, Jawa Tengah";
-  const routeNote = ops.settings.bike_route_note?.trim() || "Rute final menyusul technical meeting.";
+  const routeNote = ops.settings.bike_route_note?.trim() || "Rute masih dalam tahap survei dan belum final.";
   const contactPhone = ops.settings.contact_person_whatsapp?.trim() || ops.contactPerson || ops.settings.contact_person || DEFAULT_WHATSAPP;
   const contactHref = contactPhone ? whatsappUrl(contactPhone) : null;
   const prizeAmount = formatPrizeAmount(ops.settings.bike_prize_amount);
@@ -235,7 +235,7 @@ export default async function FunBikePage() {
               <div className="badge-sunrise mb-4 inline-block">LOKASI & RUTE</div>
               <h2 className="mb-4 text-4xl font-black text-gray-900" style={{ fontFamily: "Orbitron, sans-serif" }}>START, FINISH, DAN RUTE FUN RIDE</h2>
               <p className="mx-auto max-w-2xl text-sm leading-6 text-gray-600">
-                Lokasi start dan finish memakai titik Alun-Alun Purworejo. Rute fun ride pagi ditata bersama marshal dan panitia.
+                Lokasi start dan finish memakai titik Alun-Alun Purworejo. Rute Fun Bike masih dalam tahap survei dan belum final.
               </p>
             </div>
 
@@ -272,9 +272,9 @@ export default async function FunBikePage() {
                   <Navigation size={22} className="mb-3 text-[#0284C7]" />
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-gray-500">Catatan Rute</p>
                   <p className="mt-2 text-sm font-semibold leading-6 text-gray-800">
-                    Rute pagi mengelilingi Purworejo dari dan kembali ke Alun-Alun. {routeNote}
+                    {routeNote}
                   </p>
-                  <p className="mt-3 text-xs leading-5 text-gray-500">Checkpoint dan arahan teknis mengikuti briefing marshal saat technical meeting.</p>
+                  <p className="mt-3 text-xs leading-5 text-gray-500">Checkpoint, jarak tempuh, dan arahan teknis akan diumumkan setelah survei rute panitia selesai.</p>
                 </article>
               </div>
             </div>

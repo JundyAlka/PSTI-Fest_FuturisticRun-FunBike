@@ -45,7 +45,7 @@ export default async function DaftarPage() {
             <p className="text-[#B0C4DE]">Isi formulir berikut untuk bergabung di {event.name} 2026</p>
           </div>
           <div className="section-reveal-delay-1">
-            <RegistrationForm defaultPrice={eventOps.price ?? undefined} currentTierLabel={eventOps.currentTierLabel}
+            <RegistrationForm defaultPrice={eventOps.price ?? undefined} minAge={eventOps.minAge} currentTierLabel={eventOps.currentTierLabel}
               presaleRemaining={eventOps.presaleRemaining} presaleQuota={eventOps.presaleQuota} normalPrice={eventOps.normalPrice} />
           </div>
         </div>

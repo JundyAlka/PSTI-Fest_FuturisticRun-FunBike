@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/adminAuth";
 import { insforge } from "@/lib/insforge";
 import { ALLOWED_SETTING_KEYS } from "@/lib/validations";
 import { normalizeEventDate } from "@/lib/eventDate";
+import { writeActivityLog } from "@/lib/serverAudit";
 
 const allowedKeys = new Set<string>(ALLOWED_SETTING_KEYS);
 const eventTypes = new Set(["futuristic-run", "fun-bike"]);
@@ -64,6 +65,10 @@ export async function POST(req: NextRequest) {
     safeBody[key] = value.trim();
   }
 
+  safeBody.payment_dana_enabled = "false";
+  safeBody.payment_dana_number = "";
+  safeBody.payment_dana_holder = "";
+
   if (!Object.keys(safeBody).length) {
     return NextResponse.json({ error: "Tidak ada pengaturan untuk disimpan." }, { status: 400 });
   }
@@ -90,6 +95,18 @@ export async function POST(req: NextRequest) {
       { status: match ? 400 : 500 },
     );
   }
+
+  void writeActivityLog({
+    actorType: "admin",
+    actorLabel: session.user.email ?? "admin",
+    eventType,
+    action: "settings_updated",
+    entityType: "event_settings",
+    entityId: eventType,
+    metadata: {
+      keys: Object.keys(safeBody),
+    },
+  }, req);
 
   return NextResponse.json({ success: true, updated: data });
 }

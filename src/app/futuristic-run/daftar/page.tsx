@@ -41,7 +41,7 @@ export default async function DaftarPage() {
             <p className="text-[#B0C4DE]">Isi formulir berikut untuk bergabung di Futuristic Run 2026</p>
           </div>
           <div className="section-reveal-delay-1">
-            <RegistrationForm eventType="futuristic-run" defaultPrice={eventOps.price ?? undefined}
+            <RegistrationForm eventType="futuristic-run" defaultPrice={eventOps.price ?? undefined} minAge={eventOps.minAge}
               currentTierLabel={eventOps.currentTierLabel} presaleRemaining={eventOps.presaleRemaining}
               presaleQuota={eventOps.presaleQuota} normalPrice={eventOps.normalPrice} />
           </div>

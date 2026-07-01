@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { insforge } from "@/lib/insforge";
+import { writeActivityLog } from "@/lib/serverAudit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,6 +22,19 @@ export async function POST(req: NextRequest) {
         created_at: ts ? new Date(ts).toISOString() : new Date().toISOString(),
       },
     ]);
+
+    void writeActivityLog({
+      actorType: "visitor",
+      actorLabel: typeof meta?.regNumber === "string" ? meta.regNumber : undefined,
+      eventType,
+      action: `analytics_${event}`,
+      entityType: "analytics_event",
+      pageUrl: url ?? null,
+      metadata: {
+        ...(meta && typeof meta === "object" ? meta : {}),
+        referrer: ref ?? null,
+      },
+    }, req);
 
     return NextResponse.json({ ok: true });
   } catch (err) {

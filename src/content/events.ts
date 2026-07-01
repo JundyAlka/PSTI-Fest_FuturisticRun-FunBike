@@ -236,7 +236,7 @@ export const EVENTS: Record<EventSlug, EventContent> = {
       },
       {
         q: "Bagaimana alur pembayaran dan berapa lama proses verifikasi pendaftaran?",
-        a: "Pendaftaran dilakukan secara online melalui website ini. Pembayaran dapat dilakukan via Transfer Bank, DANA, atau QRIS. Setelah mengunggah bukti bayar, admin panitia akan melakukan verifikasi maksimal dalam waktu 1x24 jam. Status pendaftaran akan berubah menjadi 'Terverifikasi' disertai e-ticket resmi.",
+        a: "Pendaftaran dilakukan secara online melalui website ini. Pembayaran dapat dilakukan via Transfer Bank atau QRIS. Setelah mengunggah bukti bayar, admin panitia akan melakukan verifikasi maksimal dalam waktu 1x24 jam. Status pendaftaran akan berubah menjadi 'Terverifikasi' disertai e-ticket resmi.",
       },
       {
         q: "Kapan jadwal dan syarat pengambilan Race Pack Collection (RPC)?",

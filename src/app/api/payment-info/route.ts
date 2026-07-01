@@ -104,7 +104,8 @@ async function loadSettings(eventType: EventDateSlug) {
       ]));
       if (settingsResult.error) throw settingsResult.error;
       if (categoryResult.error) throw categoryResult.error;
-      const pricing = categoryResult.data as { currentPrice?: number } | null;
+      const rawPricing = categoryResult.data as { currentPrice?: number } | Array<{ currentPrice?: number }> | null;
+      const pricing = Array.isArray(rawPricing) ? rawPricing[0] ?? null : rawPricing;
       return { settings: settingsResult.data ?? [], activePrice: pricing?.currentPrice };
     } catch (error) {
       lastError = error;
@@ -130,9 +131,9 @@ function fromSettings(
     holder: bankHolder,
   };
   const dana = {
-    enabled: map.payment_dana_enabled === "true" && Boolean(map.payment_dana_number && map.payment_dana_holder),
-    number: map.payment_dana_number || "",
-    holder: map.payment_dana_holder || "",
+    enabled: false,
+    number: "",
+    holder: "",
   };
   const qris = {
     enabled: map.payment_qris_enabled === "true" && Boolean((map.payment_qris_nmid || fallback.qris.nmid) && (map.payment_qris_image_url || fallback.qris.imageUrl) && (map.payment_qris_merchant_name || map.payment_bank_holder || fallback.qris.merchantName)),
@@ -143,7 +144,6 @@ function fromSettings(
   const parsedFee = Number.parseInt(map.registration_fee ?? "", 10);
   const methods: PaymentInfoResponse["methods"] = [];
   if (bank.enabled) methods.push("bank");
-  if (dana.enabled) methods.push("dana");
   if (qris.enabled) methods.push("qris");
 
   return {
