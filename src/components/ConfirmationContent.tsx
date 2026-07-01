@@ -1,11 +1,11 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { AlertCircle, ArrowRight, CheckCircle, Clock, Copy, CreditCard, Download, FileText, Home, Loader2, MessageCircle, QrCode, RefreshCw, Smartphone, Upload, X } from "lucide-react";
+import { AlertCircle, ArrowRight, CheckCircle, Clock, Copy, CreditCard, Download, FileText, Home, Loader2, MessageCircle, Minus, Plus, QrCode, RefreshCw, Smartphone, Upload, X } from "lucide-react";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { PAYMENT_PROOF_MAX_SIZE, PAYMENT_PROOF_TYPES } from "@/lib/validations";
 import { trackPaymentProof } from "@/lib/analytics";
-import { DEFAULT_CONTACT_NAME, DEFAULT_WHATSAPP } from "@/content/brand";
+import { DEFAULT_WHATSAPP } from "@/content/brand";
 import { EVENTS } from "@/content/events";
 import { TBD_LABEL } from "@/components/ui/TbdBadge";
 import { formatTanggalID, formatWibTime } from "@/lib/eventDate";
@@ -117,6 +117,8 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
   const [registrationStatus, setRegistrationStatus] = useState<RegistrationStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(true);
   const [qrisZoomOpen, setQrisZoomOpen] = useState(false);
+  const [qrisScale, setQrisScale] = useState(1);
+  const qrisPinchRef = useRef<{ distance: number; scale: number } | null>(null);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [pdfError, setPdfError] = useState("");
   const [pdfSuccess, setPdfSuccess] = useState(false);
@@ -203,6 +205,27 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
     };
   }, [qrisZoomOpen]);
 
+  const updateQrisScale = (nextScale: number) => {
+    setQrisScale(Math.min(4, Math.max(1, nextScale)));
+  };
+
+  const handleQrisTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length !== 2) return;
+    const [first, second] = Array.from(event.touches);
+    qrisPinchRef.current = {
+      distance: Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY),
+      scale: qrisScale,
+    };
+  };
+
+  const handleQrisTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length !== 2 || !qrisPinchRef.current) return;
+    event.preventDefault();
+    const [first, second] = Array.from(event.touches);
+    const distance = Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
+    updateQrisScale(qrisPinchRef.current.scale * (distance / qrisPinchRef.current.distance));
+  };
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -245,6 +268,7 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
           ...(current ?? { found: true }),
           found: true,
           paymentStatus: "pending",
+          paymentStatusCode: "pending",
           paymentProof: data.url,
           rejectionReason: null,
         }));
@@ -290,7 +314,7 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
   const isRejected = paymentStatus === "rejected";
   const isVerified = paymentStatus === "verified";
   const proofAlreadyUploaded = Boolean(registrationStatus?.paymentProof) || uploadSuccess;
-  const proofReadyForPdf = proofAlreadyUploaded && Boolean(paymentProof);
+  const proofReadyForPdf = isVerified && proofAlreadyUploaded && Boolean(paymentProof);
   const canUpload = !proofAlreadyUploaded || isRejected;
   const cardClass = isFunBike ? "glass-premium-light border-orange-200/70" : "glass-premium";
   const headingClass = isFunBike ? "text-slate-900" : "text-white";
@@ -301,7 +325,7 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
   const primaryButtonClass = isFunBike ? "btn-sunrise" : "btn-neon";
   const secondaryButtonClass = isFunBike ? "btn-outline-sunrise" : "btn-outline-neon";
   const whatsappNumber = DEFAULT_WHATSAPP.replace(/\D/g, "").replace(/^0/, "62");
-  const whatsappText = `Halo panitia ${eventName}, saya ${registrationStatus.name ?? "peserta"}, no registrasi ${reg}. Berikut bukti pembayaran saya (PDF terlampir).`;
+  const whatsappText = `Halo panitia ${eventName}, saya ${registrationStatus.name ?? "peserta"} dengan nomor registrasi ${reg}. Bukti pembayaran saya sudah diunggah, tetapi statusnya belum terverifikasi. Mohon bantu dicek.`;
   const copyText = async (label: string, value: string) => {
     if (!value || value === "-") return;
     await navigator.clipboard?.writeText(value);
@@ -354,7 +378,7 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
 
   const handleDownloadPDF = async () => {
     if (!proofReadyForPdf || generatingPdf) {
-      setPdfError("Upload bukti pembayaran terlebih dahulu agar PDF lengkap dapat dibuat.");
+      setPdfError("PDF tersedia setelah pembayaran diverifikasi admin.");
       return;
     }
     setGeneratingPdf(true);
@@ -464,9 +488,9 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
         <div className="stagger-list space-y-3">
           {[
             { num: "01", text: "Selesaikan pembayaran dalam 24 jam sesuai instruksi di halaman ini." },
-            { num: "02", text: "Unduh PDF bukti pendaftaran + bukti bayar (lihat Sprint Y)." },
-            { num: "03", text: `Kirim PDF ke WA panitia (${DEFAULT_CONTACT_NAME.split(" ")[0]}) lewat tombol yang tersedia.` },
-            { num: "04", text: "Tunggu verifikasi panitia (1x24 jam kerja)." },
+            { num: "02", text: "Upload bukti pembayaran melalui formulir di bawah. Bukti otomatis masuk ke dashboard admin." },
+            { num: "03", text: "Tunggu verifikasi admin dan pantau status menggunakan nomor registrasi Anda." },
+            { num: "04", text: "Setelah terverifikasi, unduh PDF bukti pendaftaran dan pembayaran." },
             { num: "05", text: "Ambil Race Pack sesuai jadwal resmi panitia." },
           ].map((s) => (
             <div key={s.num} className="flex items-start gap-3">
@@ -538,6 +562,11 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
               : "Bukti sebelumnya belum valid. Silakan upload ulang bukti pembayaran yang benar."}
           </div>
         )}
+        {!isVerified && proofAlreadyUploaded && !isRejected && (
+          <div className={`mt-4 rounded-xl border p-3 text-sm leading-relaxed ${isFunBike ? "border-amber-200 bg-amber-50 text-amber-800" : "border-amber-300/20 bg-amber-400/10 text-amber-100"}`}>
+            Mohon tunggu verifikasi admin maksimal 1x24 jam kerja. Gunakan tombol <strong>Cek Status</strong> untuk memantau. Jika terlalu lama, hubungi panitia melalui Chat WhatsApp di bawah.
+          </div>
+        )}
       </div>
 
       {/* Payment instructions */}
@@ -598,7 +627,7 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
             )}
 
             <div className="grid gap-4 sm:grid-cols-2">
-              {paymentInfo.bank.enabled && (
+              {paymentInfo.bank.enabled && registrationStatus.paymentMethod === "transfer" && (
                 <div className={`rounded-2xl border p-4 ${isFunBike ? "border-orange-200 bg-orange-50/80" : "border-[#00E5FF]/25 bg-[#00E5FF]/5"}`}>
                   <div className={`mb-3 flex items-center gap-2 text-sm font-bold ${headingClass}`}>
                     <CreditCard size={17} style={{ color: accentColor }} /> Transfer Bank
@@ -616,7 +645,7 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
                 </div>
               )}
 
-              {paymentInfo.dana.enabled && (
+              {paymentInfo.dana.enabled && registrationStatus.paymentMethod === "dana" && (
                 <div className="rounded-2xl border border-[#118EEA]/30 bg-[#118EEA]/10 p-4">
                   <div className={`mb-3 flex items-center gap-2 text-sm font-bold ${headingClass}`}>
                     <Smartphone size={17} className="text-[#52B6F8]" /> DANA
@@ -633,20 +662,24 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
                 </div>
               )}
 
-              {paymentInfo.qris.enabled && (
+              {paymentInfo.qris.enabled && registrationStatus.paymentMethod === "qris" && (
                 <div className={`rounded-2xl border p-4 sm:col-span-2 ${isFunBike ? "border-sky-200 bg-sky-50/80" : "border-[#8B00FF]/30 bg-[#8B00FF]/10"}`}>
                   <div className={`mb-4 flex items-center gap-2 text-sm font-bold ${headingClass}`}>
                     <QrCode size={17} className={isFunBike ? "text-sky-600" : "text-[#C084FC]"} /> QRIS
                   </div>
-                  <div className="grid items-center gap-5 sm:grid-cols-[minmax(0,15rem)_1fr]">
+                  <div className="grid items-center gap-5 sm:grid-cols-[minmax(0,18rem)_1fr]">
                     <button
                       type="button"
-                      onClick={() => setQrisZoomOpen(true)}
-                      className="mx-auto aspect-square w-full max-w-60 cursor-zoom-in rounded-2xl bg-white p-3"
+                      onClick={() => {
+                        setQrisScale(1);
+                        setQrisZoomOpen(true);
+                      }}
+                      className="mx-auto w-full max-w-72 cursor-zoom-in overflow-hidden rounded-2xl bg-white p-2 shadow-lg transition hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-violet-400"
                       aria-label="Perbesar gambar QRIS"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={paymentInfo.qris.imageUrl} alt={`QRIS ${paymentInfo.qris.merchantName}`} className="h-full w-full object-contain" />
+                      <img src={paymentInfo.qris.imageUrl} alt={`QRIS ${paymentInfo.qris.merchantName}`} className="max-h-[22rem] h-auto w-full object-contain" />
+                      <span className="mt-2 block text-center text-xs font-semibold text-slate-700">Ketuk untuk memperbesar</span>
                     </button>
                     <div>
                       <p className={`font-bold ${headingClass}`}>{paymentInfo.qris.merchantName}</p>
@@ -763,30 +796,41 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3 mb-3">
-        <button
-          onClick={handleDownloadPDF}
-          disabled={!proofReadyForPdf || generatingPdf}
-          className={`${primaryButtonClass} flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm flex-1 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50`}
-        >
-          {generatingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-          {generatingPdf ? "Membuat PDF..." : "Unduh PDF Bukti"}
-        </button>
-        <a
-          href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappText)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`${secondaryButtonClass} flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm flex-1 cursor-pointer`}
-        >
-          <MessageCircle size={16} />
-          Kirim bukti ke WA {DEFAULT_CONTACT_NAME.split(" ")[0]}
-        </a>
+        {isVerified ? (
+          <button
+            onClick={handleDownloadPDF}
+            disabled={!proofReadyForPdf || generatingPdf}
+            className={`${primaryButtonClass} flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm flex-1 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50`}
+          >
+            {generatingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+            {generatingPdf ? "Membuat PDF..." : "Unduh PDF Terverifikasi"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={loadRegistrationStatus}
+            className={`${primaryButtonClass} flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm flex-1 cursor-pointer`}
+          >
+            <RefreshCw size={16} /> Cek Status Pembayaran
+          </button>
+        )}
+        {!isVerified && proofAlreadyUploaded && !isRejected && (
+          <a
+            href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappText)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${secondaryButtonClass} flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm flex-1 cursor-pointer`}
+          >
+            <MessageCircle size={16} /> Chat WhatsApp
+          </a>
+        )}
       </div>
-      {!proofReadyForPdf && (
-        <p className="mb-2 text-xs font-semibold text-amber-600">Upload bukti pembayaran terlebih dahulu agar PDF lengkap dapat dibuat.</p>
+      {!isVerified && (
+        <p className="mb-2 text-xs font-semibold text-amber-600">PDF akan tersedia setelah pembayaran diverifikasi admin.</p>
       )}
       {pdfError && <p className="mb-2 text-xs font-semibold text-red-500">{pdfError}</p>}
-      {pdfSuccess && <p className="mb-2 text-xs font-semibold text-green-600">PDF berhasil diunduh. Lampirkan file tersebut saat membuka WhatsApp.</p>}
-      <p className={`mb-4 text-xs ${mutedClass}`}>Unduh PDF terlebih dahulu, lalu buka WhatsApp dan lampirkan file PDF yang barusan diunduh.</p>
+      {pdfSuccess && <p className="mb-2 text-xs font-semibold text-green-600">PDF terverifikasi berhasil diunduh.</p>}
+      <p className={`mb-4 text-xs ${mutedClass}`}>Simpan nomor registrasi <strong>{reg}</strong> untuk kembali memantau status dan mengunduh PDF.</p>
 
       <Link
         href={isFunBike ? "/fun-bike" : "/futuristic-run"}
@@ -804,7 +848,7 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
           aria-label="Pratinjau QRIS"
           onClick={() => setQrisZoomOpen(false)}
         >
-          <div className="relative w-full max-w-xl rounded-3xl bg-white p-4" onClick={(event) => event.stopPropagation()}>
+          <div className="relative flex h-[min(92dvh,52rem)] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white p-3 sm:p-4" onClick={(event) => event.stopPropagation()}>
             <button
               type="button"
               onClick={() => setQrisZoomOpen(false)}
@@ -813,8 +857,32 @@ function Content({ eventType }: { eventType: ConfirmationEventType }) {
             >
               <X size={20} />
             </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={paymentInfo.qris.imageUrl} alt={`QRIS ${paymentInfo.qris.merchantName}`} className="max-h-[80vh] w-full object-contain" />
+            <div className="mb-2 flex items-center justify-between gap-3 pr-14 text-left">
+              <div>
+                <p className="font-bold text-slate-900">QRIS Pembayaran</p>
+                <p className="text-xs text-slate-500">Cubit dengan dua jari atau gunakan tombol zoom.</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <button type="button" onClick={() => updateQrisScale(qrisScale - 0.5)} className="flex min-h-10 min-w-10 items-center justify-center rounded-full bg-slate-100 text-slate-800" aria-label="Perkecil QRIS"><Minus size={18} /></button>
+                <span className="min-w-12 text-center text-xs font-bold text-slate-700">{Math.round(qrisScale * 100)}%</span>
+                <button type="button" onClick={() => updateQrisScale(qrisScale + 0.5)} className="flex min-h-10 min-w-10 items-center justify-center rounded-full bg-slate-100 text-slate-800" aria-label="Perbesar QRIS"><Plus size={18} /></button>
+              </div>
+            </div>
+            <div
+              className="flex min-h-0 flex-1 items-center justify-center overflow-auto rounded-2xl bg-slate-100 p-2"
+              style={{ touchAction: "none" }}
+              onTouchStart={handleQrisTouchStart}
+              onTouchMove={handleQrisTouchMove}
+              onTouchEnd={() => { qrisPinchRef.current = null; }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={paymentInfo.qris.imageUrl}
+                alt={`QRIS ${paymentInfo.qris.merchantName}`}
+                className="max-h-full max-w-full object-contain transition-transform duration-100"
+                style={{ transform: `scale(${qrisScale})`, transformOrigin: "center" }}
+              />
+            </div>
           </div>
         </div>
       )}

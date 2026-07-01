@@ -29,6 +29,7 @@ const dark = rgb(0.06, 0.09, 0.16);
 const muted = rgb(0.36, 0.42, 0.50);
 const border = rgb(0.88, 0.90, 0.93);
 const soft = rgb(0.97, 0.98, 0.99);
+const verifiedGreen = rgb(0.04, 0.55, 0.27);
 
 function wrapText(text: string, font: PDFFont, size: number, maxWidth: number) {
   const words = (text || "-").split(/\s+/);
@@ -59,7 +60,7 @@ function drawWrapped(page: PDFPage, text: string, x: number, y: number, options:
 
 function sectionTitle(page: PDFPage, title: string, y: number, bold: PDFFont, accent: ReturnType<typeof rgb>) {
   page.drawRectangle({ x: margin, y: y - 4, width: 4, height: 15, color: accent });
-  page.drawText(title, { x: margin + 12, y, font: bold, size: 12, color: dark });
+  page.drawText(title, { x: margin + 12, y, font: bold, size: 13.5, color: dark });
   return y - 24;
 }
 
@@ -70,8 +71,8 @@ function detailGrid(page: PDFPage, rows: Array<[string, string | undefined]>, y:
     const row = Math.floor(index / 2);
     const x = margin + column * (columnWidth + 14);
     const rowTop = y - row * 48;
-    page.drawText(label.toUpperCase(), { x, y: rowTop, font: bold, size: 7.5, color: muted });
-    drawWrapped(page, rawValue || "-", x, rowTop - 14, { font: regular, size: 10, maxWidth: columnWidth, lineHeight: 12 });
+    page.drawText(label.toUpperCase(), { x, y: rowTop, font: bold, size: 8.5, color: muted });
+    drawWrapped(page, rawValue || "-", x, rowTop - 15, { font: regular, size: 11.5, maxWidth: columnWidth, lineHeight: 13.5 });
   });
   return y - Math.ceil(rows.length / 2) * 48;
 }
@@ -91,15 +92,20 @@ export async function createRegistrationPdf(data: RegistrationPdfData) {
   const accent = rgb(...data.accent);
   const page = doc.addPage([A4.width, A4.height]);
 
-  page.drawRectangle({ x: 0, y: A4.height - 124, width: A4.width, height: 124, color: soft });
-  page.drawText("FUTURISTIC VIBES 2026", { x: margin, y: A4.height - 52, font: bold, size: 21, color: dark });
-  page.drawText(data.eventName, { x: margin, y: A4.height - 77, font: regular, size: 12, color: muted });
-  page.drawRectangle({ x: margin, y: A4.height - 96, width: A4.width - margin * 2, height: 4, color: accent });
+  page.drawRectangle({ x: 0, y: A4.height - 76, width: A4.width, height: 76, color: verifiedGreen });
+  const paidLabel = "TERVERIFIKASI - SUDAH BAYAR";
+  const paidLabelWidth = bold.widthOfTextAtSize(paidLabel, 22);
+  page.drawText(paidLabel, { x: (A4.width - paidLabelWidth) / 2, y: A4.height - 47, font: bold, size: 22, color: rgb(1, 1, 1) });
 
-  page.drawText("NOMOR REGISTRASI", { x: margin, y: A4.height - 151, font: bold, size: 8, color: muted });
-  page.drawText(data.regNumber, { x: margin, y: A4.height - 181, font: bold, size: 25, color: accent });
+  page.drawRectangle({ x: 0, y: A4.height - 196, width: A4.width, height: 120, color: soft });
+  page.drawText("FUTURISTIC VIBES 2026", { x: margin, y: A4.height - 122, font: bold, size: 23, color: dark });
+  page.drawText(data.eventName, { x: margin, y: A4.height - 149, font: regular, size: 13, color: muted });
+  page.drawRectangle({ x: margin, y: A4.height - 170, width: A4.width - margin * 2, height: 4, color: accent });
 
-  let y = A4.height - 224;
+  page.drawText("NOMOR REGISTRASI", { x: margin, y: A4.height - 223, font: bold, size: 9, color: muted });
+  page.drawText(data.regNumber, { x: margin, y: A4.height - 254, font: bold, size: 27, color: accent });
+
+  let y = A4.height - 294;
   y = sectionTitle(page, "DATA PESERTA", y, bold, accent);
   y = detailGrid(page, [
     ["Nama", data.participant.name],
@@ -114,10 +120,10 @@ export async function createRegistrationPdf(data: RegistrationPdfData) {
 
   y = sectionTitle(page, "DETAIL ACARA", y, bold, accent);
   page.drawRectangle({ x: margin, y: y - 67, width: A4.width - margin * 2, height: 77, color: soft, borderColor: border, borderWidth: 0.7 });
-  page.drawText("TANGGAL DAN JAM", { x: margin + 14, y: y - 12, font: bold, size: 7.5, color: muted });
-  drawWrapped(page, data.eventDate, margin + 14, y - 28, { font: regular, size: 10, maxWidth: A4.width - margin * 2 - 28 });
-  page.drawText("LOKASI START / FINISH", { x: margin + 14, y: y - 48, font: bold, size: 7.5, color: muted });
-  drawWrapped(page, data.eventLocation, margin + 14, y - 63, { font: regular, size: 10, maxWidth: A4.width - margin * 2 - 28 });
+  page.drawText("TANGGAL DAN JAM", { x: margin + 14, y: y - 12, font: bold, size: 8.5, color: muted });
+  drawWrapped(page, data.eventDate, margin + 14, y - 29, { font: regular, size: 11.5, maxWidth: A4.width - margin * 2 - 28 });
+  page.drawText("LOKASI START / FINISH", { x: margin + 14, y: y - 48, font: bold, size: 8.5, color: muted });
+  drawWrapped(page, data.eventLocation, margin + 14, y - 64, { font: regular, size: 11.5, maxWidth: A4.width - margin * 2 - 28 });
   y -= 94;
 
   y = sectionTitle(page, "PEMBAYARAN", y, bold, accent);
@@ -129,8 +135,9 @@ export async function createRegistrationPdf(data: RegistrationPdfData) {
   addFooter(page, regular, data.printedAt);
 
   const proofPage = doc.addPage([A4.width, A4.height]);
-  proofPage.drawText("BUKTI PEMBAYARAN", { x: margin, y: A4.height - 54, font: bold, size: 18, color: dark });
-  proofPage.drawText(`${data.eventName} - ${data.regNumber}`, { x: margin, y: A4.height - 76, font: regular, size: 10, color: muted });
+  proofPage.drawRectangle({ x: 0, y: A4.height - 62, width: A4.width, height: 62, color: verifiedGreen });
+  proofPage.drawText("BUKTI PEMBAYARAN TERVERIFIKASI", { x: margin, y: A4.height - 39, font: bold, size: 18, color: rgb(1, 1, 1) });
+  proofPage.drawText(`${data.eventName} - ${data.regNumber}`, { x: margin, y: A4.height - 82, font: regular, size: 11, color: muted });
   proofPage.drawRectangle({ x: margin, y: A4.height - 92, width: A4.width - margin * 2, height: 3, color: accent });
 
   const proofArea = { x: margin, y: 76, width: A4.width - margin * 2, height: A4.height - 190 };

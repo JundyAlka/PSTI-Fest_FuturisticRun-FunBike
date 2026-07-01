@@ -82,26 +82,14 @@ function EventCard({ event, ops }: { event: EventContent; ops: PublicEventOps })
         >
           {isBike ? (
             <>
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[200px]">
-                <div className="absolute inset-0 rounded-full opacity-30" style={{ background: "radial-gradient(circle, #F59E0B 0%, transparent 70%)" }} />
-                <div className="absolute inset-4 rounded-full opacity-20" style={{ background: "radial-gradient(circle, #FF6B2C 0%, transparent 60%)" }} />
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 h-20">
-                <svg viewBox="0 0 600 80" className="absolute bottom-0 w-full h-full" preserveAspectRatio="none" aria-hidden="true">
-                  <path d="M0,80 L0,50 Q80,20 160,45 Q240,15 320,40 Q400,10 480,35 Q540,20 600,40 L600,80 Z" fill="#7BC142" opacity="0.15" />
-                  <path d="M0,80 L0,55 Q100,30 200,50 Q300,25 400,48 Q500,22 600,45 L600,80 Z" fill="#7BC142" opacity="0.1" />
-                </svg>
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative">
-                  <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-white/45 border border-white/70 shadow-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                    <Bike size={36} className="sm:hidden text-[#FF6B2C]" />
-                    <Bike size={54} className="hidden sm:block text-[#FF6B2C]" />
-                  </div>
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-16 h-2 bg-black/5 rounded-full blur-sm" />
-                </div>
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#FFF8F0] to-transparent" />
+              <Image
+                src="/hero-bike.png"
+                alt={`${event.name} morning ride`}
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover object-center group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#FFF8F0] via-[#FFF8F0]/30 to-transparent" />
             </>
           ) : (
             <>
@@ -363,12 +351,14 @@ export default async function HubPage() {
               SPONSOR & PARTNER
             </h2>
             <div className="flex flex-wrap justify-center gap-4">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {["UMPWR", "Futuristic Vibes", "PLF", "ICF", "SUNFLOW", "Ollsame", "Himatekno UM"].map((name) => (
                 <div
-                  key={i}
-                  className="card-animated glass-card flex h-20 basis-[calc((100%-2rem)/3)] items-center justify-center rounded-xl border border-[#1E3A5F]/50 p-3 sm:min-w-0 sm:flex-1 sm:basis-0 sm:p-4"
+                  key={name}
+                  className="card-animated glass-card flex h-16 items-center justify-center rounded-xl border border-[#1E3A5F]/50 px-5 sm:px-6 hover:border-[#00E5FF]/30 transition-colors bg-[#080C20]/40"
                 >
-                  <TbdBadge label={`Sponsor ${i + 1}`} />
+                  <span className="text-[#B0C4DE] font-bold tracking-widest text-xs sm:text-sm" style={{ fontFamily: "Orbitron, sans-serif" }}>
+                    {name}
+                  </span>
                 </div>
               ))}
             </div>

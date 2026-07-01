@@ -3,7 +3,7 @@ import { useState, useMemo } from "react";
 import { ChevronDown, HelpCircle, Search, MessageSquareCode } from "lucide-react";
 import AnimatedSectionTitle from "@/components/AnimatedSectionTitle";
 import { hasAnnouncedValue } from "@/components/ui/TbdBadge";
-import { CONTACT_EMAIL, DEFAULT_CONTACT_NAME, DEFAULT_WHATSAPP, FEST_NAME } from "@/content/brand";
+import { CONTACT_EMAIL, DEFAULT_WHATSAPP, FEST_NAME } from "@/content/brand";
 
 type FaqItem = { q: string; a: string };
 
@@ -42,7 +42,6 @@ export default function FaqSection({
 
   const faqs = parseFaqSetting(settings.faq) ?? fallbackItems;
   const contact = settings.contact_person_whatsapp?.trim() || contactPerson || settings.contact_person || DEFAULT_WHATSAPP;
-  const contactName = settings.contact_person_name?.trim() || DEFAULT_CONTACT_NAME;
   const whatsappNumber = contact?.replace(/\D/g, "");
 
   const filteredFaqs = useMemo(() => {
@@ -155,7 +154,7 @@ export default function FaqSection({
           </div>
           <h3 className="text-xl font-bold text-white mb-2">Masih Butuh Bantuan Teknis?</h3>
           <p className="mb-6 text-sm text-[#B0C4DE] max-w-md mx-auto">
-            Tim panitia {contactName} siap membantu menjawab kendala pendaftaran dan verifikasi pembayaran Anda.
+            Tim panitia siap membantu menjawab kendala pendaftaran dan verifikasi pembayaran Anda.
           </p>
           {whatsappNumber ? (
             <a
@@ -164,7 +163,7 @@ export default function FaqSection({
               rel="noopener noreferrer"
               className="btn-outline-neon inline-flex cursor-pointer items-center gap-2.5 rounded-full px-8 py-3.5 text-sm font-bold"
             >
-              Chat WhatsApp {contactName}
+              Chat WhatsApp
             </a>
           ) : (
             <a href={`mailto:${CONTACT_EMAIL}`} className="btn-outline-neon inline-flex cursor-pointer items-center gap-2.5 rounded-full px-8 py-3.5 text-sm font-bold">

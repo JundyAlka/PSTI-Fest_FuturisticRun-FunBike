@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CalendarDays, Camera, Clock, Mail, MapPin, Phone, Play, Ticket } from "lucide-react";
 import LogoMark from "@/components/LogoMark";
-import { CONTACT_EMAIL, DEFAULT_CONTACT_NAME, DEFAULT_WHATSAPP, FEST_NAME, FEST_YEAR, ORGANIZER_NAME } from "@/content/brand";
+import { CONTACT_EMAIL, DEFAULT_WHATSAPP, FEST_NAME, FEST_YEAR, ORGANIZER_NAME } from "@/content/brand";
 import { EVENTS } from "@/content/events";
 import { formatEventDate, formatWibTime } from "@/lib/eventDate";
 
@@ -16,7 +16,6 @@ export default function Footer({
   settings?: Record<string, string>;
   contactPerson?: string | null;
 }) {
-  const contactName = settings.contact_person_name?.trim() || DEFAULT_CONTACT_NAME;
   const contactPhone = settings.contact_person_whatsapp?.trim() || contactPerson || settings.contact_person || DEFAULT_WHATSAPP;
   const whatsappNumber = contactPhone.replace(/\D/g, "");
   const whatsappHref = whatsappNumber ? `https://wa.me/${whatsappNumber}` : `mailto:${CONTACT_EMAIL}`;
@@ -112,7 +111,7 @@ export default function Footer({
               </a>
               <a href={whatsappHref} className="flex items-center gap-2 text-[#B0C4DE] hover:text-[#00E5FF] text-sm transition-colors">
                 <Phone size={14} className="text-[#00E5FF]" />
-                {contactPhone ? `${contactName}: ${contactPhone}` : "Hubungi panitia PSTI Fest"}
+                {contactPhone ? "Chat WhatsApp" : "Hubungi panitia PSTI Fest"}
               </a>
             </div>
 

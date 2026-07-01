@@ -190,6 +190,14 @@ export default function FunBikeCekPage() {
                           <Upload size={15} /> Upload Bukti
                         </Link>
                       ) : null}
+                      {result.paymentStatusCode === "verified" ? (
+                        <Link
+                          href={`/konfirmasi?reg=${encodeURIComponent(result.regNumber ?? query)}&event=fun-bike`}
+                          className="btn-sunrise inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold"
+                        >
+                          <FileText size={15} /> Unduh PDF Terverifikasi
+                        </Link>
+                      ) : null}
                       <Link
                         href="/fun-bike"
                         className="inline-flex min-h-11 items-center justify-center rounded-xl border border-orange-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-orange-100"

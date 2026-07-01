@@ -35,7 +35,7 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import LocationMap from "@/components/ui/LocationMap";
 import { hasAnnouncedValue } from "@/components/ui/TbdBadge";
 import QuotaMeter from "@/components/QuotaMeter";
-import { CONTACT_EMAIL, DEFAULT_CONTACT_NAME, DEFAULT_WHATSAPP, FEST_FULL_NAME, FEST_NAME, FEST_YEAR, ORGANIZER_NAME } from "@/content/brand";
+import { CONTACT_EMAIL, DEFAULT_WHATSAPP, FEST_FULL_NAME, FEST_NAME, FEST_YEAR, ORGANIZER_NAME } from "@/content/brand";
 import { EVENTS, type EventLocation } from "@/content/events";
 import { getPublicEventOps } from "@/lib/eventOps";
 import { resolveEventLocation } from "@/lib/eventLocation";
@@ -98,7 +98,6 @@ export default async function FunBikePage() {
   const locationLabel = location.label || "Alun-Alun Purworejo";
   const locationAddress = ops.settings.event_location_address?.trim() || "Alun-Alun Purworejo, Purworejo, Jawa Tengah";
   const routeNote = ops.settings.bike_route_note?.trim() || "Rute final menyusul technical meeting.";
-  const contactName = ops.settings.contact_person_name?.trim() || DEFAULT_CONTACT_NAME;
   const contactPhone = ops.settings.contact_person_whatsapp?.trim() || ops.contactPerson || ops.settings.contact_person || DEFAULT_WHATSAPP;
   const contactHref = contactPhone ? whatsappUrl(contactPhone) : null;
   const prizeAmount = formatPrizeAmount(ops.settings.bike_prize_amount);
@@ -123,7 +122,11 @@ export default async function FunBikePage() {
           <div className="absolute left-1/2 top-20 h-52 w-52 -translate-x-1/2 rounded-full bg-[#F59E0B]/25 blur-3xl" />
 
           <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-16 pt-28 text-center sm:px-6 lg:px-8">
-            <div className="badge-sunrise mb-5 inline-block fade-in-up">{FEST_FULL_NAME} PRESENTS</div>
+            <div className="mb-5 inline-block fade-in-up rounded-full bg-gradient-to-r from-[#FF6B2C] via-[#F59E0B] to-[#38BDF8] p-[2px] shadow-lg shadow-[#FF6B2C]/20">
+              <div className="rounded-full bg-[#FFF8F0] px-5 py-2 text-xs font-black tracking-[0.25em]" style={{ fontFamily: "Orbitron, sans-serif" }}>
+                <span className="bg-gradient-to-r from-[#FF6B2C] to-[#0284C7] bg-clip-text text-transparent">{FEST_FULL_NAME} PRESENTS</span>
+              </div>
+            </div>
             <h1 className="fade-in-up-delay-1 mb-4" style={{ fontFamily: "Orbitron, sans-serif", fontSize: "clamp(2.5rem, 7vw, 5rem)", fontWeight: 900, lineHeight: 1.1 }}>
               <span className="bg-gradient-to-r from-[#FF6B2C] via-[#F59E0B] to-[#38BDF8] bg-clip-text text-transparent">
                 {event.name}
@@ -172,7 +175,7 @@ export default async function FunBikePage() {
               lightSurface
               titleFontFamily="Orbitron, sans-serif"
               titleClass="text-5xl sm:text-6xl lg:text-7xl"
-              disableGradient={true}
+              disableGradient={false}
               className="mb-10 sm:mb-14"
             />
 
@@ -322,22 +325,32 @@ export default async function FunBikePage() {
             />
 
             <div className="mt-12 sm:mt-16">
-              <h3 className="mb-5 text-center text-2xl font-black text-gray-950" style={{ fontFamily: "Rajdhani, sans-serif" }}>
-                INFO PELAKSANAAN
-              </h3>
+              <div className="mb-8 text-center">
+                <div className="badge-sunrise mb-4 inline-block">INFO PENTING</div>
+                <h3 className="text-3xl font-black text-gray-950 sm:text-4xl" style={{ fontFamily: "Orbitron, sans-serif" }}>
+                  INFO PELAKSANAAN
+                </h3>
+              </div>
               <div className="grid gap-5 sm:grid-cols-2">
                 {[
-                  { icon: Music, label: "Hiburan", value: "Band SUNFLOW & Ollsame", color: "#0369A1", border: "border-sky-200" },
-                  { icon: Gift, label: "Doorprize", value: "Doorprize pembelian panitia + dukungan sponsor, diundi saat acara", color: "#C2410C", border: "border-orange-200" },
-                  { icon: Trophy, label: "Apresiasi", value: `Uang pembinaan: ${prizeAmount}`, color: "#B45309", border: "border-amber-200" },
-                  { icon: ShieldCheck, label: "Koordinasi", value: "Pelaksanaan dikoordinasikan bersama PLF & ICF", color: "#B45309", border: "border-amber-200" },
-                ].map(({ icon: Icon, label, value, color, border }) => (
-                  <article key={label} className={`card-animated rounded-2xl border-2 ${border} bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all`}>
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border" style={{ borderColor: `${color}40`, background: `${color}15` }}>
-                      <Icon size={20} style={{ color }} />
+                  { icon: Music, label: "Hiburan", value: "Band SUNFLOW & Ollsame", color: "#0ea5e9", bg: "from-sky-50 to-white", border: "border-sky-200" },
+                  { icon: Gift, label: "Doorprize", value: "Doorprize pembelian panitia + dukungan sponsor, diundi saat acara", color: "#f97316", bg: "from-orange-50 to-white", border: "border-orange-200" },
+                  { icon: Trophy, label: "Apresiasi", value: `Uang pembinaan: ${prizeAmount}`, color: "#eab308", bg: "from-yellow-50 to-white", border: "border-yellow-200" },
+                  { icon: ShieldCheck, label: "Koordinasi", value: "Pelaksanaan dikoordinasikan bersama PLF & ICF", color: "#84cc16", bg: "from-lime-50 to-white", border: "border-lime-200" },
+                ].map(({ icon: Icon, label, value, color, bg, border }) => (
+                  <article key={label} className={`card-animated relative overflow-hidden rounded-3xl border-2 ${border} bg-gradient-to-br ${bg} p-6 shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl group`}>
+                    <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-10 transition-transform duration-500 group-hover:scale-150" style={{ backgroundColor: color }} />
+                    <div className="relative z-10 flex items-start gap-5">
+                      <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+                        <AnimatedIcon color={color} size={26} animate="sway">
+                          <Icon size={26} />
+                        </AnimatedIcon>
+                      </div>
+                      <div>
+                        <p className="mb-1 text-xs font-black uppercase tracking-[0.2em]" style={{ color }}>{label}</p>
+                        <p className="text-sm font-bold leading-relaxed text-gray-800 sm:text-base">{value}</p>
+                      </div>
                     </div>
-                    <p className="text-xs font-black uppercase tracking-[0.15em] text-gray-500">{label}</p>
-                    <p className="mt-2 text-sm font-semibold leading-relaxed text-gray-900">{value}</p>
                   </article>
                 ))}
               </div>
@@ -426,7 +439,7 @@ export default async function FunBikePage() {
               <p className="mb-3 text-sm text-gray-500">Contact person</p>
               {contactHref ? (
                 <a href={contactHref} target="_blank" rel="noopener noreferrer" className="btn-outline-sunrise inline-flex cursor-pointer items-center gap-2 rounded-full px-6 py-3 text-sm">
-                  Chat WhatsApp {contactName}
+                  Chat WhatsApp
                 </a>
               ) : (
                 <a href={`mailto:${CONTACT_EMAIL}`} className="btn-outline-sunrise inline-flex cursor-pointer items-center gap-2 rounded-full px-6 py-3 text-sm">
@@ -483,7 +496,7 @@ export default async function FunBikePage() {
                 <h3 className="mb-2 text-sm font-bold text-white" style={{ fontFamily: "Orbitron, sans-serif" }}>KONTAK</h3>
                 <ul className="space-y-2 text-sm text-gray-400">
                   <li>{CONTACT_EMAIL}</li>
-                  <li>{contactPhone ? `${contactName}: ${contactPhone}` : "Hubungi panitia PSTI Fest"}</li>
+                  <li>{contactPhone ? "Chat WhatsApp" : "Hubungi panitia PSTI Fest"}</li>
                 </ul>
               </div>
             </div>

@@ -37,7 +37,7 @@ export default function SectionHeading({
         {eyebrow}
       </div>
       <h2
-        className={`${titleClass} font-black mb-4 ${lightSurface ? "italic" : ""}`}
+        className={`${titleClass} font-black mb-4`}
         style={{
           fontFamily: titleFontFamily,
           ...(disableGradient ? { color: accentColor } : {

@@ -194,6 +194,14 @@ export default function CekPage() {
                           <Upload size={15} /> Upload Bukti
                         </Link>
                       ) : null}
+                      {result.paymentStatusCode === "verified" ? (
+                        <Link
+                          href={`/konfirmasi?reg=${encodeURIComponent(result.regNumber ?? query)}&event=futuristic-run`}
+                          className="btn-neon inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm"
+                        >
+                          <FileText size={15} /> Unduh PDF Terverifikasi
+                        </Link>
+                      ) : null}
                       <Link
                         href={isFunBike ? "/fun-bike" : "/futuristic-run"}
                         className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/10 px-4 text-sm font-semibold text-[#D7E8FF] transition hover:bg-white/5"
