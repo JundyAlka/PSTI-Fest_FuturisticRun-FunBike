@@ -118,3 +118,42 @@ model EventSetting {
   @@unique([eventType, key])
   @@map("event_settings")
 }
+
+model ActivityLog {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now()) @map("created_at")
+  actorType  String   @default("system") @map("actor_type")
+  actorLabel String?  @map("actor_label")
+  eventType  String?  @map("event_type")
+  action     String
+  entityType String?  @map("entity_type")
+  entityId   String?  @map("entity_id")
+  pageUrl    String?  @map("page_url")
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  metadata   String   @default("{}")
+
+  @@index([createdAt(sort: Desc)])
+  @@index([eventType, action, createdAt(sort: Desc)])
+  @@map("activity_logs")
+}
+
+model VisitorSession {
+  sessionId        String   @id @map("session_id")
+  firstSeenAt      DateTime @default(now()) @map("first_seen_at")
+  lastSeenAt       DateTime @default(now()) @map("last_seen_at")
+  eventType        String?  @map("event_type")
+  currentPath      String?  @map("current_path")
+  referrer         String?
+  ipAddress        String?  @map("ip_address")
+  userAgent        String?  @map("user_agent")
+  deviceType       String?  @map("device_type")
+  registered       Boolean  @default(false)
+  registrationNumber String? @map("registration_number")
+  pageViews        Int      @default(1) @map("page_views")
+  metadata         String   @default("{}")
+
+  @@index([lastSeenAt(sort: Desc)])
+  @@index([eventType, registered, lastSeenAt(sort: Desc)])
+  @@map("visitor_sessions")
+}
