@@ -315,7 +315,7 @@ export default function PengaturanPage() {
       setSuccessAlert(changedKeys.length > 0 ? `Berhasil menyimpan perubahan: ${changedLabels}` : "Berhasil menyimpan (tidak ada perubahan baru)");
       setInitialSettings(settings);
       setSaved(true);
-      setTimeout(() => { setSaved(false); setSuccessAlert(""); }, 4000);
+      setTimeout(() => { setSaved(false); setSuccessAlert(""); }, 3000);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Pengaturan gagal disimpan.");
     } finally {
@@ -368,7 +368,7 @@ export default function PengaturanPage() {
       setPricingCapacity(refreshedPricing.tiers.reduce((sum, tier) => sum + tier.quota, 0));
       setSaved(true);
       setSuccessAlert("Berhasil menyimpan perubahan konfigurasi Tier Harga.");
-      setTimeout(() => { setSaved(false); setSuccessAlert(""); }, 4000);
+      setTimeout(() => { setSaved(false); setSuccessAlert(""); }, 3000);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Tier harga gagal disimpan.");
     } finally {
@@ -918,7 +918,7 @@ export default function PengaturanPage() {
 
           {/* Save button */}
           {activeTab !== "pricing" && (
-            <div className="sticky bottom-6 z-40 mt-8 flex justify-end">
+            <div className="mt-8 mb-12 flex justify-end">
               <button
                 onClick={handleSave}
                 disabled={saving}
