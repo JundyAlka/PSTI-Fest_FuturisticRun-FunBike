@@ -6,9 +6,32 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: FEST_FULL_NAME,
+  description: `Official Website ${FEST_FULL_NAME}. Daftar dan bergabunglah di event Futuristic Run & Fun Bike.`,
   icons: {
     icon: "/logo-futuristicrun.png",
     apple: "/logo-futuristicrun.png",
+  },
+  openGraph: {
+    title: FEST_FULL_NAME,
+    description: `Official Website ${FEST_FULL_NAME}. Daftar dan bergabunglah di event Futuristic Run & Fun Bike.`,
+    url: "https://futuristicvibes.id",
+    siteName: FEST_FULL_NAME,
+    images: [
+      {
+        url: "/logo-futuristicrun.png",
+        width: 800,
+        height: 800,
+        alt: `Logo ${FEST_FULL_NAME}`,
+      },
+    ],
+    locale: "id_ID",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: FEST_FULL_NAME,
+    description: `Official Website ${FEST_FULL_NAME}. Daftar dan bergabunglah di event Futuristic Run & Fun Bike.`,
+    images: ["/logo-futuristicrun.png"],
   },
 };
 

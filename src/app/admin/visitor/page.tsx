@@ -19,7 +19,22 @@ interface VisitorStats {
   }>;
 }
 
-interface StatsResponse { visitors: VisitorStats; }
+interface ActivityLog {
+  id: number;
+  createdAt: string;
+  actorType: string;
+  actorLabel: string | null;
+  eventType: string | null;
+  action: string;
+  entityType: string | null;
+  entityId: string | null;
+  pageUrl: string | null;
+}
+
+interface StatsResponse { 
+  visitors: VisitorStats;
+  activity: ActivityLog[];
+}
 
 function eventName(value: string | null) {
   if (value === "fun-bike") return "Fun Bike";
@@ -29,6 +44,27 @@ function eventName(value: string | null) {
 }
 
 const OFont = { fontFamily: "Orbitron, sans-serif" };
+
+function actionLabel(action: string) {
+  const map: Record<string, string> = {
+    visitor_first_seen: "Visitor baru",
+    analytics_landing_view: "Landing dilihat",
+    analytics_cta_click: "CTA diklik",
+    analytics_form_start: "Form dimulai",
+    analytics_form_step_complete: "Step form selesai",
+    analytics_form_submit: "Submit form",
+    registration_created: "Pendaftaran masuk",
+    payment_proof_uploaded: "Bukti bayar diunggah",
+    payment_verified: "Pembayaran diverifikasi",
+    payment_rejected: "Pembayaran ditolak",
+    payment_verified_bulk: "Bulk verify",
+    settings_updated: "Pengaturan diubah",
+    participants_exported: "Export peserta",
+    audit_exported: "Export audit",
+    participants_deleted: "Peserta dihapus",
+  };
+  return map[action] ?? action.replace(/_/g, " ");
+}
 
 export default function VisitorDashboard() {
   const [data, setData] = useState<StatsResponse | null>(null);
@@ -130,6 +166,33 @@ export default function VisitorDashboard() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* AKTIVITAS TERBARU */}
+      <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-4 sm:p-5 mt-6">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Activity size={16} className="text-[#FFD700]" />
+            <h2 className="text-sm font-black text-white" style={OFont}>AKTIVITAS TERBARU</h2>
+          </div>
+          <a href="/api/admin/audit?format=csv&limit=5000" className="text-xs font-semibold text-[#00E5FF] hover:text-white">CSV</a>
+        </div>
+        <div className="space-y-2">
+          {(data?.activity?.length ? data.activity : []).slice(0, 15).map((log) => (
+            <div key={log.id} className="rounded-xl border border-[#1E3A5F]/70 bg-[#0A0E27]/60 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-bold text-white">{actionLabel(log.action)}</p>
+                  <p className="mt-1 truncate text-[11px] text-[#B0C4DE]">
+                    {eventName(log.eventType)} - {log.actorLabel ?? log.actorType}
+                  </p>
+                </div>
+                <span className="shrink-0 text-[10px] text-[#5A7899]">{new Date(log.createdAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span>
+              </div>
+            </div>
+          ))}
+          {!data?.activity?.length && <p className="rounded-xl border border-[#1E3A5F]/70 p-4 text-xs text-[#B0C4DE]">Belum ada aktivitas terekam.</p>}
+        </div>
       </div>
     </div>
   );
