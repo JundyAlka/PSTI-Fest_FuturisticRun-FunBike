@@ -9,6 +9,7 @@ import { FEST_NAME } from "@/content/brand";
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/peserta", label: "Peserta", icon: Users },
+  { href: "/admin/visitor", label: "Visitor", icon: Users },
   { href: "/admin/pengaturan", label: "Pengaturan", icon: Settings },
 ];
 

@@ -282,9 +282,8 @@ export default function PengaturanPage() {
       payment_dana_number: "",
       payment_dana_holder: "",
     }).filter(([key]) => {
-      if (key === "registration_fee") return false;
       if (eventType === "fun-bike") return key !== "quota_5k" && !key.startsWith("prize_") && !key.startsWith("benefit_");
-      return key !== "quota_funbike" && key !== "registration_fee";
+      return key !== "quota_funbike";
     }));
     try {
       const response = await fetch(`/api/admin/settings?eventType=${eventType}`, {
@@ -429,6 +428,18 @@ export default function PengaturanPage() {
                     max={9999}
                   />
                   <p className="text-[#B0C4DE] text-xs mt-1">Total slot yang tersedia untuk event terpilih</p>
+                </div>
+                <div className="mt-4">
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "#8B00FF" }}>Biaya Pendaftaran Default</label>
+                  <input
+                    type="number"
+                    className={inp}
+                    value={settings.registration_fee}
+                    onChange={(e) => set("registration_fee", e.target.value)}
+                    min={0}
+                    step={1000}
+                  />
+                  <p className="text-[#B0C4DE] text-xs mt-1">Digunakan jika tidak ada tier harga yang aktif di menu Tier Harga.</p>
                 </div>
               </SectionCard>
 

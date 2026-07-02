@@ -11,9 +11,19 @@ export default function RouteMapImage({ theme = "run" }: { theme?: "run" | "bike
   const pinchRef = useRef<{ distance: number; scale: number } | null>(null);
 
   const clampScale = useCallback((next: number) => Math.min(4, Math.max(1, next)), []);
-  const updateScale = useCallback((next: number) => setScale(clampScale(next)), [clampScale]);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const dragStart = useRef({ x: 0, y: 0 });
+  const isDragging = useRef(false);
+
+  const updateScale = useCallback((next: number) => {
+    const newScale = clampScale(next);
+    setScale(newScale);
+    if (newScale === 1) setPos({ x: 0, y: 0 }); // Reset position when fully zoomed out
+  }, [clampScale]);
+
   const openModal = useCallback(() => {
     setScale(1);
+    setPos({ x: 0, y: 0 });
     pinchRef.current = null;
     setIsOpen(true);
   }, []);
@@ -22,6 +32,25 @@ export default function RouteMapImage({ theme = "run" }: { theme?: "run" | "bike
     const [first, second] = [touches.item(0), touches.item(1)];
     if (!first || !second) return 0;
     return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (scale <= 1) return;
+    isDragging.current = true;
+    dragStart.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+    if (e.target instanceof HTMLElement) e.target.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging.current) return;
+    setPos({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    isDragging.current = false;
+    if (e.target instanceof HTMLElement && e.target.hasPointerCapture(e.pointerId)) {
+      e.target.releasePointerCapture(e.pointerId);
+    }
   };
 
   useEffect(() => {
@@ -149,7 +178,7 @@ export default function RouteMapImage({ theme = "run" }: { theme?: "run" | "bike
             }}
             style={{ touchAction: "none" }}
           >
-            <div className="flex min-h-full items-center justify-center p-2 sm:p-8">
+            <div className="flex min-h-full items-center justify-center overflow-hidden">
               <Image
                 src="/route-map.jpg" 
                 alt="Peta Rute Full" 
@@ -157,7 +186,16 @@ export default function RouteMapImage({ theme = "run" }: { theme?: "run" | "bike
                 height={800}
                 className="h-auto w-full max-w-none select-none object-contain transition-transform duration-100 md:max-w-6xl"
                 draggable={false}
-                style={{ transform: `scale(${scale})`, transformOrigin: "center center", touchAction: "none" }}
+                style={{ 
+                  transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`, 
+                  transformOrigin: "center center", 
+                  touchAction: "none",
+                  cursor: scale > 1 ? "grab" : "default"
+                }}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerUp}
               />
             </div>
           </div>

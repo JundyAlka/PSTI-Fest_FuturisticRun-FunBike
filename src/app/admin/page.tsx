@@ -242,67 +242,7 @@ export default function AdminDashboard() {
         <LoadingPanel label="Memuat dashboard" />
       ) : (
         <>
-          <div className="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-            <div className="card-animated glass-card relative overflow-hidden rounded-2xl border border-[#1E3A5F] p-4 sm:p-5">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00E5FF] to-transparent" />
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Radio size={16} className="text-[#00E5FF]" />
-                    <h2 className="text-sm font-black text-white" style={OFont}>LIVE VISITOR RADAR</h2>
-                  </div>
-                  <p className="mt-1 text-xs text-[#B0C4DE]">Pantau visitor aktif, termasuk yang tertarik tapi belum mendaftar.</p>
-                </div>
-                <span className="inline-flex min-h-8 items-center gap-2 rounded-full border border-[#4ADE80]/30 bg-[#4ADE80]/10 px-3 text-xs font-bold text-[#4ADE80]">
-                  <span className="size-2 animate-pulse rounded-full bg-[#4ADE80]" /> LIVE
-                </span>
-              </div>
-
-              <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                {[
-                  { label: "Aktif sekarang", value: data?.visitors.activeNow ?? 0, icon: Eye, color: "#00E5FF" },
-                  { label: "Visitor hari ini", value: data?.visitors.today ?? 0, icon: Users, color: "#8B5CF6" },
-                  { label: "Belum daftar", value: data?.visitors.unregisteredActive ?? 0, icon: MousePointerClick, color: "#FF8C00" },
-                  { label: "Konversi hari ini", value: data?.visitors.registeredToday ?? 0, icon: ShieldCheck, color: "#4ADE80" },
-                ].map((item) => (
-                  <div key={item.label} className="rounded-xl border border-[#1E3A5F] bg-[#0A0E27]/70 p-3">
-                    <div className="mb-2 flex items-center gap-2 text-[10px] text-[#B0C4DE]">
-                      <item.icon size={13} style={{ color: item.color }} />
-                      <span>{item.label}</span>
-                    </div>
-                    <div className="text-2xl font-black" style={{ ...OFont, color: item.color }}>{item.value}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-3">
-                {(data?.visitors.byEvent.length ? data.visitors.byEvent : [{ eventType: "hub", active: 0, today: 0, unregistered: 0 }]).map((item) => (
-                  <div key={item.eventType} className="rounded-xl border border-[#1E3A5F]/80 bg-[#080C20]/70 p-3">
-                    <div className="mb-2 flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold text-white">{eventName(item.eventType)}</span>
-                      <span className="rounded-full bg-[#00E5FF]/10 px-2 py-0.5 text-[10px] text-[#00E5FF]">{item.active} live</span>
-                    </div>
-                    <div className="text-[11px] text-[#B0C4DE]">Hari ini {item.today} visitor - belum daftar {item.unregistered}</div>
-                  </div>
-                ))}
-              </div>
-
-              {!!data?.visitors.recent.length && (
-                <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                  {data.visitors.recent.slice(0, 4).map((visitor) => (
-                    <div key={visitor.sessionId} className="rounded-xl border border-[#1E3A5F]/70 bg-[#050817]/50 p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="truncate text-xs font-semibold text-white">{visitor.currentPath ?? "/"}</span>
-                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${visitor.registered ? "bg-[#4ADE80]/10 text-[#4ADE80]" : "bg-[#FF8C00]/10 text-[#FF8C00]"}`}>
-                          {visitor.registered ? "daftar" : "belum"}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-[11px] text-[#B0C4DE]">{eventName(visitor.eventType)} - {visitor.deviceType ?? "device"} - {visitor.pageViews} views</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+          <div className="mb-6 grid grid-cols-1">
 
             <div className="card-animated glass-card rounded-2xl border border-[#1E3A5F] p-4 sm:p-5">
               <div className="mb-4 flex items-center justify-between gap-3">

@@ -30,6 +30,7 @@ model EventCategory {
   code      String
   label     String
   price     Int
+  originalPrice Int? @map("original_price")
   quota     Int
   minAge    Int?     @map("min_age")
   createdAt DateTime @default(now()) @map("created_at")
