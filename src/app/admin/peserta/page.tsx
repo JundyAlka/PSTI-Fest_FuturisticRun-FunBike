@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { useEffect, useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Search, Filter, CheckCircle, XCircle, Eye, Download, ChevronLeft, ChevronRight, MessageCircle, CheckSquare, Trash2, AlertTriangle, X } from "lucide-react";
+import { Search, Filter, CheckCircle, XCircle, Eye, Download, ChevronLeft, ChevronRight, MessageCircle, CheckSquare, Trash2, X } from "lucide-react";
 import { getPaymentStatusColor, getPaymentStatusLabel, formatCurrency, CATEGORY_LABELS } from "@/lib/utils";
 import LoadingPanel from "@/components/LoadingPanel";
 
@@ -37,34 +37,7 @@ export default function PesertaPage() {
   const [rejectConfirm, setRejectConfirm] = useState<number | null>(null);
   const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    if (!undoToast) return;
-    if (undoToast.timeLeft > 0) {
-      undoTimeoutRef.current = setTimeout(() => {
-        setUndoToast(prev => prev ? { ...prev, timeLeft: prev.timeLeft - 1 } : null);
-      }, 1000);
-    } else {
-      executeDelete(undoToast.ids);
-      setUndoToast(null);
-    }
-    return () => {
-      if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [undoToast]);
-
-  const executeDelete = async (ids: number[]) => {
-    setBulkLoading(true);
-    await fetch("/api/admin/participants", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids }),
-    });
-    setBulkLoading(false);
-    await reload();
-  };
-
-  const reload = async () => {
+  const reload = useCallback(async () => {
     const params = new URLSearchParams({ page: String(page), limit: "20", eventType: activeEvent });
     if (search) params.set("search", search);
     if (category !== "all") params.set("category", category);
@@ -73,7 +46,36 @@ export default function PesertaPage() {
     const data = await res.json();
     setParticipants(data.participants ?? []);
     setMeta(data.meta ?? { total: 0, page: 1, limit: 20, pages: 0 });
-  };
+  }, [activeEvent, category, page, search, status]);
+
+  const executeDelete = useCallback(async (ids: number[]) => {
+    setBulkLoading(true);
+    await fetch("/api/admin/participants", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    setBulkLoading(false);
+    await reload();
+  }, [reload]);
+
+  useEffect(() => {
+    if (!undoToast) return;
+    if (undoToast.timeLeft > 0) {
+      undoTimeoutRef.current = setTimeout(() => {
+        setUndoToast(prev => prev ? { ...prev, timeLeft: prev.timeLeft - 1 } : null);
+      }, 1000);
+    } else {
+      const ids = undoToast.ids;
+      undoTimeoutRef.current = setTimeout(() => {
+        void executeDelete(ids);
+        setUndoToast(null);
+      }, 0);
+    }
+    return () => {
+      if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    };
+  }, [executeDelete, undoToast]);
 
   const handleBulkVerify = async (newStatus: "verified" | "rejected") => {
     if (selectedIds.size === 0) return;
