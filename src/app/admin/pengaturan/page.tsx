@@ -138,10 +138,12 @@ function Toggle({ label, desc, value, onChange }: { label: string; desc: string;
 export default function PengaturanPage() {
   const [eventType, setEventType] = useState<EventType>("futuristic-run");
   const [settings, setSettings] = useState<SettingsState>(defaultSettings);
+  const [initialSettings, setInitialSettings] = useState<SettingsState>(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [successAlert, setSuccessAlert] = useState("");
   const [activeTab, setActiveTab] = useState<"event" | "pricing" | "payment">("event");
   const [pricing, setPricing] = useState<PricingSnapshot | null>(null);
   const [pricingCapacity, setPricingCapacity] = useState(0);
@@ -199,16 +201,20 @@ export default function PengaturanPage() {
           ? ev.rules.join("\n")
           : data.rules;
 
-        setSettings((prev) => ({
-          ...prev,
-          ...data,
-          payment_dana_enabled: "false",
-          payment_dana_number: "",
-          payment_dana_holder: "",
-          faq: cleanFaq,
-          rules: cleanRules,
-          event_date: normalizeEventDate(data.event_date) ?? DEFAULT_EVENT_DATES[eventType],
-        }));
+        setSettings((prev) => {
+          const newSettings = {
+            ...prev,
+            ...data,
+            payment_dana_enabled: "false",
+            payment_dana_number: "",
+            payment_dana_holder: "",
+            faq: cleanFaq,
+            rules: cleanRules,
+            event_date: normalizeEventDate(data.event_date) ?? DEFAULT_EVENT_DATES[eventType],
+          };
+          setInitialSettings(newSettings);
+          return newSettings;
+        });
       })
       .finally(() => setLoading(false));
   }, [eventType]);
@@ -230,7 +236,7 @@ export default function PengaturanPage() {
     setPricing(null);
     setPricingCapacity(0);
     setSaved(false);
-    setSettings({
+    const resetSettings = {
       ...defaultSettings,
       event_date: DEFAULT_EVENT_DATES[nextEventType],
       registration_fee: nextEventType === "fun-bike" ? "150000" : "120000",
@@ -250,7 +256,9 @@ export default function PengaturanPage() {
       bike_route_note: nextEventType === "fun-bike" ? "Rute masih dalam tahap survei dan belum final." : "",
       faq: EVENTS[nextEventType].faq.map((item) => `${item.q} | ${item.a}`).join("\n"),
       rules: EVENTS[nextEventType].rules.join("\n"),
-    });
+    };
+    setSettings(resetSettings);
+    setInitialSettings(resetSettings);
     setEventType(nextEventType);
   };
 
@@ -293,8 +301,21 @@ export default function PengaturanPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Pengaturan gagal disimpan.");
+      const SETTING_LABELS: Record<string, string> = {
+        registration_open: "Status Pendaftaran", quota_5k: "Kuota Run 5K", quota_funbike: "Kuota Fun Bike",
+        registration_fee: "Biaya Default", event_date: "Tgl Event", event_location: "Lokasi",
+        payment_bank_account: "Rekening Bank", payment_qris_nmid: "QRIS", faq: "FAQ", rules: "Ketentuan",
+        benefit_prize_details: "Hadiah Juara", benefit_race_pack_contents: "Isi Race Pack",
+        payment_instructions: "Instruksi Bayar", payment_deadline_hours: "Batas Bayar",
+      };
+      const changedKeys = Object.keys(payload).filter(k => payload[k] !== initialSettings[k]);
+      let changedLabels = changedKeys.map(k => SETTING_LABELS[k] || k).slice(0, 4).join(", ");
+      if (changedKeys.length > 4) changedLabels += ` +${changedKeys.length - 4} lainnya`;
+      
+      setSuccessAlert(changedKeys.length > 0 ? `Berhasil menyimpan perubahan: ${changedLabels}` : "Berhasil menyimpan (tidak ada perubahan baru)");
+      setInitialSettings(settings);
       setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      setTimeout(() => { setSaved(false); setSuccessAlert(""); }, 4000);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Pengaturan gagal disimpan.");
     } finally {
@@ -346,7 +367,8 @@ export default function PengaturanPage() {
       setPricing(refreshedPricing);
       setPricingCapacity(refreshedPricing.tiers.reduce((sum, tier) => sum + tier.quota, 0));
       setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      setSuccessAlert("Berhasil menyimpan perubahan konfigurasi Tier Harga.");
+      setTimeout(() => { setSaved(false); setSuccessAlert(""); }, 4000);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Tier harga gagal disimpan.");
     } finally {
@@ -884,6 +906,13 @@ export default function PengaturanPage() {
             <div role="alert" className="flex items-start gap-2 rounded-xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">
               <AlertCircle size={17} className="mt-0.5 shrink-0" />
               <span>{saveError}</span>
+            </div>
+          )}
+
+          {successAlert && (
+            <div role="alert" className="flex items-start gap-2 rounded-xl border border-[#4ADE80]/30 bg-[#4ADE80]/10 p-4 text-sm text-[#4ADE80]">
+              <div className="mt-0.5 shrink-0 flex items-center justify-center w-4 h-4 rounded-full bg-[#4ADE80] text-[#0A0E27] font-bold text-[10px]">✓</div>
+              <span>{successAlert}</span>
             </div>
           )}
 
