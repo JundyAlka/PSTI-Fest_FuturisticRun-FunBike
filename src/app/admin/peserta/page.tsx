@@ -1,8 +1,8 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Search, Filter, CheckCircle, XCircle, Eye, Download, ChevronLeft, ChevronRight, Mail, CheckSquare, Trash2, AlertTriangle, X } from "lucide-react";
+import { Search, Filter, CheckCircle, XCircle, Eye, Download, ChevronLeft, ChevronRight, MessageCircle, CheckSquare, Trash2, AlertTriangle, X } from "lucide-react";
 import { getPaymentStatusColor, getPaymentStatusLabel, formatCurrency, CATEGORY_LABELS } from "@/lib/utils";
 import LoadingPanel from "@/components/LoadingPanel";
 
@@ -32,7 +32,37 @@ export default function PesertaPage() {
   const [activeEvent, setActiveEvent] = useState<"futuristic-run" | "fun-bike">("futuristic-run");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ ids: number[]; label: string } | null>(null);
+  
+  const [undoToast, setUndoToast] = useState<{ ids: number[]; label: string; timeLeft: number } | null>(null);
+  const [rejectConfirm, setRejectConfirm] = useState<number | null>(null);
+  const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!undoToast) return;
+    if (undoToast.timeLeft > 0) {
+      undoTimeoutRef.current = setTimeout(() => {
+        setUndoToast(prev => prev ? { ...prev, timeLeft: prev.timeLeft - 1 } : null);
+      }, 1000);
+    } else {
+      executeDelete(undoToast.ids);
+      setUndoToast(null);
+    }
+    return () => {
+      if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [undoToast]);
+
+  const executeDelete = async (ids: number[]) => {
+    setBulkLoading(true);
+    await fetch("/api/admin/participants", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    setBulkLoading(false);
+    await reload();
+  };
 
   const reload = async () => {
     const params = new URLSearchParams({ page: String(page), limit: "20", eventType: activeEvent });
@@ -56,14 +86,6 @@ export default function PesertaPage() {
     setBulkLoading(false);
     setSelectedIds(new Set());
     await reload();
-  };
-
-  const handleResendEmail = async (id: number) => {
-    await fetch("/api/admin/resend-email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
   };
 
   const toggleSelect = (id: number) => {
@@ -123,6 +145,7 @@ export default function PesertaPage() {
     }
     setActionLoading(false);
     setSelected(null);
+    setRejectConfirm(null);
     setRejectNotes("");
     await reload();
   };
@@ -130,25 +153,10 @@ export default function PesertaPage() {
   const requestDelete = useCallback((idOrIds: number | number[], label?: string) => {
     const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
     if (ids.length === 0) return;
-    setDeleteConfirm({ ids, label: label ?? `${ids.length} data peserta` });
-  }, []);
-
-  const confirmDelete = async () => {
-    if (!deleteConfirm) return;
-    setActionLoading(true);
-    setBulkLoading(true);
-    await fetch("/api/admin/participants", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: deleteConfirm.ids }),
-    });
-    setActionLoading(false);
-    setBulkLoading(false);
+    setUndoToast({ ids, label: label ?? `${ids.length} data`, timeLeft: 3 });
     setSelected(null);
     setSelectedIds(new Set());
-    setDeleteConfirm(null);
-    await reload();
-  };
+  }, []);
 
   return (
     <div className="page-animate w-full min-w-0 max-w-full overflow-x-hidden p-4 sm:p-6 lg:p-8">
@@ -197,7 +205,7 @@ export default function PesertaPage() {
             <button
               disabled={bulkLoading}
               onClick={() => handleBulkVerify("verified")}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border border-[#00E5FF] text-[#00E5FF] hover:bg-[#00E5FF]/10 disabled:opacity-50 transition-all"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold border border-[#00E5FF] text-[#00E5FF] hover:bg-[#00E5FF]/10 disabled:opacity-50 transition-all cursor-pointer"
             >
               <CheckCircle size={13} /> Verifikasi
             </button>
@@ -210,7 +218,7 @@ export default function PesertaPage() {
             </button>
             <button
               onClick={() => setSelectedIds(new Set())}
-              className="text-xs text-[#B0C4DE] hover:text-white px-2 transition-colors"
+              className="text-xs text-[#B0C4DE] hover:text-white px-2 transition-colors cursor-pointer"
             >
               Batal
             </button>
@@ -260,7 +268,7 @@ export default function PesertaPage() {
                     <div className="font-mono text-xs text-[#00E5FF]">{p.reg_number}</div>
                     <h2 className="mt-1 break-words font-semibold text-white">{p.full_name}</h2>
                   </div>
-                  <button onClick={() => toggleSelect(p.id)} className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-[#1E3A5F] text-[#B0C4DE]" aria-label={`Pilih ${p.full_name}`}>
+                  <button onClick={() => toggleSelect(p.id)} className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-[#1E3A5F] text-[#B0C4DE] cursor-pointer" aria-label={`Pilih ${p.full_name}`}>
                     <CheckSquare size={16} className={selectedIds.has(p.id) ? "text-[#00E5FF]" : ""} />
                   </button>
                 </div>
@@ -274,8 +282,8 @@ export default function PesertaPage() {
                 </dl>
                 <div className="flex flex-wrap items-center gap-2 border-t border-[#1E3A5F]/40 pt-3">
                   {p.payment_proof && <a href={p.payment_proof} target="_blank" rel="noopener noreferrer" className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#1E3A5F] px-3 text-xs text-[#00E5FF] min-[430px]:w-auto"><Eye size={15} /> Bukti</a>}
-                  <button onClick={() => { setSelected(p); setRejectNotes(""); setActionError(""); }} className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#00E5FF]/30 bg-[#00E5FF]/5 px-3 text-xs text-[#00E5FF] min-[430px]:w-auto"><Eye size={15} /> Detail</button>
-                  <button onClick={() => requestDelete(p.id, p.full_name)} className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-red-500/30 bg-red-500/5 px-3 text-xs text-red-400 min-[430px]:ml-auto min-[430px]:w-auto"><Trash2 size={15} /> Hapus</button>
+                  <button onClick={() => { setSelected(p); setRejectNotes(""); setActionError(""); }} className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#00E5FF]/30 bg-[#00E5FF]/5 px-3 text-xs text-[#00E5FF] min-[430px]:w-auto cursor-pointer"><Eye size={15} /> Detail</button>
+                  <button onClick={() => requestDelete(p.id, p.full_name)} className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-red-500/30 bg-red-500/5 px-3 text-xs text-red-400 min-[430px]:ml-auto min-[430px]:w-auto cursor-pointer"><Trash2 size={15} /> Hapus</button>
                 </div>
               </article>
             ))}
@@ -285,7 +293,7 @@ export default function PesertaPage() {
               <thead>
                 <tr className="border-b border-[#1E3A5F] bg-[#0F1535]">
                   <th className="px-3 py-3 w-8">
-                    <button onClick={toggleSelectAll} className="text-[#B0C4DE] hover:text-white transition-colors">
+                    <button onClick={toggleSelectAll} className="text-[#B0C4DE] hover:text-white transition-colors cursor-pointer">
                       <CheckSquare size={14} className={selectedIds.size === participants.length && participants.length > 0 ? "text-[#00E5FF]" : ""} />
                     </button>
                   </th>
@@ -309,7 +317,7 @@ export default function PesertaPage() {
                 ) : participants.map((p, i) => (
                   <tr key={p.id} className={`group table-row-animated border-b border-[#1E3A5F]/50 transition-colors hover:bg-white/5 ${i % 2 === 1 ? "bg-white/[0.01]" : ""}`}>
                     <td className="px-3 py-3">
-                      <button onClick={() => toggleSelect(p.id)} className="text-[#B0C4DE] hover:text-white transition-colors">
+                      <button onClick={() => toggleSelect(p.id)} className="text-[#B0C4DE] hover:text-white transition-colors cursor-pointer">
                         <CheckSquare size={14} className={selectedIds.has(p.id) ? "text-[#00E5FF]" : ""} />
                       </button>
                     </td>
@@ -348,7 +356,7 @@ export default function PesertaPage() {
                           title="Lihat Detail"
                           aria-label={`Lihat detail ${p.full_name}`}
                           onClick={() => { setSelected(p); setRejectNotes(""); setActionError(""); }}
-                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#00E5FF] transition-colors hover:border-[#00E5FF]/50 hover:bg-[#00E5FF]/15 hover:text-white"
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#00E5FF]/20 bg-[#00E5FF]/5 text-[#00E5FF] transition-colors hover:border-[#00E5FF]/50 hover:bg-[#00E5FF]/15 hover:text-white cursor-pointer"
                         >
                           <Eye size={16} />
                         </button>
@@ -356,7 +364,7 @@ export default function PesertaPage() {
                           title="Hapus Peserta"
                           aria-label={`Hapus peserta ${p.full_name}`}
                           onClick={() => requestDelete(p.id, p.full_name)}
-                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/5 text-red-400 transition-colors hover:border-red-500/50 hover:bg-red-500/15 hover:text-red-300"
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/5 text-red-400 transition-colors hover:border-red-500/50 hover:bg-red-500/15 hover:text-red-300 cursor-pointer"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -375,10 +383,10 @@ export default function PesertaPage() {
           <div className="flex items-center justify-between px-4 py-3 border-t border-[#1E3A5F]">
             <span className="text-[#B0C4DE] text-xs">Hal. {meta.page} dari {meta.pages}</span>
             <div className="flex gap-2">
-              <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="p-1.5 rounded-lg border border-[#1E3A5F] text-[#B0C4DE] hover:text-white hover:border-[#00E5FF]/50 disabled:opacity-30 transition-all">
+              <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="p-1.5 rounded-lg border border-[#1E3A5F] text-[#B0C4DE] hover:text-white hover:border-[#00E5FF]/50 disabled:opacity-30 transition-all cursor-pointer">
                 <ChevronLeft size={14} />
               </button>
-              <button disabled={page >= meta.pages} onClick={() => setPage((p) => p + 1)} className="p-1.5 rounded-lg border border-[#1E3A5F] text-[#B0C4DE] hover:text-white hover:border-[#00E5FF]/50 disabled:opacity-30 transition-all">
+              <button disabled={page >= meta.pages} onClick={() => setPage((p) => p + 1)} className="p-1.5 rounded-lg border border-[#1E3A5F] text-[#B0C4DE] hover:text-white hover:border-[#00E5FF]/50 disabled:opacity-30 transition-all cursor-pointer">
                 <ChevronRight size={14} />
               </button>
             </div>
@@ -435,22 +443,16 @@ export default function PesertaPage() {
                       Lihat PDF Bukti Pembayaran
                     </a>
                   ) : (
-                    <a href={selected.payment_proof} target="_blank" rel="noopener noreferrer" className="block">
-                      <img src={selected.payment_proof} alt="Bukti bayar" className="max-h-40 w-auto max-w-full rounded-lg border border-[#1E3A5F]/50 hover:border-[#00E5FF]/50 transition-colors object-contain bg-black/30" />
+                    <a href={selected.payment_proof} target="_blank" rel="noopener noreferrer" className="block w-full overflow-hidden rounded-lg border border-[#1E3A5F]/50 hover:border-[#00E5FF]/50 transition-colors bg-black/30 relative group" title="Klik untuk perbesar">
+                      <div className="absolute inset-0 bg-[#00E5FF]/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none z-10"><Search size={32} className="text-[#00E5FF] drop-shadow-lg" /></div>
+                      <img src={selected.payment_proof} alt="Bukti bayar" className="w-full h-auto max-h-[300px] object-contain transition-transform duration-500 group-hover:scale-105" />
                     </a>
                   )}
                 </div>
               )}
 
-              {/* Rejection notes */}
-              {selected.payment_status === "pending" && (
-                <div>
-                  <label className="block text-[#5A7899] text-[10px] font-semibold tracking-wider uppercase mb-1.5">Alasan Penolakan (wajib jika ditolak)</label>
-                  <textarea className="neon-input w-full rounded-xl px-3.5 py-2.5 text-sm" rows={2} placeholder="Alasan penolakan..." value={rejectNotes} onChange={(e) => setRejectNotes(e.target.value)} />
-                </div>
-              )}
-
-              {actionError && <p className="rounded-xl border border-red-400/20 bg-red-500/10 p-3 text-xs text-red-200">{actionError}</p>}
+              {/* Removed old reject notes textarea from here */}
+              {actionError && !rejectConfirm && <p className="rounded-xl border border-red-400/20 bg-red-500/10 p-3 text-xs text-red-200">{actionError}</p>}
 
               {selected.payment_status !== "pending" && (
                 <div className="rounded-xl border border-[#1E3A5F]/40 bg-white/[0.02] p-4 text-center">
@@ -477,8 +479,8 @@ export default function PesertaPage() {
                     <CheckCircle size={14} /> Verifikasi
                   </button>
                   <button
-                    disabled={actionLoading || !selected.payment_proof || rejectNotes.trim().length < 3}
-                    onClick={() => handleVerify(selected.id, "rejected")}
+                    disabled={actionLoading || !selected.payment_proof}
+                    onClick={() => setRejectConfirm(selected.id)}
                     className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold bg-[#FF006E]/10 border border-[#FF006E]/30 text-[#FF006E] hover:bg-[#FF006E]/20 transition-all disabled:opacity-40 cursor-pointer"
                   >
                     <XCircle size={14} /> Tolak
@@ -486,9 +488,9 @@ export default function PesertaPage() {
                 </div>
               )}
               <div className="grid grid-cols-1 gap-3 min-[430px]:grid-cols-2">
-                <button onClick={() => handleResendEmail(selected.id)} className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-semibold border border-[#1E3A5F] text-[#B0C4DE] hover:text-white hover:border-[#00E5FF]/40 hover:bg-[#00E5FF]/5 transition-all cursor-pointer">
-                  <Mail size={13} /> Kirim Email
-                </button>
+                <a href={`https://wa.me/${selected.phone.replace(/^0/, '62').replace(/\D/g, '')}?text=${encodeURIComponent(`Halo ${selected.full_name}, kami dari panitia Futuristic Fest 2026. `)}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-semibold border border-[#1E3A5F] text-[#B0C4DE] hover:text-white hover:border-[#25D366]/40 hover:bg-[#25D366]/10 transition-all cursor-pointer">
+                  <MessageCircle size={13} /> Chat WA
+                </a>
                 <button disabled={actionLoading} onClick={() => requestDelete(selected.id, selected.full_name)} className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-[11px] font-semibold border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all cursor-pointer disabled:opacity-40">
                   <Trash2 size={13} /> Hapus Data
                 </button>
@@ -499,26 +501,43 @@ export default function PesertaPage() {
         document.body
       )}
 
-      {/* Delete Confirmation Modal */}
-      {deleteConfirm && createPortal(
-        <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[18vh] px-4" style={{ background: "rgba(5,8,22,0.88)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }} onClick={(e) => { if (e.target === e.currentTarget) setDeleteConfirm(null); }}>
-          <div className="w-full max-w-md rounded-2xl border border-red-500/20 shadow-[0_8px_64px_rgba(239,68,68,0.12),0_0_0_1px_rgba(30,58,95,0.4)] overflow-hidden" style={{ background: "linear-gradient(180deg, #12101F 0%, #0A0E27 100%)", animation: "modalSlideUp .2s cubic-bezier(.22,1,.36,1)" }}>
-            <div className="p-6 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-5">
-                <AlertTriangle size={24} className="text-red-400" />
-              </div>
-              <h3 className="text-white font-bold text-sm mb-2" style={{ fontFamily: "Orbitron, sans-serif", letterSpacing: "0.08em" }}>KONFIRMASI HAPUS</h3>
-              <p className="text-[#B0C4DE] text-sm leading-relaxed">Apakah Anda yakin ingin menghapus <span className="text-white font-semibold">{deleteConfirm.label}</span>?</p>
-              <p className="text-red-400/70 text-xs mt-2">Data yang dihapus tidak dapat dikembalikan.</p>
-            </div>
-            <div className="flex gap-3 px-6 pb-6">
-              <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 rounded-xl text-sm font-semibold border border-[#1E3A5F] text-[#B0C4DE] hover:text-white hover:border-[#5A7899] transition-all cursor-pointer">Batal</button>
-              <button disabled={actionLoading} onClick={confirmDelete} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold bg-red-500/15 border border-red-500/30 text-red-400 hover:bg-red-500/25 hover:text-red-300 transition-all cursor-pointer disabled:opacity-40">
-                {actionLoading ? <span className="w-4 h-4 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" /> : <Trash2 size={14} />}
-                Hapus
+      {/* Rejection Modal */}
+      {rejectConfirm && createPortal(
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4" style={{ background: "rgba(5,8,22,0.85)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+          <div className="w-full max-w-sm rounded-2xl border border-red-500/30 bg-[#0A0E27] p-5 shadow-2xl" style={{ animation: "modalSlideUp .2s ease-out" }}>
+            <h3 className="text-sm font-bold text-white mb-2 tracking-wider" style={{ fontFamily: "Orbitron, sans-serif" }}>ALASAN PENOLAKAN</h3>
+            <textarea autoFocus className="neon-input w-full rounded-xl px-3 py-2 text-sm mb-3" rows={3} placeholder="Masukkan alasan penolakan..." value={rejectNotes} onChange={e => setRejectNotes(e.target.value)} />
+            {actionError && rejectConfirm && <p className="mb-3 text-xs text-red-400">{actionError}</p>}
+            <div className="flex gap-2">
+              <button onClick={() => { setRejectConfirm(null); setRejectNotes(""); setActionError(""); }} className="flex-1 py-2 rounded-xl text-xs font-semibold border border-[#1E3A5F] text-[#B0C4DE] hover:text-white transition-colors cursor-pointer">Batal</button>
+              <button disabled={actionLoading} onClick={() => handleVerify(rejectConfirm, "rejected")} className="flex-1 flex items-center justify-center py-2 rounded-xl text-xs font-bold bg-[#FF006E]/10 border border-[#FF006E]/30 text-[#FF006E] hover:bg-[#FF006E]/20 transition-colors cursor-pointer disabled:opacity-50">
+                {actionLoading ? <span className="w-3 h-3 border-2 border-[#FF006E]/30 border-t-[#FF006E] rounded-full animate-spin" /> : "Konfirmasi Tolak"}
               </button>
             </div>
           </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Undo Delete Toast */}
+      {undoToast && createPortal(
+        <div className="fixed bottom-6 left-6 z-[70] flex items-center gap-4 rounded-xl border border-[#1E3A5F]/80 shadow-[0_8px_32px_rgba(0,0,0,0.5)] bg-[#0A0E27] p-4 text-sm text-white" style={{ animation: "modalSlideUp 0.3s ease-out" }}>
+          <div className="flex items-center gap-3">
+            <div className="relative flex items-center justify-center w-8 h-8">
+              <svg className="absolute w-full h-full -rotate-90" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="14" fill="none" stroke="#1E3A5F" strokeWidth="3" />
+                <circle cx="16" cy="16" r="14" fill="none" stroke="#FF006E" strokeWidth="3" strokeDasharray="88" strokeDashoffset={88 - (88 * (undoToast.timeLeft / 3))} className="transition-all duration-1000 ease-linear" />
+              </svg>
+              <span className="text-xs font-bold">{undoToast.timeLeft}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="font-semibold text-white">Menghapus Data...</span>
+              <span className="text-xs text-[#B0C4DE]">{undoToast.label}</span>
+            </div>
+          </div>
+          <button onClick={() => setUndoToast(null)} className="ml-2 px-3 py-1.5 rounded-lg text-xs font-bold text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-colors cursor-pointer">
+            URUNGKAN
+          </button>
         </div>,
         document.body
       )}
